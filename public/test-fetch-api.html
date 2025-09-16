@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Fetch - Admin Panel API</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .environment-selector {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .env-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .env-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .env-btn:hover:not(.active) {
+            background: #f0f0f0;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .status.online { background: #10b981; color: white; }
+        .status.offline { background: #ef4444; color: white; }
+        .status.checking { background: #f59e0b; color: white; }
+        .test-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .test-button {
+            padding: 8px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .test-button:hover {
+            background: #5a67d8;
+        }
+        .test-button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+        .result-box {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 1px solid #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result-box.success {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .result-box.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .credentials-section {
+            background: #fffbeb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fbbf24;
+        }
+        .credential-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+        .credential-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        .info-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e0e7ff;
+            color: #4c51bf;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Teste de Fetch - Admin Panel API</h1>
+        <p class="subtitle">Análise completa das chamadas de API para ambos os ambientes</p>
+
+        <div class="controls">
+            <div class="environment-selector">
+                <button class="env-btn active" onclick="selectEnvironment('local')">
+                    🖥️ Local (localhost:3000)
+                    <span class="status" id="status-local">checking</span>
+                </button>
+                <button class="env-btn" onclick="selectEnvironment('production')">
+                    ☁️ Produção (ierp.invistto.com)
+                    <span class="status" id="status-production">checking</span>
+                </button>
+            </div>
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <strong>Ambiente Selecionado:</strong>
+                <div id="current-url" style="margin-top: 5px; font-family: monospace; color: #667eea;"></div>
+            </div>
+        </div>
+
+        <div class="credentials-section">
+            <strong>🔐 Credenciais de Teste (Opcional)</strong>
+            <div class="credential-row">
+                <div>
+                    <label>Email:</label>
+                    <input type="text" id="test-email" class="credential-input" 
+                           placeholder="admin@invistto.com.br" value="">
+                </div>
+                <div>
+                    <label>Senha:</label>
+                    <input type="password" id="test-password" class="credential-input" 
+                           placeholder="senha123" value="">
+                </div>
+            </div>
+        </div>
+
+        <!-- Teste 1: Health Check -->
+        <div class="test-section">
+            <div class="test-header">
+                <div class="test-title">
+                    1. Health Check / Status
+                    <span class="info-badge">GET</span>
+                </div>
+                <button class="test-button" onclick="testHealthCheck()">Testar</button>
+            </div>
+            <div id="health-result"></div>
+        </div>
+
+        <!-- Teste 2: Login -->
+        <div class="test-section">
+            <div class="test-header">
+                <div class="test-title">
+                    2. Autenticação (Login)
+                    <span class="info-badge">POST</span>
+                </div>
+                <button class="test-button" onclick="testLogin()">Testar</button>
+            </div>
+            <div id="login-result"></div>
+        </div>
+
+        <!-- Teste 3: Listar Usuários -->
+        <div class="test-section">
+            <div class="test-header">
+                <div class="test-title">
+                    3. Listar Usuários
+                    <span class="info-badge">GET</span>
+                    <span class="info-badge">AUTH</span>
+                </div>
+                <button class="test-button" onclick="testListUsers()">Testar</button>
+            </div>
+            <div id="users-result"></div>
+        </div>
+
+        <!-- Teste 4: Listar Bases -->
+        <div class="test-section">
+            <div class="test-header">
+                <div class="test-title">
+                    4. Listar Bases
+                    <span class="info-badge">GET</span>
+                    <span class="info-badge">AUTH</span>
+                </div>
+                <button class="test-button" onclick="testListBases()">Testar</button>
+            </div>
+            <div id="bases-result"></div>
+        </div>
+
+        <!-- Teste 5: Performance -->
+        <div class="test-section">
+            <div class="test-header">
+                <div class="test-title">
+                    5. Teste de Performance (10 requisições)
+                    <span class="info-badge">BATCH</span>
+                </div>
+                <button class="test-button" onclick="testPerformance()">Testar</button>
+            </div>
+            <div id="performance-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuração dos ambientes
+        const environments = {
+            local: {
+                name: 'Local',
+                url: 'http://localhost:3000',
+                status: 'checking'
+            },
+            production: {
+                name: 'Produção',
+                url: 'https://ierp.invistto.com',
+                status: 'checking'
+            }
+        };
+
+        let currentEnv = 'local';
+        let authToken = null;
+
+        // Inicializar
+        window.onload = () => {
+            updateCurrentUrl();
+            checkEnvironmentsStatus();
+        };
+
+        function selectEnvironment(env) {
+            currentEnv = env;
+            document.querySelectorAll('.env-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateCurrentUrl();
+            clearAllResults();
+        }
+
+        function updateCurrentUrl() {
+            document.getElementById('current-url').textContent = 
+                `${environments[currentEnv].url}/api`;
+        }
+
+        function clearAllResults() {
+            ['health', 'login', 'users', 'bases', 'performance'].forEach(id => {
+                document.getElementById(`${id}-result`).innerHTML = '';
+            });
+        }
+
+        async function checkEnvironmentsStatus() {
+            for (const [key, env] of Object.entries(environments)) {
+                const statusEl = document.getElementById(`status-${key}`);
+                statusEl.textContent = 'checking';
+                statusEl.className = 'status checking';
+
+                try {
+                    const response = await fetch(`${env.url}/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'test@test.com', password: 'test' })
+                    });
+                    
+                    if (response.status < 500) {
+                        statusEl.textContent = 'online';
+                        statusEl.className = 'status online';
+                        env.status = 'online';
+                    } else {
+                        statusEl.textContent = 'offline';
+                        statusEl.className = 'status offline';
+                        env.status = 'offline';
+                    }
+                } catch (error) {
+                    statusEl.textContent = 'offline';
+                    statusEl.className = 'status offline';
+                    env.status = 'offline';
+                }
+            }
+        }
+
+        function showResult(elementId, success, content) {
+            const resultDiv = document.getElementById(`${elementId}-result`);
+            resultDiv.innerHTML = `
+                <div class="result-box ${success ? 'success' : 'error'}">
+                    ${content}
+                </div>
+            `;
+        }
+
+        function showLoading(elementId) {
+            const resultDiv = document.getElementById(`${elementId}-result`);
+            resultDiv.innerHTML = '<div class="loading"></div>';
+        }
+
+        // Teste 1: Health Check
+        async function testHealthCheck() {
+            showLoading('health');
+            const startTime = Date.now();
+            
+            try {
+                // Tentar diferentes endpoints de health
+                const endpoints = ['/api/health', '/api/system/status', '/api/auth/login'];
+                let found = false;
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(`${environments[currentEnv].url}${endpoint}`, {
+                            method: endpoint.includes('login') ? 'POST' : 'GET',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: endpoint.includes('login') ? 
+                                JSON.stringify({ email: 'test@test.com', password: 'test' }) : undefined
+                        });
+                        
+                        const elapsed = Date.now() - startTime;
+                        
+                        if (response.status < 500) {
+                            const data = await response.json();
+                            showResult('health', true, 
+                                `✅ Servidor Online
+Endpoint: ${endpoint}
+Status: ${response.status} ${response.statusText}
+Tempo: ${elapsed}ms
+Response: ${JSON.stringify(data, null, 2)}`);
+                            found = true;
+                            break;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                
+                if (!found) {
+                    throw new Error('Nenhum endpoint de health encontrado');
+                }
+            } catch (error) {
+                showResult('health', false, 
+                    `❌ Erro: ${error.message}
+Servidor pode estar offline ou bloqueando CORS`);
+            }
+        }
+
+        // Teste 2: Login
+        async function testLogin() {
+            showLoading('login');
+            const email = document.getElementById('test-email').value || 'admin@invistto.com.br';
+            const password = document.getElementById('test-password').value || 'admin123';
+            
+            try {
+                const response = await fetch(`${environments[currentEnv].url}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                // Verificar se tem token no data ou data.data
+                const token = data.access_token || data.data?.access_token;
+                const userData = data.data || data;
+                
+                if (response.ok && token) {
+                    authToken = token;
+                    showResult('login', true, 
+                        `✅ Login Bem-sucedido!
+Email: ${email}
+Usuário: ${userData.name}
+Base: ${userData.base || 'Base ' + userData.baseId}
+Token: ${token.substring(0, 50)}...
+Permissões: ${userData.isMaster ? 'Admin Master' : 'Usuário Normal'}`);
+                } else {
+                    showResult('login', false, 
+                        `⚠️ Login Falhou
+Status: ${response.status}
+Mensagem: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult('login', false, 
+                    `❌ Erro na requisição: ${error.message}`);
+            }
+        }
+
+        // Teste 3: Listar Usuários
+        async function testListUsers() {
+            if (!authToken) {
+                showResult('users', false, '⚠️ Faça login primeiro!');
+                return;
+            }
+            
+            showLoading('users');
+            
+            try {
+                const response = await fetch(`${environments[currentEnv].url}/api/usuarios`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('users', true, 
+                        `✅ Usuários Listados
+Total: ${data.total || data.length}
+Dados: ${JSON.stringify(data, null, 2).substring(0, 1000)}...`);
+                } else {
+                    showResult('users', false, 
+                        `⚠️ Erro ao listar usuários
+Status: ${response.status}
+Mensagem: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult('users', false, 
+                    `❌ Erro na requisição: ${error.message}`);
+            }
+        }
+
+        // Teste 4: Listar Bases
+        async function testListBases() {
+            if (!authToken) {
+                showResult('bases', false, '⚠️ Faça login primeiro!');
+                return;
+            }
+            
+            showLoading('bases');
+            
+            try {
+                const response = await fetch(`${environments[currentEnv].url}/api/bases`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('bases', true, 
+                        `✅ Bases Listadas
+Total: ${data.total || data.length}
+Dados: ${JSON.stringify(data, null, 2).substring(0, 1000)}...`);
+                } else {
+                    showResult('bases', false, 
+                        `⚠️ Erro ao listar bases
+Status: ${response.status}
+Mensagem: ${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                showResult('bases', false, 
+                    `❌ Erro na requisição: ${error.message}`);
+            }
+        }
+
+        // Teste 5: Performance
+        async function testPerformance() {
+            showLoading('performance');
+            const times = [];
+            const results = [];
+            
+            for (let i = 0; i < 10; i++) {
+                const startTime = Date.now();
+                
+                try {
+                    const response = await fetch(`${environments[currentEnv].url}/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'test@test.com', password: 'test' })
+                    });
+                    
+                    const elapsed = Date.now() - startTime;
+                    times.push(elapsed);
+                    results.push(`Request ${i + 1}: ${elapsed}ms - Status ${response.status}`);
+                } catch (error) {
+                    results.push(`Request ${i + 1}: ERRO - ${error.message}`);
+                }
+            }
+            
+            const avgTime = times.length > 0 ? 
+                Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+            const minTime = times.length > 0 ? Math.min(...times) : 0;
+            const maxTime = times.length > 0 ? Math.max(...times) : 0;
+            
+            showResult('performance', times.length > 0, 
+                `📊 Resultados do Teste de Performance
+Total de Requisições: 10
+Bem-sucedidas: ${times.length}
+Tempo Médio: ${avgTime}ms
+Tempo Mínimo: ${minTime}ms
+Tempo Máximo: ${maxTime}ms
+
+Detalhes:
+${results.join('\n')}`);
+        }
+    </script>
+</body>
+</html>

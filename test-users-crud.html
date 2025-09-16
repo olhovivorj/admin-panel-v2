@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste CRUD Usuários - Admin Panel V2</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; font-size: 18px; margin-top: 0; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover { background: #2563eb; }
+        .result {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        input {
+            padding: 6px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste CRUD de Usuários - Admin Panel V2</h1>
+
+    <div class="test-section">
+        <h2>⚙️ Configuração</h2>
+        <label>API URL: <input type="text" id="apiUrl" value="http://localhost:3000/api" style="width: 300px;"></label>
+        <div class="result" id="config">
+            Endpoints disponíveis:
+            - GET /usuarios (listar)
+            - GET /usuarios/{id} (buscar)
+            - POST /usuarios (criar)
+            - PUT /usuarios/{id} (atualizar)
+            - DELETE /usuarios/{id} (deletar)
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 1. Listar Usuários</h2>
+        <button onclick="testListUsers()">Listar Todos</button>
+        <button onclick="testListUsers('?limit=5')">Listar 5</button>
+        <button onclick="testListUsers('?active=true')">Apenas Ativos</button>
+        <div class="result" id="listResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>➕ 2. Criar Usuário</h2>
+        <input type="text" id="newName" placeholder="Nome" value="Teste User">
+        <input type="email" id="newEmail" placeholder="Email" value="teste@example.com">
+        <input type="password" id="newPassword" placeholder="Senha" value="123456">
+        <select id="newRole">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+            <option value="viewer">Viewer</option>
+        </select>
+        <input type="number" id="newBaseId" placeholder="Base ID" value="1">
+        <br>
+        <button onclick="testCreateUser()">Criar Usuário</button>
+        <div class="result" id="createResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 3. Buscar Usuário</h2>
+        <input type="number" id="getUserId" placeholder="ID do Usuário" value="1">
+        <button onclick="testGetUser()">Buscar</button>
+        <div class="result" id="getResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>✏️ 4. Atualizar Usuário</h2>
+        <input type="number" id="updateUserId" placeholder="ID" value="1">
+        <input type="text" id="updateName" placeholder="Novo Nome">
+        <input type="email" id="updateEmail" placeholder="Novo Email">
+        <button onclick="testUpdateUser()">Atualizar</button>
+        <button onclick="testToggleStatus()">Toggle Ativo/Inativo</button>
+        <div class="result" id="updateResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🗑️ 5. Deletar Usuário</h2>
+        <input type="number" id="deleteUserId" placeholder="ID do Usuário">
+        <button onclick="testDeleteUser()">Deletar</button>
+        <div class="result" id="deleteResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔐 6. Trocar Senha</h2>
+        <input type="number" id="passwordUserId" placeholder="ID" value="1">
+        <input type="password" id="currentPassword" placeholder="Senha Atual">
+        <input type="password" id="newPasswordChange" placeholder="Nova Senha">
+        <button onclick="testChangePassword()">Trocar Senha</button>
+        <div class="result" id="passwordResult"></div>
+    </div>
+
+    <script>
+        const getApiUrl = () => document.getElementById('apiUrl').value;
+
+        async function makeRequest(method, endpoint, data = null) {
+            const url = getApiUrl() + endpoint;
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+                return { success: response.ok, data: result, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testListUsers(params = '') {
+            const result = await makeRequest('GET', '/usuarios' + params);
+            const div = document.getElementById('listResult');
+
+            if (result.success) {
+                const users = result.data.data || result.data.users || result.data;
+                div.innerHTML = `<span class="success">✅ Sucesso!</span>\n` +
+                    `Total: ${result.data.total || users.length} usuários\n` +
+                    JSON.stringify(users, null, 2);
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.error || result.data.message}</span>`;
+            }
+        }
+
+        async function testCreateUser() {
+            const data = {
+                name: document.getElementById('newName').value,
+                email: document.getElementById('newEmail').value,
+                password: document.getElementById('newPassword').value,
+                role: document.getElementById('newRole').value,
+                baseId: parseInt(document.getElementById('newBaseId').value),
+            };
+
+            const result = await makeRequest('POST', '/usuarios', data);
+            const div = document.getElementById('createResult');
+
+            if (result.success) {
+                div.innerHTML = `<span class="success">✅ Usuário criado!</span>\n` +
+                    JSON.stringify(result.data, null, 2);
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.data?.message || result.error}</span>`;
+            }
+        }
+
+        async function testGetUser() {
+            const id = document.getElementById('getUserId').value;
+            const result = await makeRequest('GET', `/usuarios/${id}`);
+            const div = document.getElementById('getResult');
+
+            if (result.success) {
+                div.innerHTML = `<span class="success">✅ Usuário encontrado!</span>\n` +
+                    JSON.stringify(result.data, null, 2);
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.data?.message || result.error}</span>`;
+            }
+        }
+
+        async function testUpdateUser() {
+            const id = document.getElementById('updateUserId').value;
+            const data = {};
+
+            const name = document.getElementById('updateName').value;
+            const email = document.getElementById('updateEmail').value;
+
+            if (name) data.name = name;
+            if (email) data.email = email;
+
+            const result = await makeRequest('PUT', `/usuarios/${id}`, data);
+            const div = document.getElementById('updateResult');
+
+            if (result.success) {
+                div.innerHTML = `<span class="success">✅ Usuário atualizado!</span>\n` +
+                    JSON.stringify(result.data, null, 2);
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.data?.message || result.error}</span>`;
+            }
+        }
+
+        async function testToggleStatus() {
+            const id = document.getElementById('updateUserId').value;
+
+            // Primeiro buscar o usuário para ver o status atual
+            const getResult = await makeRequest('GET', `/usuarios/${id}`);
+            if (!getResult.success) {
+                document.getElementById('updateResult').innerHTML =
+                    `<span class="error">❌ Erro ao buscar usuário</span>`;
+                return;
+            }
+
+            const currentStatus = getResult.data.data?.active || getResult.data.active;
+            const newStatus = !currentStatus;
+
+            const result = await makeRequest('PUT', `/usuarios/${id}`, { active: newStatus });
+            const div = document.getElementById('updateResult');
+
+            if (result.success) {
+                div.innerHTML = `<span class="success">✅ Status alterado para: ${newStatus ? 'ATIVO' : 'INATIVO'}</span>\n` +
+                    JSON.stringify(result.data, null, 2);
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.data?.message || result.error}</span>`;
+            }
+        }
+
+        async function testDeleteUser() {
+            const id = document.getElementById('deleteUserId').value;
+            if (!id) {
+                alert('Por favor, informe o ID do usuário');
+                return;
+            }
+
+            if (!confirm(`Tem certeza que deseja deletar o usuário ${id}?`)) {
+                return;
+            }
+
+            const result = await makeRequest('DELETE', `/usuarios/${id}`);
+            const div = document.getElementById('deleteResult');
+
+            if (result.success) {
+                div.innerHTML = `<span class="success">✅ Usuário deletado!</span>\n` +
+                    JSON.stringify(result.data, null, 2);
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.data?.message || result.error}</span>`;
+            }
+        }
+
+        async function testChangePassword() {
+            const id = document.getElementById('passwordUserId').value;
+            const data = {
+                currentPassword: document.getElementById('currentPassword').value,
+                newPassword: document.getElementById('newPasswordChange').value,
+            };
+
+            const result = await makeRequest('PUT', `/usuarios/${id}/change-password`, data);
+            const div = document.getElementById('passwordResult');
+
+            if (result.success) {
+                div.innerHTML = `<span class="success">✅ Senha alterada com sucesso!</span>`;
+            } else {
+                div.innerHTML = `<span class="error">❌ Erro: ${result.data?.message || result.error}</span>`;
+            }
+        }
+
+        // Carregar lista ao iniciar
+        window.onload = () => {
+            testListUsers();
+        };
+    </script>
+</body>
+</html>
