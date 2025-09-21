@@ -1112,6 +1112,14 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
               email: selectedUser.email,
             } : null,
           })
+
+          // Debug adicional
+          logger.info('DEBUG UsersList - Estado completo:', 'USER', {
+            selectedUser: selectedUser,
+            isEditing: isEditing,
+            userPropToPass: isEditing ? selectedUser : null
+          })
+
           return (
             <UserFormModal
               user={isEditing ? selectedUser : null}

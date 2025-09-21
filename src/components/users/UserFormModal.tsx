@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { UsuarioResponseDto, CreateUsuarioDto, UpdateUsuarioDto, usersService } from '@/services/users'
 import { useBase } from '@/contexts/BaseContext'
 import { SysUserSelector } from './forms/SysUserSelector'
+import { LojaSelector } from './forms/LojaSelector'
 import { EndpointRateLimitConfig } from './EndpointRateLimitConfig'
 // import { EndpointConfigurationPanel } from './EndpointConfigurationPanel'
 import { ApiTokenManager } from './ApiTokenManager'
@@ -58,6 +59,7 @@ const userSchema = z.object({
   ip_whitelist: z.array(z.string()).optional(),
   rate_limit_per_hour: z.number().min(1).max(10000).optional(),
   permissoes_endpoints: z.record(z.any()).optional(),
+  lojas: z.array(z.number()).optional(),
 })
 
 type UserFormData = z.infer<typeof userSchema>
@@ -70,12 +72,24 @@ interface UserFormModalProps {
 }
 
 export function UserFormModal({ user, isOpen, onClose, onSuccess }: UserFormModalProps) {
+  // Debug no início do componente
+  logger.info('🔍 UserFormModal - Props recebidas:', 'FORM', {
+    user,
+    isOpen,
+    hasUser: !!user,
+    userId: user?.id,
+    userName: user?.name,
+    userEmail: user?.email,
+    userTipo: user?.tipo_usuario
+  })
+
   const queryClient = useQueryClient()
   const { selectedBaseId } = useBase()
   const { isSuperAdmin, canChangeUserType } = useSuperAdmin()
   const isEditing = !!user
   const [showPassword, setShowPassword] = useState(false)
   const [checkingEmail, setCheckingEmail] = useState(false)
+  const [selectedLojas, setSelectedLojas] = useState<number[]>([])
   const [debugMode, setDebugMode] = useState(() => {
     // Carregar preferência do localStorage
     return localStorage.getItem('userFormDebugMode') === 'true'
@@ -307,6 +321,25 @@ Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
     },
   })
 
+  // Carregar lojas do usuário ao editar
+  useEffect(() => {
+    const loadUserLojas = async () => {
+      if (user?.id && user.tipo_usuario !== 'API') {
+        try {
+          const response = await api.get(`/usuarios/${user.id}/lojas`)
+          if (response.data?.data) {
+            const lojaIds = response.data.data.map((loja: any) => loja.id)
+            setSelectedLojas(lojaIds)
+            logger.info('🏢 Lojas do usuário carregadas:', 'FORM', lojaIds)
+          }
+        } catch (error) {
+          logger.error('❌ Erro ao carregar lojas do usuário:', 'FORM', error)
+        }
+      }
+    }
+    loadUserLojas()
+  }, [user])
+
   useEffect(() => {
     if (user) {
       logger.info('🔄 Carregando dados do usuário para edição:', 'FORM', {
@@ -437,6 +470,8 @@ Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
       ativo: data.active,
       // Garantir que permissoes_endpoints seja sempre um objeto
       permissoes_endpoints: data.permissoes_endpoints || {},
+      // Adicionar lojas selecionadas para usuários NORMAL
+      lojas: data.tipo_usuario !== 'API' ? selectedLojas : undefined,
     }
     // Remover active do payload pois backend espera ativo
     delete payload.active
@@ -664,16 +699,27 @@ Clique OK para criar o usuário
               
               return shouldShowSysUser
             })() && (
-              <SysUserSelector
-                selectedBaseId={selectedBaseId}
-                setValue={setValue}
-                watch={watch}
-                isOpen={isOpen}
-                allowEmpty={false} // Usuários normais DEVEM ter sys-user
-                isEditing={isEditing} // Para mostrar read-only na edição
-                currentSysUserId={user?.iduser} // ID do sys_user atual
-                currentSysUserData={user?.sysUserData} // Dados do sys_user se disponível
-              />
+              <>
+                <SysUserSelector
+                  selectedBaseId={selectedBaseId}
+                  setValue={setValue}
+                  watch={watch}
+                  isOpen={isOpen}
+                  allowEmpty={false} // Usuários normais DEVEM ter sys-user
+                  isEditing={isEditing} // Para mostrar read-only na edição
+                  currentSysUserId={user?.iduser} // ID do sys_user atual
+                  currentSysUserData={user?.sysUserData} // Dados do sys_user se disponível
+                />
+
+                {/* Seletor de Lojas - apenas para usuários NORMAL */}
+                <LojaSelector
+                  userId={user?.id}
+                  baseId={selectedBaseId || user?.baseId || 0}
+                  selectedLojas={selectedLojas}
+                  onChange={setSelectedLojas}
+                  isEditing={isEditing}
+                />
+              </>
             )}
 
             <div>

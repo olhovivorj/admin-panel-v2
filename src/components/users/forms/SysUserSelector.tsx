@@ -325,25 +325,27 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
         <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium text-gray-900 dark:text-white">
-              Usuário Selecionado
+              {isEditing ? 'Usuário ERP Vinculado' : 'Usuário Selecionado'}
             </h4>
-            <button
-              type="button"
-              onClick={() => setEditSysUser(!editSysUser)}
-              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center"
-            >
-              {editSysUser ? (
-                <>
-                  <CheckCircleIcon className="h-4 w-4 mr-1" />
-                  Salvar
-                </>
-              ) : (
-                <>
-                  <PencilIcon className="h-4 w-4 mr-1" />
-                  Editar
-                </>
-              )}
-            </button>
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={() => setEditSysUser(!editSysUser)}
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center"
+              >
+                {editSysUser ? (
+                  <>
+                    <CheckCircleIcon className="h-4 w-4 mr-1" />
+                    Salvar
+                  </>
+                ) : (
+                  <>
+                    <PencilIcon className="h-4 w-4 mr-1" />
+                    Editar
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {editSysUser ? (

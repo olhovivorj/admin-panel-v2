@@ -1,39 +1,72 @@
 import api from './api'
 
-// Tipos simplificados
-export interface User {
+// Tipo completo para compatibilidade com o backend
+export interface UsuarioResponseDto {
   id: number
   name: string
   email: string
   telefone?: string
   obs?: string
-  role: 'admin' | 'user' | 'viewer'
-  active: boolean
+  notes?: string
+  role: 'admin' | 'user' | 'operator' | 'viewer'
+  status: 'active' | 'inactive'
+  active?: boolean
   baseId: number
   baseName?: string
   createdAt: string
   updatedAt: string
   lastLogin?: string
+  tipo_usuario?: 'NORMAL' | 'API'
+  iduser?: number
+  sysUserData?: any
+  permissions?: string[]
+  ip_whitelist?: string[]
+  rate_limit_per_hour?: number
+  permissoes_endpoints?: any
+  api_key?: string
+  api_secret?: string
 }
 
-export interface CreateUserDto {
+// Alias para compatibilidade
+export type User = UsuarioResponseDto
+
+export interface CreateUsuarioDto {
   name: string
   email: string
-  password: string
-  role: 'admin' | 'user' | 'viewer'
+  password?: string
+  role: 'admin' | 'user' | 'operator' | 'viewer'
   baseId: number
   telefone?: string
   obs?: string
+  ativo?: boolean
+  tipo_usuario?: 'NORMAL' | 'API'
+  iduser?: number
+  permissions?: string[]
+  ip_whitelist?: string[]
+  rate_limit_per_hour?: number
+  permissoes_endpoints?: any
 }
 
-export interface UpdateUserDto {
+// Alias para compatibilidade
+export type CreateUserDto = CreateUsuarioDto
+
+export interface UpdateUsuarioDto {
   name?: string
   email?: string
   telefone?: string
   obs?: string
-  role?: 'admin' | 'user' | 'viewer'
-  active?: boolean
+  role?: 'admin' | 'user' | 'operator' | 'viewer'
+  ativo?: boolean
+  tipo_usuario?: 'NORMAL' | 'API'
+  iduser?: number
+  permissions?: string[]
+  ip_whitelist?: string[]
+  rate_limit_per_hour?: number
+  permissoes_endpoints?: any
 }
+
+// Alias para compatibilidade
+export type UpdateUserDto = UpdateUsuarioDto
 
 export interface ChangePasswordDto {
   currentPassword: string
@@ -65,19 +98,19 @@ export const usersService = {
   // Buscar usuário por ID
   async getUser(id: number) {
     const response = await api.get(`/usuarios/${id}`)
-    return response.data
+    return response.data.data // Retornar apenas os dados do usuário, não o wrapper
   },
 
   // Criar usuário
-  async createUser(data: CreateUserDto) {
+  async createUser(data: CreateUsuarioDto) {
     const response = await api.post('/usuarios', data)
-    return response.data
+    return response.data.data || response.data // Retornar data se existir, senão response.data
   },
 
   // Atualizar usuário
-  async updateUser(id: number, data: UpdateUserDto) {
+  async updateUser(id: number, data: UpdateUsuarioDto) {
     const response = await api.put(`/usuarios/${id}`, data)
-    return response.data
+    return response.data.data || response.data // Retornar data se existir, senão response.data
   },
 
   // Deletar usuário
@@ -104,11 +137,23 @@ export const usersService = {
   },
 
   // Verificar email disponível
-  async checkEmailAvailable(email: string, excludeUserId?: number) {
+  async checkEmailAvailability(email: string, excludeUserId?: number) {
     const params: any = { email }
     if (excludeUserId) params.excludeUserId = excludeUserId
 
     const response = await api.get('/usuarios/check-email', { params })
     return response.data.data.available
+  },
+
+  // Resetar senha
+  async resetPassword(userId: number) {
+    const response = await api.post(`/usuarios/${userId}/reset-password`)
+    return response.data
+  },
+
+  // Buscar lojas de um sys-user
+  async getLojasBySysUser(baseId: number, sysUserId: number) {
+    const response = await api.get(`/usuarios/sys-users/${baseId}/user/${sysUserId}/lojas`)
+    return response.data
   },
 }
