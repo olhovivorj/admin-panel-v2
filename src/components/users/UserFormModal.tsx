@@ -12,8 +12,8 @@ import { UsuarioResponseDto, CreateUsuarioDto, UpdateUsuarioDto, usersService } 
 import { useBase } from '@/contexts/BaseContext'
 import { SysUserSelector } from './forms/SysUserSelector'
 import { LojaSelector } from './forms/LojaSelector'
-import { PersonSelector } from './forms/PersonSelector'
-import { PlanSelector } from './forms/PlanSelector'
+import { PersonSelectorMobile } from './forms/PersonSelectorMobile'
+import { PlanSelectorMobile } from './forms/PlanSelectorMobile'
 import { EndpointRateLimitConfig } from './EndpointRateLimitConfig'
 // import { EndpointConfigurationPanel } from './EndpointConfigurationPanel'
 import { ApiTokenManager } from './ApiTokenManager'
@@ -834,9 +834,9 @@ Clique OK para criar o usuário
               )}
             </div>
 
-            {/* Selector de Pessoa do ERP - Novo campo */}
-            <div>
-              <PersonSelector
+            {/* Selector de Pessoa do ERP - Mobile optimized */}
+            <div className="col-span-2">
+              <PersonSelectorMobile
                 baseId={selectedBaseId || 60}
                 value={watch('ID_PESSOA')}
                 onChange={(personId) => setValue('ID_PESSOA', personId || undefined)}
@@ -846,9 +846,9 @@ Clique OK para criar o usuário
               />
             </div>
 
-            {/* Selector de Plano de Acesso - Novo campo */}
-            <div>
-              <PlanSelector
+            {/* Selector de Plano de Acesso - Mobile optimized */}
+            <div className="col-span-2">
+              <PlanSelectorMobile
                 value={watch('plano_id')}
                 onChange={(planId) => setValue('plano_id', planId)}
                 disabled={false}

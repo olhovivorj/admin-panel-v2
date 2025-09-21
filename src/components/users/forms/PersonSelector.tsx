@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MagnifyingGlassIcon, UserIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, UserIcon, XMarkIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import api from '@/services/api'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
@@ -33,6 +33,8 @@ export function PersonSelector({
   const [pessoas, setPessoas] = useState<Person[]>([])
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null)
   const [showDropdown, setShowDropdown] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false) // Pesquisa avançada
+  const [searchType, setSearchType] = useState<'all' | 'name' | 'cpf' | 'email'>('all')
 
   // Se for usuário API, não precisa selecionar pessoa
   if (tipoUsuario === 'API') {
