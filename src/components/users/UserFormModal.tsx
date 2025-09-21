@@ -12,6 +12,8 @@ import { UsuarioResponseDto, CreateUsuarioDto, UpdateUsuarioDto, usersService } 
 import { useBase } from '@/contexts/BaseContext'
 import { SysUserSelector } from './forms/SysUserSelector'
 import { LojaSelector } from './forms/LojaSelector'
+import { PersonSelector } from './forms/PersonSelector'
+import { PlanSelector } from './forms/PlanSelector'
 import { EndpointRateLimitConfig } from './EndpointRateLimitConfig'
 // import { EndpointConfigurationPanel } from './EndpointConfigurationPanel'
 import { ApiTokenManager } from './ApiTokenManager'
@@ -55,6 +57,8 @@ const userSchema = z.object({
   tipo_usuario: z.enum(['NORMAL', 'API']).optional(),
   sysUserId: z.number().optional(),
   iduser: z.number().optional(),
+  ID_PESSOA: z.number().optional(), // Novo: vincular com pessoa do ERP
+  plano_id: z.number().optional(),   // Novo: plano de acesso
   permissions: z.array(z.string()).optional(),
   ip_whitelist: z.array(z.string()).optional(),
   rate_limit_per_hour: z.number().min(1).max(10000).optional(),
@@ -828,6 +832,28 @@ Clique OK para criar o usuário
               {errors.role && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.role.message}</p>
               )}
+            </div>
+
+            {/* Selector de Pessoa do ERP - Novo campo */}
+            <div>
+              <PersonSelector
+                baseId={selectedBaseId || 60}
+                value={watch('ID_PESSOA')}
+                onChange={(personId) => setValue('ID_PESSOA', personId || undefined)}
+                required={false} // Por enquanto opcional, depois será obrigatório para novos
+                disabled={isEditing} // Não permite mudar pessoa após criar
+                tipoUsuario={watch('tipo_usuario')}
+              />
+            </div>
+
+            {/* Selector de Plano de Acesso - Novo campo */}
+            <div>
+              <PlanSelector
+                value={watch('plano_id')}
+                onChange={(planId) => setValue('plano_id', planId)}
+                disabled={false}
+                required={false}
+              />
             </div>
 
             <div>

@@ -18,6 +18,9 @@ export interface UsuarioResponseDto {
   lastLogin?: string
   tipo_usuario?: 'NORMAL' | 'API'
   iduser?: number
+  ID_PESSOA?: number  // Nova coluna para vincular com ge_pessoa
+  pessoaNome?: string  // Nome da pessoa vinculada
+  pessoaCpf?: string   // CPF da pessoa vinculada
   sysUserData?: any
   permissions?: string[]
   ip_whitelist?: string[]
@@ -41,6 +44,8 @@ export interface CreateUsuarioDto {
   ativo?: boolean
   tipo_usuario?: 'NORMAL' | 'API'
   iduser?: number
+  ID_PESSOA?: number   // Vincular com pessoa do ERP
+  plano_id?: number    // Plano de acesso (basic, standard, premium, admin)
   permissions?: string[]
   ip_whitelist?: string[]
   rate_limit_per_hour?: number
