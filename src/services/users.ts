@@ -161,4 +161,30 @@ export const usersService = {
     const response = await api.get(`/usuarios/sys-users/${baseId}/user/${sysUserId}/lojas`)
     return response.data
   },
+
+  // Buscar dados de uma pessoa do ERP para auto-preencher formulário
+  async getPessoaData(idPessoa: number, baseId: number) {
+    const response = await api.get(`/erp/pessoas/${idPessoa}`, {
+      params: { baseId }
+    })
+    return response.data.data || response.data
+  },
+
+  // Buscar pessoas por nome/CPF para autocomplete
+  async searchPessoas(term: string, baseId: number) {
+    const response = await api.get('/erp/pessoas', {
+      params: {
+        baseId,
+        search: term,
+        limit: 10
+      }
+    })
+    return response.data.data || response.data
+  },
+
+  // Listar roles (cargos) disponíveis
+  async getRoles() {
+    const response = await api.get('/roles')
+    return response.data
+  },
 }
