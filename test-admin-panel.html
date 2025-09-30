@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel V2 - Guia de Acesso</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 40px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7f9fc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .credentials {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .field {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f7f9fc;
+            border-radius: 6px;
+        }
+        .label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        .value {
+            font-family: 'Courier New', monospace;
+            color: #2b6cb0;
+            font-weight: bold;
+            user-select: all;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 20px 0;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .feature {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .feature-title {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f0fff4;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #9ae6b4;
+        }
+        .status-icon {
+            color: #48bb78;
+            font-size: 1.5rem;
+        }
+        .warning {
+            background: #fffaf0;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .endpoints {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .endpoint {
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+        .endpoint-method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-right: 8px;
+        }
+        .get { background: #48bb78; color: white; }
+        .post { background: #4299e1; color: white; }
+        .put { background: #ed8936; color: white; }
+        .delete { background: #f56565; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Admin Panel V2</h1>
+            <p class="subtitle">Interface Administrativa Simplificada do INVISTTO ERP</p>
+        </div>
+
+        <div class="content">
+            <!-- Status -->
+            <div class="section">
+                <h2>📊 Status do Sistema</h2>
+                <div class="status">
+                    <span class="status-icon">✅</span>
+                    <span>Frontend rodando em <strong>http://localhost:3001</strong></span>
+                </div>
+                <div class="status">
+                    <span class="status-icon">✅</span>
+                    <span>Backend (ari-nest) rodando em <strong>http://localhost:3000</strong></span>
+                </div>
+                <div class="status">
+                    <span class="status-icon">✅</span>
+                    <span>API-DNP rodando em <strong>http://localhost:4000</strong></span>
+                </div>
+            </div>
+
+            <!-- Acesso -->
+            <div class="section">
+                <h2>🔐 Credenciais de Acesso</h2>
+                <div class="credentials">
+                    <div class="field">
+                        <span class="label">Email:</span>
+                        <span class="value">admin@invistto.com.br</span>
+                    </div>
+                    <div class="field">
+                        <span class="label">Senha:</span>
+                        <span class="value">admin123</span>
+                    </div>
+                </div>
+                <center>
+                    <a href="http://localhost:3001" target="_blank" class="btn-primary">
+                        Acessar Admin Panel V2
+                    </a>
+                </center>
+            </div>
+
+            <!-- Funcionalidades -->
+            <div class="section">
+                <h2>✨ Funcionalidades Principais</h2>
+                <div class="features">
+                    <div class="feature">
+                        <div class="feature-icon">👥</div>
+                        <div class="feature-title">CRUD Usuários</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🏢</div>
+                        <div class="feature-title">Gestão de Bases</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Dashboard</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🔒</div>
+                        <div class="feature-title">Autenticação JWT</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">🌙</div>
+                        <div class="feature-title">Tema Dark/Light</div>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-title">Responsivo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Endpoints -->
+            <div class="section">
+                <h2>🔌 Endpoints Disponíveis (20 essenciais)</h2>
+                <div class="endpoints">
+                    <div class="endpoint">
+                        <span class="endpoint-method get">GET</span>
+                        <span>/usuarios</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method post">POST</span>
+                        <span>/usuarios</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method put">PUT</span>
+                        <span>/usuarios/:id</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method delete">DELETE</span>
+                        <span>/usuarios/:id</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method get">GET</span>
+                        <span>/bases</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method get">GET</span>
+                        <span>/system/status</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method post">POST</span>
+                        <span>/auth/login</span>
+                    </div>
+                    <div class="endpoint">
+                        <span class="endpoint-method get">GET</span>
+                        <span>/dashboard</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Como Testar -->
+            <div class="section">
+                <h2>🧪 Como Testar</h2>
+                <ol style="line-height: 1.8; padding-left: 20px;">
+                    <li><strong>Faça login</strong> com as credenciais fornecidas</li>
+                    <li><strong>Navegue pelo Dashboard</strong> para ver estatísticas</li>
+                    <li><strong>Acesse Usuários</strong> para testar o CRUD completo</li>
+                    <li><strong>Vá em Bases</strong> para configurações Firebird</li>
+                    <li><strong>Teste o tema</strong> clicando no ícone de lua/sol</li>
+                    <li><strong>Crie um usuário</strong> para testar formulários</li>
+                    <li><strong>Edite/Delete</strong> para testar operações</li>
+                    <li><strong>Faça logout</strong> e teste o login novamente</li>
+                </ol>
+            </div>
+
+            <!-- Informações Técnicas -->
+            <div class="section">
+                <h2>⚙️ Informações Técnicas</h2>
+                <div class="credentials">
+                    <div class="field">
+                        <span class="label">Stack Frontend:</span>
+                        <span class="value">React 18 + TypeScript + Vite</span>
+                    </div>
+                    <div class="field">
+                        <span class="label">UI Framework:</span>
+                        <span class="value">TailwindCSS + Headless UI</span>
+                    </div>
+                    <div class="field">
+                        <span class="label">Backend:</span>
+                        <span class="value">NestJS + Prisma + MySQL</span>
+                    </div>
+                    <div class="field">
+                        <span class="label">Redução de código:</span>
+                        <span class="value">84% (de 68 para 20 endpoints)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aviso -->
+            <div class="warning">
+                <strong>⚠️ Atenção:</strong> Esta é uma versão simplificada focada em funcionalidades essenciais.
+                Foram removidos: Analytics complexo, Monitoring, Métricas detalhadas, API Docs, Logs avançados.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-selecionar texto ao clicar nos valores
+        document.querySelectorAll('.value').forEach(element => {
+            element.addEventListener('click', function() {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(this);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+        });
+    </script>
+</body>
+</html>

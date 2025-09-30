@@ -25,7 +25,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { usersService, UsuarioResponseDto } from '@/services/users'
 import { basesService } from '@/services/bases'
-import { UserFormModal } from './UserFormModal'
+import { UserFormModalSimple } from './UserFormModalSimple'
 import { ApiUserFormModal } from './ApiUserFormModal'
 import { UserDetailModal } from './UserDetailModal'
 import { EndpointConfigModal } from './EndpointConfigModal'
@@ -1103,7 +1103,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
       {/* Modals */}
       {showFormModal && (
         (() => {
-          logger.info('🚀 Abrindo UserFormModal', 'USER', {
+          logger.info('🚀 Abrindo UserFormModalSimple', 'USER', {
             isEditing,
             selectedUser: selectedUser ? {
               id: selectedUser.id,
@@ -1121,11 +1121,11 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
           })
 
           return (
-            <UserFormModal
+            <UserFormModalSimple
               user={isEditing ? selectedUser : null}
               isOpen={showFormModal}
           onClose={() => {
-            logger.info('🚪 Fechando UserFormModal', 'USER')
+            logger.info('🚪 Fechando UserFormModalSimple', 'USER')
             setShowFormModal(false)
             setSelectedUser(null)
             setIsEditing(false)
@@ -1171,7 +1171,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
             )
           } else {
             return (
-              <UserFormModal
+              <UserFormModalSimple
                 user={null}
                 isOpen={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
