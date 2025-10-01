@@ -11,7 +11,8 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
   const { user, loading } = useAuth()
 
   // Verificação adicional de segurança - token deve existir
-  const token = localStorage.getItem('@ari:token')
+  // ✅ SEGURANÇA: Token em sessionStorage (expira ao fechar navegador)
+  const token = sessionStorage.getItem('@ari:token')
 
   if (loading) {
     return (

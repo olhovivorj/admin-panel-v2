@@ -50,15 +50,16 @@ api.interceptors.request.use(
 
     // Verificar se já tem credenciais API (X-API-Key e X-API-Secret)
     const hasApiCredentials = config.headers['X-API-Key'] && config.headers['X-API-Secret']
-    
+
     // Token de autenticação - NÃO adicionar se tem credenciais API
+    // ✅ SEGURANÇA: Token em sessionStorage expira ao fechar navegador
     if (!hasApiCredentials) {
-      const token = localStorage.getItem('@ari:token')
+      const token = sessionStorage.getItem('@ari:token')
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
         console.log('🔐 [API] Token presente no request:', token.substring(0, 20) + '...')
       } else {
-        console.warn('⚠️ [API] Nenhum token encontrado no localStorage')
+        console.warn('⚠️ [API] Nenhum token encontrado no sessionStorage')
       }
     } else {
       console.log('🔑 [API] Usando credenciais API (X-API-Key/Secret), ignorando JWT')
@@ -69,15 +70,22 @@ api.interceptors.request.use(
     if (!hasApiCredentials) {
       const selectedBaseId = localStorage.getItem('@ari:selectedBaseId')
       const selectedBaseCode = localStorage.getItem('@ari:selectedBase')
-      const userString = localStorage.getItem('@ari:user')
+      // ✅ SEGURANÇA: User em sessionStorage expira ao fechar navegador
+      const userString = sessionStorage.getItem('@ari:user')
       let isAdmin = false
       let userBaseId = null
 
-      // Verificar se é admin
+      // Verificar se é admin usando rolePriority
       if (userString) {
         try {
           const user = JSON.parse(userString)
-          isAdmin = user?.isMaster || user?.email === 'admin@invistto.com.br'
+          // Novo sistema: verificar rolePriority >= 80 (Admin ou superior)
+          if (user?.rolePriority !== undefined) {
+            isAdmin = user.rolePriority >= 80
+          } else {
+            // Fallback: sistema antigo
+            isAdmin = user?.isMaster === true
+          }
           userBaseId = user?.baseId
         } catch (e) {
           // Ignorar erro de parse
@@ -223,14 +231,17 @@ api.interceptors.response.use(
         method: error.config?.method,
         headers: error.config?.headers,
         response: error.response?.data,
-        hasToken: !!localStorage.getItem('@ari:token'),
+        hasToken: !!sessionStorage.getItem('@ari:token'),
       })
 
-      // SEGURANÇA: Limpar apenas dados de autenticação, preservar cache de bases
-      localStorage.removeItem('@ari:token')
-      localStorage.removeItem('@ari:user')
-      localStorage.removeItem('@ari:refreshToken')
+      // SEGURANÇA: Limpar todos dados de autenticação
       sessionStorage.clear()
+      // Preservar apenas cache de bases no localStorage
+      const cachedBases = localStorage.getItem('@ari:cachedBases')
+      localStorage.clear()
+      if (cachedBases) {
+        localStorage.setItem('@ari:cachedBases', cachedBases)
+      }
 
       // Mensagem simples, não objeto
       const errorMessage = typeof error.response?.data?.message === 'string'

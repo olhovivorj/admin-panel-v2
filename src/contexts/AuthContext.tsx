@@ -16,6 +16,10 @@ interface User {
   permissions: string[]
   tipoUsuario?: string
   canChangeBase?: boolean
+  // Novos campos do sistema de roles
+  roleId?: number
+  roleName?: string
+  rolePriority?: number
 }
 
 interface AuthContextData {
@@ -39,8 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadUserFromStorage() {
     try {
-      const token = localStorage.getItem('@ari:token')
-      const savedUser = localStorage.getItem('@ari:user')
+      // ✅ SEGURANÇA: Token em sessionStorage expira ao fechar navegador
+      const token = sessionStorage.getItem('@ari:token')
+      const savedUser = sessionStorage.getItem('@ari:user')
 
       logger.info('SECURITY CHECK', { hasToken: !!token, hasSavedUser: !!savedUser }, 'AUTH')
 
@@ -98,12 +103,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         permissions: userData.permissions || [],
         tipoUsuario: userData.tipoUsuario || 'COMUM',
         canChangeBase: userData.canChangeBase || false,
+        // Novos campos do sistema de roles
+        roleId: userData.roleId,
+        roleName: userData.roleName,
+        rolePriority: userData.rolePriority,
       }
 
-      localStorage.setItem('@ari:token', access_token)
-      localStorage.setItem('@ari:user', JSON.stringify(user))
+      // ✅ SEGURANÇA: Token em sessionStorage expira ao fechar navegador
+      sessionStorage.setItem('@ari:token', access_token)
+      sessionStorage.setItem('@ari:user', JSON.stringify(user))
 
-      // Salvar baseId selecionada para as requisições da API
+      // Salvar baseId selecionada para as requisições da API (localStorage OK)
       if (user.baseId) {
         localStorage.setItem('@ari:selectedBaseId', user.baseId.toString())
       }
@@ -122,7 +132,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.info(`Usuário ${user.name} (${user.role}) conectado à base ${user.baseId}`, 'AUTH')
 
       toast.success('Login realizado com sucesso!')
-      navigate('/dashboard')
+
+      // Aguardar React atualizar state antes de navegar
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 100)
     } catch (error: any) {
       logger.logAuth('login', email, false) // Log falha do login
 
@@ -199,7 +213,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.post('/auth/refresh')
       const { token } = response.data
 
-      localStorage.setItem('@ari:token', token)
+      // ✅ SEGURANÇA: Token em sessionStorage expira ao fechar navegador
+      sessionStorage.setItem('@ari:token', token)
       api.defaults.headers.authorization = `Bearer ${token}`
     } catch (error) {
       logout()

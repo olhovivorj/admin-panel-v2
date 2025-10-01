@@ -7,13 +7,14 @@ import { UserStats } from '@/components/users/UserStats'
 import { UserFilters as IUserFilters } from '@/types'
 import { useBase } from '@/contexts/BaseContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { isAdmin as checkIsAdmin } from '@/utils/roleHelpers'
 
 export function Users() {
   const [filters, setFilters] = useState<IUserFilters>({})
   const { selectedBaseId, selectedBaseCode, isLoading: baseLoading } = useBase()
   const { user } = useAuth()
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = checkIsAdmin(user)
 
   // IMPORTANTE: Hooks devem sempre ser chamados na mesma ordem
   // Buscar estatísticas - admin pode ver todas as bases

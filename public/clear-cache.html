@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Limpando Cache...</title>
+</head>
+<body>
+  <h1>Limpando cache do navegador...</h1>
+  <p>Você será redirecionado em 2 segundos.</p>
+  <script>
+    // Limpar TODO o localStorage
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Limpar cookies (se houver)
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+
+    console.log('✅ Cache limpo com sucesso!');
+
+    // Redirecionar para login após 2 segundos
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 2000);
+  </script>
+</body>
+</html>

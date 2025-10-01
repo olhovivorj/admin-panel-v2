@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import api from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
+import { isAdmin as checkIsAdmin } from '@/utils/roleHelpers'
 
 interface BulkLoadOptions {
   endpoint: string;
@@ -60,7 +61,7 @@ export function useBulkDataLoader() {
       }
 
       // 2. Determinar tamanho do batch baseado no role
-      const isAdmin = user?.role === 'admin' || user?.email === 'admin@invistto.com.br'
+      const isAdmin = checkIsAdmin(user)
       const batchSize = isAdmin ? 20000 : 5000
 
       // 3. Calcular número de batches necessários

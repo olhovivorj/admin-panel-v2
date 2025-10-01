@@ -123,7 +123,19 @@ export class PaginationManager {
   // Helpers para UI
   getPageSizeOptions(): number[] {
     // Verificar se é admin para mostrar opções maiores
-    const isAdmin = localStorage.getItem('@ari:user')?.includes('admin@invistto.com.br')
+    // ✅ SEGURANÇA: User em sessionStorage (expira ao fechar navegador)
+    const userString = sessionStorage.getItem('@ari:user')
+    let isAdmin = false
+
+    if (userString) {
+      try {
+        const user = JSON.parse(userString)
+        // Novo sistema: verificar rolePriority >= 80
+        isAdmin = user?.rolePriority ? user.rolePriority >= 80 : user?.isMaster === true
+      } catch (e) {
+        // Ignorar erro de parse
+      }
+    }
 
     const standardOptions = [100, 500, 1000, 2000, 5000]
     const adminOptions = [100, 500, 1000, 2000, 5000, 10000, 20000]

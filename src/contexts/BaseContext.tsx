@@ -5,6 +5,7 @@ import { appConfig } from '@/config/app.config'
 import toast from 'react-hot-toast'
 import { useAuth } from './AuthContext'
 import { logger } from '@/utils/logger'
+import { isAdmin as checkIsAdmin, canChangeBase as checkCanChangeBase } from '@/utils/roleHelpers'
 
 interface BaseContextData {
   bases: BaseWithStats[]
@@ -30,9 +31,9 @@ export function BaseProvider({ children }: { children: ReactNode }) {
   const [selectedBase, setSelectedBase] = useState<BaseWithStats | null>(null)
   const [selectedBaseId, setSelectedBaseId] = useState<number | null>(null)
 
-  // Verificar se usuário é admin através dos novos campos
-  const isAdmin = user?.isMaster || user?.email === 'admin@invistto.com.br'
-  const canSelectBase = user?.canChangeBase || isAdmin
+  // Verificar permissões usando roleHelpers
+  const isAdmin = checkIsAdmin(user)
+  const canSelectBase = checkCanChangeBase(user)
   const userBaseId = user?.baseId || null
 
   // Debug do usuário

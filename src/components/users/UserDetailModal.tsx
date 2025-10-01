@@ -7,6 +7,7 @@ import { Button } from '@/components/common/Button'
 import { LojasSelector } from './LojasSelector'
 import { useAuth } from '@/contexts/AuthContext'
 import { LojaAccessTest } from './LojaAccessTest'
+import { isAdmin as checkIsAdmin } from '@/utils/roleHelpers'
 
 interface UserDetailModalProps {
   user: UsuarioResponseDto
@@ -16,7 +17,7 @@ interface UserDetailModalProps {
 
 export function UserDetailModal({ user, isOpen, onClose }: UserDetailModalProps) {
   const { user: currentUser } = useAuth()
-  const isAdmin = currentUser?.role === 'admin'
+  const isAdmin = checkIsAdmin(currentUser)
 
   // Query para buscar bases (para mostrar nomes ao invés de IDs)
   const { data: bases = [], error: basesError } = useQuery({
