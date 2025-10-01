@@ -18,7 +18,7 @@ export interface UsuarioResponseDto {
   lastLogin?: string
   tipo_usuario?: 'NORMAL' | 'API'
   iduser?: number
-  ID_PESSOA?: number  // Nova coluna para vincular com ge_pessoa
+  id_pessoa?: number  // FK para ge_pessoa (ERP)
   pessoaNome?: string  // Nome da pessoa vinculada
   pessoaCpf?: string   // CPF da pessoa vinculada
   sysUserData?: any
@@ -44,7 +44,7 @@ export interface CreateUsuarioDto {
   ativo?: boolean
   tipo_usuario?: 'NORMAL' | 'API'
   iduser?: number
-  ID_PESSOA?: number   // Vincular com pessoa do ERP
+  id_pessoa?: number   // Vincular com pessoa do ERP
   plano_id?: number    // Plano de acesso (basic, standard, premium, admin)
   permissions?: string[]
   ip_whitelist?: string[]
@@ -185,6 +185,14 @@ export const usersService = {
   // Listar roles (cargos) disponíveis
   async getRoles() {
     const response = await api.get('/roles')
+    return response.data
+  },
+
+  // Buscar pessoas no ERP para vincular a novos usuários
+  async searchPessoaErp(search?: string) {
+    const response = await api.get('/erp/pessoas/disponiveis-vinculacao', {
+      params: { search }
+    })
     return response.data
   },
 }
