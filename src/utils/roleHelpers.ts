@@ -65,7 +65,7 @@ export function isSupervisor(user: UserWithRole | null): boolean {
 
 /**
  * Verifica se o usuário pode trocar de base
- * Apenas Admin (80+) pode trocar de base
+ * Apenas Master (100) pode trocar de base
  */
 export function canChangeBase(user: UserWithRole | null): boolean {
   if (!user) return false
@@ -75,9 +75,9 @@ export function canChangeBase(user: UserWithRole | null): boolean {
     return user.canChangeBase
   }
 
-  // Fallback: baseado em prioridade
+  // Fallback: baseado em prioridade - APENAS MASTER
   if (user.rolePriority !== undefined) {
-    return user.rolePriority >= 80
+    return user.rolePriority >= 100
   }
 
   // Fallback final: sistema antigo
