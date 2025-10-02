@@ -218,38 +218,35 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   })
 
   const toggleStatusMutation = useOperationToast({
-    mutationFn: usersService.toggleUserStatus,
+    mutationFn: ({ id, active }: { id: number; active: boolean }) =>
+      usersService.toggleUserStatus(id, active),
     loadingMessage: 'Alterando status...',
     successMessage: (returnedData) => {
       logger.info('✅ Toggle status sucesso - dados retornados:', returnedData, 'USER')
-      
-      // Debug: ver exatamente o que está sendo retornado
-      const status = returnedData.status
-      const ativo = returnedData.ativo
-      
-      logger.info('🔍 Debug mensagem sucesso:', 'USER', {
-        status,
-        ativo,
-        statusIsActive: status === 'active',
-        ativoIsTrue: ativo === true,
-      })
-      
+
       // Determinar se foi ativado ou inativado baseado nos dados retornados
-      const foiAtivado = status === 'active' || ativo === true
+      const ativo = returnedData?.data?.ativo ?? returnedData?.ativo
+      const foiAtivado = ativo === true || ativo === 1
+
+      logger.info('🔍 Debug mensagem sucesso:', 'USER', {
+        ativo,
+        foiAtivado,
+      })
+
       return `Usuário ${foiAtivado ? 'ativado' : 'inativado'} com sucesso!`
     },
     errorMessage: (error: any) => error.response?.data?.message || 'Erro ao alterar status',
-    toastId: (userId) => `toggle-${userId}`,
+    toastId: ({ id }) => `toggle-${id}`,
     onSuccess: async (data) => {
       logger.info('🔄 onSuccess do toggleStatusMutation', 'USER', { data })
-      
+
       // Pequeno delay para garantir que o backend processou
       await new Promise(resolve => setTimeout(resolve, 500))
-      
+
       // Invalidar todas as queries relacionadas
       await queryClient.invalidateQueries({ queryKey: ['users'] })
       await queryClient.invalidateQueries({ queryKey: ['user-stats'] })
-      
+
       // Forçar refetch imediato
       await refetch()
     },
@@ -394,6 +391,11 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
     }
   }
 
+  // Helper para verificar se usuário está ativo
+  const isUserActive = (user: UsuarioResponseDto) => {
+    return user.ativo === true || user.ativo === 1
+  }
+
   const handleDelete = async (user: UsuarioResponseDto) => {
     if (window.confirm(`Tem certeza que deseja remover o usuário "${user.name}"?`)) {
       try {
@@ -423,22 +425,24 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   }
 
   const handleToggleStatus = async (user: UsuarioResponseDto) => {
-    const isCurrentlyActive = user.status === 'active'
+    const isCurrentlyActive = user.ativo === true || user.ativo === 1
+    const newActiveValue = !isCurrentlyActive
     const action = isCurrentlyActive ? 'inativar' : 'ativar'
-    
+
     logger.info('🎯 Toggle status iniciado:', 'USER', {
       userId: user.id,
       userName: user.name,
-      currentStatus: user.status,
+      ativo: user.ativo,
       isCurrentlyActive,
+      newActiveValue,
       action,
     })
-    
+
     if (window.confirm(`Tem certeza que deseja ${action} o usuário "${user.name}"?`)) {
       try {
-        const result = await toggleStatusMutation.mutateAsync(user.id)
+        const result = await toggleStatusMutation.mutateAsync({ id: user.id, active: newActiveValue })
         logger.info('✅ Toggle status resultado:', 'USER', result)
-        
+
         // Forçar atualização imediata
         logger.info('🔄 Forçando refetch após toggle status', 'USER')
         await refetch()
@@ -698,7 +702,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
                     name: user.name,
                     status: user.status,
                     ativo: user.ativo,
-                    statusIsActive: user.status === 'active',
+                    isActive: isUserActive(user),
                   })
                   
                   return (
@@ -798,17 +802,16 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          {user.status === 'active' ? (
+                          {isUserActive(user) ? (
                             <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
                           ) : (
                             <XCircleIcon className="h-5 w-5 text-red-500 mr-2" />
                           )}
                           <span className={cn(
                             'text-sm',
-                            user.status === 'active' ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400',
+                            isUserActive(user) ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400',
                           )}>
-                            {user.status === 'active' ? 'Ativo' :
-                              user.status === 'suspended' ? 'Suspenso' : 'Inativo'}
+                            {isUserActive(user) ? 'Ativo' : 'Inativo'}
                           </span>
                         </div>
                       </td>
@@ -927,14 +930,14 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
                                         disabled={toggleStatusMutation.isPending}
                                         className={cn(
                                           active ? 'bg-gray-100 dark:bg-gray-700' : '',
-                                          user.status === 'active' 
-                                            ? 'text-red-600 hover:text-red-700' 
+                                          isUserActive(user)
+                                            ? 'text-red-600 hover:text-red-700'
                                             : 'text-green-600 hover:text-green-700',
                                           'group flex items-center px-4 py-2 text-sm w-full',
                                           toggleStatusMutation.isPending && 'opacity-50 cursor-not-allowed'
                                         )}
                                       >
-                                        {user.status === 'active' ? (
+                                        {isUserActive(user) ? (
                                           <>
                                             <XCircleIcon className="mr-3 h-5 w-5" aria-hidden="true" />
                                             Inativar
@@ -1042,11 +1045,11 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
                                 })
                                 handleToggleStatus(user)
                               }}
-                              title={user.status === 'active' ? 'Inativar' : 'Ativar'}
+                              title={isUserActive(user) ? 'Inativar' : 'Ativar'}
                               disabled={toggleStatusMutation.isPending}
-                              className={user.status === 'active' ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}
+                              className={isUserActive(user) ? 'text-red-600 hover:text-red-800' : 'text-green-600 hover:text-green-800'}
                             >
-                              {user.status === 'active' ? <XCircleIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
+                              {isUserActive(user) ? <XCircleIcon className="h-4 w-4" /> : <CheckCircleIcon className="h-4 w-4" />}
                             </Button>
                             <Button
                               size="sm"

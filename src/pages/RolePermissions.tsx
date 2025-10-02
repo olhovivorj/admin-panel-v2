@@ -100,7 +100,7 @@ export const RolePermissions = () => {
         permissions: permissionsArray,
       })
 
-      alert('Permissões salvas com sucesso!')
+      navigate('/roles')
     } catch (error) {
       logger.error('Erro ao salvar permissões:', error)
       alert('Erro ao salvar permissões')
@@ -109,8 +109,52 @@ export const RolePermissions = () => {
     }
   }
 
-  // Agrupar páginas por categoria
-  const pagesByCategory = pages.reduce((acc, page) => {
+  const handleSelectAll = () => {
+    setPermissions((prev) => {
+      const newMap = new Map(prev)
+      activePages.forEach((page) => {
+        newMap.set(page.id, {
+          page_id: page.id,
+          can_access: true,
+          can_edit: true,
+          can_delete: true,
+        })
+      })
+      return newMap
+    })
+  }
+
+  const handleDeselectAll = () => {
+    setPermissions(new Map())
+  }
+
+  const handleInvertSelection = () => {
+    setPermissions((prev) => {
+      const newMap = new Map()
+      activePages.forEach((page) => {
+        const current = prev.get(page.id)
+        const hasAnyPermission = current && (current.can_access || current.can_edit || current.can_delete)
+
+        if (!hasAnyPermission) {
+          // Se não tinha nenhuma permissão, marca todas
+          newMap.set(page.id, {
+            page_id: page.id,
+            can_access: true,
+            can_edit: true,
+            can_delete: true,
+          })
+        }
+        // Se tinha alguma permissão, não adiciona ao mapa (desmarca)
+      })
+      return newMap
+    })
+  }
+
+  // Filtrar apenas páginas ativas
+  const activePages = pages.filter((page) => page.is_active)
+
+  // Agrupar páginas ativas por categoria
+  const pagesByCategory = activePages.reduce((acc, page) => {
     const category = page.category || 'Sem categoria'
     if (!acc[category]) acc[category] = []
     acc[category].push(page)
@@ -139,7 +183,31 @@ export const RolePermissions = () => {
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 overflow-hidden border border-gray-200 dark:border-gray-700">
         <div className="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="font-semibold text-gray-900 dark:text-white">Páginas do Sistema</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-semibold text-gray-900 dark:text-white">
+              Páginas do Sistema ({activePages.length} ativas)
+            </h2>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSelectAll}
+                className="px-3 py-1 text-sm border border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors"
+              >
+                Selecionar Todas
+              </button>
+              <button
+                onClick={handleDeselectAll}
+                className="px-3 py-1 text-sm border border-red-600 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+              >
+                Desmarcar Todas
+              </button>
+              <button
+                onClick={handleInvertSelection}
+                className="px-3 py-1 text-sm border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+              >
+                Inverter Seleção
+              </button>
+            </div>
+          </div>
           <button
             onClick={handleSave}
             disabled={saving}

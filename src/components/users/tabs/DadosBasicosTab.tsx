@@ -135,8 +135,8 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+    <div className="space-y-3">
+      <h3 className="text-base font-medium text-gray-900 dark:text-white mb-2">
         Informações Básicas
       </h3>
 
@@ -193,7 +193,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
             </>
           )}
 
-          {searchTerm.length >= 3 && searchResults.length === 0 && !isSearching && (
+          {!isEditing && searchTerm.length >= 3 && searchResults.length === 0 && !isSearching && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
               Nenhuma pessoa encontrada
             </p>
@@ -363,12 +363,12 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
       {/* Usuário ativo */}
       <div className="flex items-center">
         <input
-          {...register('ativo')}
+          {...register('active')}
           type="checkbox"
-          id="ativo"
+          id="active"
           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
         />
-        <label htmlFor="ativo" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+        <label htmlFor="active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
           Usuário ativo
         </label>
       </div>

@@ -60,22 +60,25 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
   const fetchLojas = async () => {
     setIsLoading(true)
     try {
-      const response = await api.get(`/empresas/${baseId}`)
-      const data = response.data?.success ? response.data.data : response.data
+      const response = await api.get(`/bases/${baseId}/lojas`)
+      const data = response.data?.data || response.data
 
-      // Mapear dados do endpoint /empresas para o formato esperado
+      console.log('📊 Response lojas:', { baseId, data })
+
+      // Mapear dados do endpoint /bases/:id/lojas para o formato esperado
       const lojasFormatadas = Array.isArray(data) ? data.map((empresa: any) => ({
-        id_empresa: empresa.ID_EMPRESA,
-        codigo: empresa.ID_EMPRESA?.toString() || '',
-        razao_social: empresa.NOME_EMPRESA || 'Sem nome',
-        nome_fantasia: empresa.NOME_EMPRESA || 'Sem nome',
-        cnpj: '', // Não disponível no endpoint atual
-        logo_url: '',
-        data_inicio: '',
-        ativo: empresa.ativo || false, // Usar campo calculado do backend
+        id_empresa: empresa.ID_EMPRESA || empresa.id_empresa,
+        codigo: (empresa.ID_EMPRESA || empresa.id_empresa)?.toString() || '',
+        razao_social: empresa.RAZAO_SOCIAL || empresa.NOME_EMPRESA || 'Sem nome',
+        nome_fantasia: empresa.NOME_FANTASIA || empresa.NOME_EMPRESA || 'Sem nome',
+        cnpj: empresa.CNPJ || '',
+        logo_url: empresa.LOGO_URL || '',
+        data_inicio: empresa.DATA_INICIO || empresa.data_inicio || new Date().toISOString(),
+        ativo: empresa.ATIVO === 1 || empresa.ATIVO === true || empresa.ativo === true,
         atividade: empresa.ATIVIDADE || '',
       })) : []
 
+      console.log('📦 Lojas formatadas:', lojasFormatadas)
       setLojas(lojasFormatadas)
     } catch (error) {
       console.error('Erro ao buscar lojas:', error)

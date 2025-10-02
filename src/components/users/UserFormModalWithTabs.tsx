@@ -99,6 +99,17 @@ export function UserFormModalWithTabs({
   // Carregar dados ao editar
   useEffect(() => {
     if (user && isOpen) {
+      const ativoValue = user.ativo === true || user.ativo === 1
+      console.log('🔍 DEBUG UserFormModalWithTabs:', {
+        userId: user.id,
+        userName: user.name,
+        ativo_raw: user.ativo,
+        ativo_type: typeof user.ativo,
+        ativo_calculado: ativoValue,
+        status_raw: user.status,
+        active_raw: user.active,
+      })
+
       reset({
         name: user.name,
         email: user.email,
@@ -106,7 +117,7 @@ export function UserFormModalWithTabs({
         role_id: user.role_id || undefined,
         id_pessoa: user.id_pessoa || undefined,
         tipo_usuario: user.tipo_usuario || 'NORMAL',
-        active: user.ativo === true || user.ativo === 1, // Usar campo ativo do backend
+        active: ativoValue, // Usar campo ativo do backend
         rate_limit_per_hour: user.rate_limit_per_hour,
       })
     } else if (!user && isOpen) {

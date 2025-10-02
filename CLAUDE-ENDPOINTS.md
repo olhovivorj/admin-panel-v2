@@ -1,5 +1,10 @@
 # 📡 MAPEAMENTO DE ENDPOINTS - ADMIN PANEL V2 (SIMPLIFICADO)
 
+## 🏗️ ARQUITETURA
+- **Frontend:** admin-panel-v2 (React + Vite + TypeScript)
+- **Backend:** ari-nest (NestJS + Prisma + MySQL)
+- **API Base URL:** `http://localhost:3000/api`
+
 ## 📊 RESUMO APÓS LIMPEZA RADICAL
 - **Total de Endpoints:** 20
 - **Services Ativos:** 4 (api, users, bases, system)
@@ -35,6 +40,7 @@
 
 ## 👥 USERS PAGE
 **Service:** `src/services/users.ts` (simplificado)
+**Backend:** `ari-nest/src/modules/usuario/controllers/usuarios.controller.ts`
 
 | Endpoint | Método | Usado? | Descrição |
 |----------|--------|--------|-----------|
@@ -44,8 +50,50 @@
 | `/usuarios/{id}` | PUT | ✅ | Atualizar usuário |
 | `/usuarios/{id}` | DELETE | ✅ | Deletar usuário |
 | `/usuarios/{id}/change-password` | PUT | ✅ | Trocar senha |
-| `/usuarios/bases` | GET | ✅ | Bases do usuário |
+| `/usuarios/bases` | GET | ✅ | Bases do usuário (122 bases) |
 | `/usuarios/check-email` | GET | ✅ | Verificar email disponível |
+
+### 📦 Campos Retornados (GET /usuarios)
+```typescript
+{
+  id: number                      // ID do usuário
+  email: string                   // Email único
+  name: string                    // Nome completo
+  tipo_usuario: string            // "NORMAL", "ADMIN", etc
+  baseId: number | null           // ID da base vinculada
+  status: string                  // "active", "inactive"
+  ativo: boolean                  // Status ativo/inativo
+  role: string                    // "user", "admin"
+  id_pessoa: number | null        // ID da pessoa (ge_pessoa)
+  permissions: string[] | null    // Permissões customizadas
+  iduser: number | null           // ID do sys_users (se vinculado)
+  rate_limit_per_hour: number     // Limite de requisições/hora
+  createdAt: string               // Data de criação
+  updatedAt: string               // Data de atualização
+  lastLogin: string | null        // Último login
+  ultimo_acesso_api: string | null // Último acesso via API
+  total_requisicoes_api: number   // Total de requisições realizadas
+  baseInfo: {
+    name: string                  // Nome da base
+    description: string           // Descrição da base
+    hasAccess: boolean            // Tem acesso à base
+  }
+}
+```
+
+### 📄 Paginação (GET /usuarios)
+```typescript
+{
+  success: true,
+  data: {
+    users: Usuario[],             // Array de usuários
+    total: number,                // Total de registros
+    page: number,                 // Página atual
+    limit: number,                // Itens por página
+    totalPages: number            // Total de páginas
+  }
+}
+```
 
 ---
 
