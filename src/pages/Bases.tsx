@@ -16,14 +16,12 @@ import { logger } from '@/utils/logger'
 export function Bases() {
   const [bases, setBases] = useState<BaseWithStats[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadingStats, setLoadingStats] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedBase, setSelectedBase] = useState<BaseWithStats | null>(null)
   const [showFirebirdModal, setShowFirebirdModal] = useState(false)
   const [showLojasModal, setShowLojasModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [showOnlyWithData, setShowOnlyWithData] = useState(false)
-  const [sortBy, setSortBy] = useState<'name' | 'users' | 'clients' | 'companies'>('companies')
+  const [sortBy, setSortBy] = useState<'name'>('name')
 
   useEffect(() => {
     carregarBases()
@@ -34,40 +32,14 @@ export function Bases() {
       setLoading(true)
       setError(null)
 
-      // Primeira etapa: Carregar bases básicas (rápido)
-      logger.info('Carregando bases básicas', 'BASE')
-      const basesData = await basesService.getBasesSimples()
-
-      // Mostrar bases sem estatísticas primeiro
-      const basesComPlaceholder = basesData.map(base => ({
-        ...base,
-        total_usuarios: 0,
-        total_clientes: 0,
-        total_empresas: 0,
-        total_pessoas: 0,
-        total_fornecedores: 0,
-        _calculandoStats: true, // Flag para mostrar loading nas estatísticas
-      }))
-
-      setBases(basesComPlaceholder)
-      setLoading(false) // Interface já pode ser usada
-
-      // Segunda etapa: Calcular estatísticas (mais lento)
-      logger.info('Calculando estatísticas', 'BASE')
-      setLoadingStats(true)
-
-      // Recarregar com estatísticas completas
-      const basesCompletas = await basesService.getBases()
-      setBases(basesCompletas.map(base => ({
-        ...base,
-        _calculandoStats: false,
-      })))
+      logger.info('Carregando bases', 'BASE')
+      const basesData = await basesService.getBases()
+      setBases(basesData)
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar bases')
-      setLoading(false)
     } finally {
-      setLoadingStats(false)
+      setLoading(false)
     }
   }
 
@@ -117,21 +89,9 @@ export function Bases() {
     }
   }
 
-  // Filtrar e ordenar bases com base no termo de busca, dados e ordenação
+  // Filtrar e ordenar bases com base no termo de busca e ordenação
   const filteredBases = useMemo(() => {
     let filtered = bases
-
-    // Filtro por dados (se ativado)
-    if (showOnlyWithData) {
-      filtered = filtered.filter(base => {
-        const hasData = (base.total_usuarios || 0) > 0 ||
-                       (base.total_clientes || 0) > 0 ||
-                       (base.total_empresas || 0) > 0 ||
-                       (base.total_pessoas || 0) > 0 ||
-                       (base.total_fornecedores || 0) > 0
-        return hasData
-      })
-    }
 
     // Filtro por busca
     if (searchTerm.trim()) {
@@ -144,24 +104,13 @@ export function Bases() {
       )
     }
 
-    // Ordenação
+    // Ordenação por nome
     filtered = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return (a.NOME || '').localeCompare(b.NOME || '')
-        case 'users':
-          return (b.total_usuarios || 0) - (a.total_usuarios || 0)
-        case 'clients':
-          return (b.total_clientes || 0) - (a.total_clientes || 0)
-        case 'companies':
-          return (b.total_empresas || 0) - (a.total_empresas || 0)
-        default:
-          return 0
-      }
+      return (a.NOME || '').localeCompare(b.NOME || '')
     })
 
     return filtered
-  }, [bases, searchTerm, showOnlyWithData, sortBy])
+  }, [bases, searchTerm, sortBy])
 
   if (loading) {
     return (
@@ -214,18 +163,9 @@ export function Bases() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Bases de Dados
         </h1>
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {filteredBases.length} de {bases.length} bases
-            {searchTerm && ` (busca: "${searchTerm}")`}
-            {showOnlyWithData && ' (com dados)'}
-          </div>
-          {loadingStats && (
-            <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              <span>Calculando estatísticas...</span>
-            </div>
-          )}
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          {filteredBases.length} de {bases.length} bases
+          {searchTerm && ` (busca: "${searchTerm}")`}
         </div>
       </div>
 
@@ -255,37 +195,6 @@ export function Bases() {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center">
-              <input
-                id="showOnlyWithData"
-                type="checkbox"
-                checked={showOnlyWithData}
-                onChange={(e) => setShowOnlyWithData(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
-              />
-              <label htmlFor="showOnlyWithData" className="ml-2 block text-sm text-gray-900 dark:text-white">
-                Mostrar apenas bases com dados
-              </label>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="sortBy" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Ordenar por:
-              </label>
-              <select
-                id="sortBy"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="companies">Maior número de empresas</option>
-                <option value="users">Maior número de usuários</option>
-                <option value="clients">Maior número de clientes</option>
-                <option value="name">Nome da base (A-Z)</option>
-              </select>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -299,9 +208,6 @@ export function Bases() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Status Firebird
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Estatísticas
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Ações
@@ -336,34 +242,6 @@ export function Bases() {
                         {base.firebird_host}:{base.firebird_port}
                       </div>
                     )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span>Empresas:</span>
-                        {(base as any)._calculandoStats ? (
-                          <div className="animate-pulse w-8 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                        ) : (
-                          <span className="font-medium text-blue-600 dark:text-blue-400">{base.total_empresas || 0}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>Usuários:</span>
-                        {(base as any)._calculandoStats ? (
-                          <div className="animate-pulse w-8 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                        ) : (
-                          <span className="font-medium">{base.total_usuarios || 0}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span>Clientes:</span>
-                        {(base as any)._calculandoStats ? (
-                          <div className="animate-pulse w-8 h-3 bg-gray-200 dark:bg-gray-600 rounded"></div>
-                        ) : (
-                          <span className="font-medium">{base.total_clientes || 0}</span>
-                        )}
-                      </div>
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                     <button

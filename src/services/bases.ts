@@ -4,15 +4,7 @@ import { logger } from '@/utils/logger'
 
 export interface BaseWithStats extends Base {
   ID_BASE?: number // Compatibilidade com backend
-  total_usuarios?: number // Campos do backend
-  total_clientes?: number
-  total_empresas?: number
-  total_vendedores?: number
-  total_fornecedores?: number
-  total_pessoas?: number
   ativo?: boolean
-  clienteCount?: number
-  vendaCount?: number
   lastActivity?: string
   isActive?: boolean
   // Configurações Firebird

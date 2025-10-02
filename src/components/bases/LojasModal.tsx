@@ -59,30 +59,47 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
 
   const fetchLojas = async () => {
     setIsLoading(true)
-    try {
-      const response = await api.get(`/bases/${baseId}/lojas`)
-      const data = response.data?.data || response.data
+    console.log('🔍 Iniciando busca de lojas para baseId:', baseId)
 
-      console.log('📊 Response lojas:', { baseId, data })
+    try {
+      const url = `/bases/${baseId}/lojas`
+      console.log('🌐 URL da requisição:', url)
+
+      const response = await api.get(url)
+      console.log('✅ Response completa:', response)
+      console.log('📦 Response.data:', response.data)
+
+      const data = response.data?.data || response.data
+      console.log('📊 Data extraída:', data)
 
       // Mapear dados do endpoint /bases/:id/lojas para o formato esperado
-      const lojasFormatadas = Array.isArray(data) ? data.map((empresa: any) => ({
-        id_empresa: empresa.ID_EMPRESA || empresa.id_empresa,
-        codigo: (empresa.ID_EMPRESA || empresa.id_empresa)?.toString() || '',
-        razao_social: empresa.RAZAO_SOCIAL || empresa.NOME_EMPRESA || 'Sem nome',
-        nome_fantasia: empresa.NOME_FANTASIA || empresa.NOME_EMPRESA || 'Sem nome',
-        cnpj: empresa.CNPJ || '',
-        logo_url: empresa.LOGO_URL || '',
-        data_inicio: empresa.DATA_INICIO || empresa.data_inicio || new Date().toISOString(),
-        ativo: empresa.ATIVO === 1 || empresa.ATIVO === true || empresa.ativo === true,
-        atividade: empresa.ATIVIDADE || '',
-      })) : []
+      const lojasFormatadas = Array.isArray(data) ? data.map((empresa: any) => {
+        console.log('🏪 Mapeando empresa:', empresa)
+        return {
+          id_empresa: empresa.ID_EMPRESA || empresa.id_empresa,
+          codigo: (empresa.ID_EMPRESA || empresa.id_empresa)?.toString() || '',
+          razao_social: empresa.RAZAO_SOCIAL || empresa.razao_social || empresa.NOME_EMPRESA || 'Sem nome',
+          nome_fantasia: empresa.NOME_FANTASIA || empresa.nome_fantasia || empresa.NOME_EMPRESA || 'Sem nome',
+          cnpj: empresa.CNPJ || empresa.cnpj || '',
+          logo_url: empresa.LOGO_URL || empresa.logo_url || '',
+          data_inicio: empresa.DATA_INICIO || empresa.data_inicio || new Date().toISOString(),
+          ativo: empresa.ATIVO === 1 || empresa.ATIVO === true || empresa.ativo === true || empresa.ativo === 1,
+          atividade: empresa.ATIVIDADE || empresa.atividade || '',
+        }
+      }) : []
 
-      console.log('📦 Lojas formatadas:', lojasFormatadas)
+      console.log('✨ Lojas formatadas final:', lojasFormatadas)
+      console.log('📈 Total de lojas:', lojasFormatadas.length)
       setLojas(lojasFormatadas)
-    } catch (error) {
-      console.error('Erro ao buscar lojas:', error)
-      toast.error('Erro ao carregar lojas')
+
+      if (lojasFormatadas.length === 0) {
+        toast.info('Nenhuma loja encontrada nesta base')
+      }
+    } catch (error: any) {
+      console.error('❌ Erro completo:', error)
+      console.error('❌ Error.response:', error.response)
+      console.error('❌ Error.message:', error.message)
+      toast.error(error.response?.data?.message || 'Erro ao carregar lojas')
       setLojas([])
     } finally {
       setIsLoading(false)

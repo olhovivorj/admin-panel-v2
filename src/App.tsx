@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { BaseProvider } from '@/contexts/BaseContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { SidebarProvider } from '@/contexts/SidebarContext'
 import { Layout } from '@/components/layout/Layout'
 import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
@@ -32,7 +33,8 @@ function App() {
           <BrowserRouter>
             <AuthProvider>
               <BaseProvider>
-                <Routes>
+                <SidebarProvider>
+                  <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route
                     path="/"
@@ -51,29 +53,30 @@ function App() {
                     <Route path="roles/:roleId/permissions" element={<RolePermissions />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                    success: {
-                      iconTheme: {
-                        primary: '#10b981',
-                        secondary: '#fff',
+                  </Routes>
+                  <Toaster
+                    position="top-right"
+                    toastOptions={{
+                      duration: 4000,
+                      style: {
+                        background: '#363636',
+                        color: '#fff',
                       },
-                    },
-                    error: {
-                      iconTheme: {
-                        primary: '#ef4444',
-                        secondary: '#fff',
+                      success: {
+                        iconTheme: {
+                          primary: '#10b981',
+                          secondary: '#fff',
+                        },
                       },
-                    },
-                  }}
-                />
+                      error: {
+                        iconTheme: {
+                          primary: '#ef4444',
+                          secondary: '#fff',
+                        },
+                      },
+                    }}
+                  />
+                </SidebarProvider>
               </BaseProvider>
             </AuthProvider>
           </BrowserRouter>
