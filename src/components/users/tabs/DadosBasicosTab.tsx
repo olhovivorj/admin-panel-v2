@@ -9,11 +9,13 @@ interface DadosBasicosTabProps {
   watch: UseFormWatch<any>
   setValue: UseFormSetValue<any>
   errors: FieldErrors
+  user: any | null
   isEditing: boolean
   selectedBaseId: number
+  isOpen: boolean
 }
 
-export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, selectedBaseId }: DadosBasicosTabProps) => {
+export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEditing, selectedBaseId, isOpen }: DadosBasicosTabProps) => {
   const tipoUsuario = watch('tipo_usuario')
   const [searchTerm, setSearchTerm] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -21,9 +23,41 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
   const [selectedPessoa, setSelectedPessoa] = useState<any>(null)
   const [showPassword, setShowPassword] = useState(false)
 
+  // DEBUG
+  console.log('🔍 DEBUG:', {
+    isEditing,
+    'user?.id_pessoa': user?.id_pessoa,
+    'user?.name': user?.name,
+    'watch(name)': watch('name'),
+    'Deve desabilitar?': isEditing && !!user?.id_pessoa
+  })
+
+  // Carregar pessoa quando estiver editando
+  useEffect(() => {
+    if (isOpen && isEditing && user?.id_pessoa) {
+      // Simular pessoa selecionada com dados básicos do usuário
+      setSelectedPessoa({
+        id_pessoa: user.id_pessoa,
+        nome: user.pessoaNome || user.name, // Priorizar pessoaNome se existir
+      })
+      // Preencher o campo de busca com o nome da pessoa
+      setSearchTerm(user.pessoaNome || user.name || '')
+    } else if (!isOpen) {
+      // Limpar estados quando modal fechar
+      setSelectedPessoa(null)
+      setSearchTerm('')
+      setSearchResults([])
+    }
+  }, [isOpen, isEditing, user])
+
   // Debounced search
   useEffect(() => {
     const searchPessoas = async () => {
+      // Não buscar se estiver editando e já tiver pessoa selecionada
+      if (isEditing && selectedPessoa) {
+        return
+      }
+
       if (searchTerm.length < 3 || !selectedBaseId || tipoUsuario === 'API') {
         setSearchResults([])
         return
@@ -31,7 +65,8 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
 
       setIsSearching(true)
       try {
-        const results = await usersService.searchPessoas(searchTerm, selectedBaseId)
+        const response = await usersService.searchPessoaErp(searchTerm)
+        const results = response.data || []
         setSearchResults(Array.isArray(results) ? results : [])
       } catch (error) {
         logger.error('Erro ao buscar pessoas:', error)
@@ -43,7 +78,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
 
     const timer = setTimeout(searchPessoas, 500)
     return () => clearTimeout(timer)
-  }, [searchTerm, selectedBaseId, tipoUsuario])
+  }, [searchTerm, selectedBaseId, tipoUsuario, isEditing, selectedPessoa])
 
   const handlePessoaSelected = async (idPessoa: number) => {
     setIsSearching(true)
@@ -51,25 +86,29 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
     setSearchTerm('')
 
     try {
-      // Validar se pessoa já está vinculada a outro usuário
-      const usuariosResponse = await usersService.getUsers({ baseId: selectedBaseId })
-      const usuarios = usuariosResponse.data?.users || usuariosResponse.data || []
-      const usuarioExistente = usuarios.find((u: any) => u.id_pessoa === idPessoa)
+      // Buscar pessoa nos resultados (já tem dados completos)
+      const pessoa = searchResults.find((p: any) => (p.id_pessoa || p.ID_PESSOA) === idPessoa)
 
-      if (usuarioExistente) {
-        toast.error(`⚠️ Esta pessoa já está vinculada ao usuário: ${usuarioExistente.name}`)
+      if (!pessoa) {
+        toast.error('Pessoa não encontrada')
         setIsSearching(false)
         return
       }
 
-      const pessoaData = await usersService.getPessoaData(idPessoa, selectedBaseId)
-      setSelectedPessoa(pessoaData)
+      // Verificar se já está vinculada (flag do backend)
+      if (pessoa.ja_vinculado) {
+        toast.error(`⚠️ Esta pessoa já está vinculada a outro usuário`)
+        setIsSearching(false)
+        return
+      }
 
-      // Auto-fill form fields - mapeamento de campos UPPERCASE do ERP
-      setValue('id_pessoa', idPessoa)
-      const nome = pessoaData.RAZAO || pessoaData.nome || pessoaData.FANTASIA
-      const email = pessoaData.EMAIL || pessoaData.email
-      const telefone = pessoaData.FAX || pessoaData.TELEFONE || pessoaData.CELULAR || pessoaData.celular // FAX = celular
+      setSelectedPessoa(pessoa)
+
+      // Auto-fill form fields
+      setValue('id_pessoa', pessoa.id_pessoa)
+      const nome = pessoa.nome
+      const email = pessoa.email
+      const telefone = pessoa.telefone
 
       // Nome sempre vem do ERP (read-only)
       if (nome) setValue('name', nome.trim())
@@ -102,17 +141,23 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
       </h3>
 
       {/* Seletor de Pessoa (apenas para usuários NORMAL) */}
-      {tipoUsuario === 'NORMAL' && !watch('id_pessoa') && (
+      {tipoUsuario === 'NORMAL' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Filtrar por nome
+            {isEditing ? 'Nome da pessoa (não editável ao editar)' : 'Filtrar por nome'}
           </label>
           <input
             type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white mb-2"
-            placeholder="Digite para filtrar (mínimo 3 caracteres)"
+            value={isEditing ? (watch('name') || user?.name || '') : searchTerm}
+            onChange={(e) => !isEditing && setSearchTerm(e.target.value)}
+            disabled={isEditing}
+            readOnly={isEditing}
+            className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md mb-2 ${
+              isEditing
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-900 dark:bg-gray-700 dark:text-white'
+            }`}
+            placeholder={isEditing ? '' : 'Digite para filtrar (mínimo 3 caracteres)'}
           />
 
           {isSearching && (
@@ -135,11 +180,13 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
                 <option value="">-- Selecione uma pessoa --</option>
                 {searchResults.map((pessoa) => (
                   <option
-                    key={pessoa.id || pessoa.ID_PESSOA}
-                    value={pessoa.id || pessoa.ID_PESSOA}
+                    key={pessoa.id_pessoa}
+                    value={pessoa.id_pessoa}
+                    disabled={pessoa.ja_vinculado}
                   >
-                    {pessoa.nome || pessoa.RAZAO}
+                    {pessoa.nome}
                     {pessoa.email ? ` - ${pessoa.email}` : ''}
+                    {pessoa.ja_vinculado ? ' (já vinculado)' : ''}
                   </option>
                 ))}
               </select>
@@ -163,19 +210,21 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, isEditing, 
                 ✅ Pessoa Selecionada
               </p>
               <p className="text-sm text-green-800 dark:text-green-200">
-                <strong>{selectedPessoa.nome || selectedPessoa.RAZAO}</strong>
+                <strong>{selectedPessoa.nome}</strong>
               </p>
               <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                ID: {selectedPessoa.id || selectedPessoa.ID_PESSOA}
+                ID: {selectedPessoa.id_pessoa}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleRemovePessoa}
-              className="text-red-600 hover:text-red-800 text-sm font-medium"
-            >
-              Trocar
-            </button>
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={handleRemovePessoa}
+                className="text-red-600 hover:text-red-800 text-sm font-medium"
+              >
+                Trocar
+              </button>
+            )}
           </div>
         </div>
       )}
