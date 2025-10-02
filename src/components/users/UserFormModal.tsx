@@ -786,40 +786,39 @@ Clique OK para criar o usuário
               )}
             </div>
 
-            {!isEditing && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Senha {isApiUser && <span className="text-xs text-gray-500">(temporária para primeiro acesso)</span>}
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('password')}
-                    type={showPassword ? 'text' : 'password'}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={isApiUser ? 'Senha temporária' : 'Senha (mínimo 6 caracteres)'}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
-                )}
-                {isApiUser && (
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Usuários API autenticam via API Key/Secret, mas uma senha temporária é necessária para criação.
-                  </p>
-                )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Senha {isEditing && <span className="text-xs text-gray-500">(deixe vazio para manter atual)</span>}
+                {isApiUser && <span className="text-xs text-gray-500">(temporária para primeiro acesso)</span>}
+              </label>
+              <div className="relative">
+                <input
+                  {...register('password')}
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={isEditing ? 'Nova senha (opcional)' : isApiUser ? 'Senha temporária' : 'Senha (mínimo 6 caracteres)'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                  )}
+                </button>
               </div>
-            )}
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+              )}
+              {isApiUser && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Usuários API autenticam via API Key/Secret, mas uma senha temporária é necessária para criação.
+                </p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
