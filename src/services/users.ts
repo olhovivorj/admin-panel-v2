@@ -11,6 +11,7 @@ export interface UsuarioResponseDto {
   role: 'admin' | 'user' | 'operator' | 'viewer'
   status: 'active' | 'inactive'
   active?: boolean
+  ativo?: boolean  // Campo do backend (boolean no MySQL tinyint)
   baseId: number
   baseName?: string
   createdAt: string
