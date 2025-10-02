@@ -18,7 +18,6 @@ import { useBase } from '@/contexts/BaseContext'
 import toast from 'react-hot-toast'
 import { logger } from '@/utils/logger'
 import { DadosBasicosTab } from './tabs/DadosBasicosTab'
-import { VinculosERPTab } from './tabs/VinculosERPTab'
 import { PermissoesTab } from './tabs/PermissoesTab'
 import { LimitesAcessoTab } from './tabs/LimitesAcessoTab'
 
@@ -122,9 +121,9 @@ export function UserFormModalWithTabs({
   const mutation = useMutation({
     mutationFn: async (data: UserFormData) => {
       if (isEditing) {
-        return usersService.update(user.id, data)
+        return usersService.updateUser(user.id, data)
       } else {
-        return usersService.create({ ...data, baseId: selectedBaseId })
+        return usersService.createUser({ ...data, baseId: selectedBaseId })
       }
     },
     onSuccess: () => {
@@ -147,15 +146,14 @@ export function UserFormModalWithTabs({
 
   const tabs = [
     { name: 'Dados Básicos', icon: UserIcon },
-    { name: 'Vínculos ERP', icon: BuildingOfficeIcon },
     { name: 'Permissões', icon: ShieldCheckIcon },
     ...(watch('tipo_usuario') === 'API' ? [{ name: 'Configurações API', icon: KeyIcon }] : []),
   ]
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+    <Dialog open={isOpen} onClose={onClose} className="relative z-[9999]">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
 
       {/* Modal Container */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
@@ -201,18 +199,11 @@ export function UserFormModalWithTabs({
                     register={register}
                     errors={errors}
                     watch={watch}
-                    isEditing={isEditing}
-                  />
-                </Tab.Panel>
-
-                <Tab.Panel>
-                  <VinculosERPTab
-                    register={register}
-                    errors={errors}
-                    watch={watch}
                     setValue={setValue}
                     user={user}
                     isEditing={isEditing}
+                    selectedBaseId={selectedBaseId}
+                    isOpen={isOpen}
                   />
                 </Tab.Panel>
 

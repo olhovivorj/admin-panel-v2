@@ -54,6 +54,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   const [showFormModal, setShowFormModal] = useState(false)
   const [showApiFormModal, setShowApiFormModal] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newUserType, setNewUserType] = useState<'NORMAL' | 'API' | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showEndpointConfigModal, setShowEndpointConfigModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<UsuarioResponseDto | null>(null)
@@ -456,8 +457,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   const handleCreateNew = (type: 'NORMAL' | 'API') => {
     setSelectedUser(null)
     setIsEditing(false)
-    // Configurar o tipo inicial no modal através de um estado
-    localStorage.setItem('newUserType', type)
+    setNewUserType(type)
     setShowCreateModal(true)
   }
 
@@ -1149,43 +1149,42 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
         })()
       )}
 
-      {showCreateModal && (
-        (() => {
-          const newUserType = localStorage.getItem('newUserType')
-          localStorage.removeItem('newUserType')
-          
-          if (newUserType === 'API') {
-            return (
-              <ApiUserFormModal
-                user={null}
-                isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSuccess={async () => {
-                  await new Promise(resolve => setTimeout(resolve, 300))
-                  await queryClient.invalidateQueries({ queryKey: ['users'] })
-                  await queryClient.invalidateQueries({ queryKey: ['user-stats'] })
-                  await refetch()
-                  setShowCreateModal(false)
-                }}
-              />
-            )
-          } else {
-            return (
-              <UserFormModalWithTabs
-                user={null}
-                isOpen={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSuccess={async () => {
-                  await new Promise(resolve => setTimeout(resolve, 300))
-                  await queryClient.invalidateQueries({ queryKey: ['users'] })
-                  await queryClient.invalidateQueries({ queryKey: ['user-stats'] })
-                  await refetch()
-                  setShowCreateModal(false)
-                }}
-              />
-            )
-          }
-        })()
+      {showCreateModal && newUserType && (
+        newUserType === 'API' ? (
+          <ApiUserFormModal
+            user={null}
+            isOpen={showCreateModal}
+            onClose={() => {
+              setShowCreateModal(false)
+              setNewUserType(null)
+            }}
+            onSuccess={async () => {
+              await new Promise(resolve => setTimeout(resolve, 300))
+              await queryClient.invalidateQueries({ queryKey: ['users'] })
+              await queryClient.invalidateQueries({ queryKey: ['user-stats'] })
+              await refetch()
+              setShowCreateModal(false)
+              setNewUserType(null)
+            }}
+          />
+        ) : (
+          <UserFormModalWithTabs
+            user={null}
+            isOpen={showCreateModal}
+            onClose={() => {
+              setShowCreateModal(false)
+              setNewUserType(null)
+            }}
+            onSuccess={async () => {
+              await new Promise(resolve => setTimeout(resolve, 300))
+              await queryClient.invalidateQueries({ queryKey: ['users'] })
+              await queryClient.invalidateQueries({ queryKey: ['user-stats'] })
+              await refetch()
+              setShowCreateModal(false)
+              setNewUserType(null)
+            }}
+          />
+        )
       )}
 
       {showDetailModal && selectedUser && (

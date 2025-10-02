@@ -10,6 +10,7 @@ import { Login } from '@/pages/Login'
 import { Dashboard } from '@/pages/Dashboard'
 import { Users } from '@/pages/users/Users'
 import { Bases } from '@/pages/Bases'
+import { Roles } from '@/pages/Roles'
 import { RolePermissions } from '@/pages/RolePermissions'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -46,6 +47,7 @@ function App() {
                     <Route path="users" element={<Users />} />
                     <Route path="usuarios-api" element={<Navigate to="/users" replace />} />
                     <Route path="bases" element={<Bases />} />
+                    <Route path="roles" element={<Roles />} />
                     <Route path="roles/:roleId/permissions" element={<RolePermissions />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />

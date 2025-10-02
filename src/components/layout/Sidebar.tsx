@@ -3,6 +3,7 @@ import {
   HomeIcon,
   UsersIcon,
   CircleStackIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/utils/cn'
 import { useSuperAdmin } from '@/hooks/useSuperAdmin'
@@ -10,15 +11,16 @@ import { useSuperAdmin } from '@/hooks/useSuperAdmin'
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Usuários', href: '/users', icon: UsersIcon },
+  { name: 'Roles & Permissões', href: '/roles', icon: ShieldCheckIcon, adminOnly: true },
   { name: 'Bases de Dados', href: '/bases', icon: CircleStackIcon, adminOnly: true },
 ]
 
 export function Sidebar() {
-  const { isSuperAdmin } = useSuperAdmin()
+  const { isAdmin } = useSuperAdmin()
 
   // Filtrar navegação baseado em permissões
   const navigation = navigationItems.filter(item => {
-    if (item.adminOnly && !isSuperAdmin) {
+    if (item.adminOnly && !isAdmin) {
       return false
     }
     return true
