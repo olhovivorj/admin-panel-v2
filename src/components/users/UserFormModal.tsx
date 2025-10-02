@@ -353,6 +353,11 @@ Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
         telefone: user.telefone,
         obs: user.obs,
         notes: user.notes,
+        ativo_raw: user.ativo,
+        ativo_type: typeof user.ativo,
+        active_raw: user.active,
+        status_raw: user.status,
+        ativo_calculado: user.ativo === true || user.ativo === 1,
         permissoes_endpoints_raw: user.permissoes_endpoints,
         full_user: user,
       })
