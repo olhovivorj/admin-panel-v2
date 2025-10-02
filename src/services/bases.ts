@@ -90,10 +90,21 @@ export const basesService = {
   },
 
   // Listar todas as bases disponíveis (com estatísticas)
+  // Timeout de 10 segundos para evitar loops infinitos
   async getBases() {
+    const timeout = 10000 // 10 segundos
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
+
     try {
       logger.info('Iniciando busca de bases completas', 'BASE')
-      const response = await api.get('/bases') // Endpoint correto sem /stats
+
+      const response = await api.get('/bases', {
+        signal: controller.signal,
+        timeout: timeout,
+      })
+
+      clearTimeout(timeoutId)
 
       if (!response.data.success) {
         logger.error('Erro ao buscar bases', 'BASE', {
@@ -112,7 +123,20 @@ export const basesService = {
       logger.info(`Bases completas carregadas: ${basesTransformadas.length} bases`, 'BASE')
       return basesTransformadas
     } catch (error: any) {
-      logger.error('Erro inesperado ao buscar bases', 'BASE', { error: error.message, stack: error.stack })
+      clearTimeout(timeoutId)
+
+      // Detectar timeout
+      if (error.name === 'CanceledError' || error.code === 'ECONNABORTED') {
+        const timeoutError = new Error('⏱️ Timeout: Servidor demorou mais de 10 segundos para responder. Tente novamente.')
+        logger.error('Timeout ao buscar bases', 'BASE', { timeout: `${timeout}ms` })
+        throw timeoutError
+      }
+
+      logger.error('Erro inesperado ao buscar bases', 'BASE', {
+        error: error.message,
+        code: error.code,
+        stack: error.stack
+      })
       throw error
     }
   },

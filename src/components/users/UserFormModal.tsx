@@ -374,7 +374,7 @@ Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
         obs: user.obs || user.notes || '', // Campo observações (obs ou notes)
         role: user.role || 'user',
         baseId: user.baseId,
-        active: user.status === 'active', // Converter status para active boolean
+        active: user.ativo === true || user.ativo === 1, // Usar campo ativo do backend
         tipo_usuario: user.tipo_usuario as 'NORMAL' | 'API', // Não fazer fallback aqui
         sysUserId: user.iduser || undefined,
         permissions: Array.isArray(user.permissions) ? user.permissions : [],

@@ -91,15 +91,15 @@ export function BaseProvider({ children }: { children: ReactNode }) {
     setApiError(null)
 
     try {
-      logger.info('🌐 [BaseContext] Carregando bases da API (primeira vez)')
-      const data = await basesService.getBases()
+      logger.info('🌐 [BaseContext] Carregando bases SIMPLES da API (primeira vez) - SEM estatísticas')
+      const data = await basesService.getBasesSimples()
 
       // Salvar no cache
       localStorage.setItem('@ari:cachedBases', JSON.stringify(data))
       setBasesFromCache(data)
       setHasBasesInCache(true)
 
-      logger.info('✅ [BaseContext] Bases carregadas e salvas no cache:', data?.length, 'bases')
+      logger.info('✅ [BaseContext] Bases SIMPLES carregadas e salvas no cache:', data?.length, 'bases')
     } catch (error: any) {
       const errorMessage = error.message || 'Erro ao carregar bases'
       setApiError(errorMessage)
