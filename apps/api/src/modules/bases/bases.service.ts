@@ -2,54 +2,81 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import * as Firebird from 'node-firebird';
-import { PrismaService } from '../../database/prisma.service';
+import { BaseConfigService } from '../../config/base-config.service';
 import { CreateBaseDto } from './dto/create-base.dto';
 import { UpdateBaseDto } from './dto/update-base.dto';
 import { FirebirdConfigDto } from './dto/firebird-config.dto';
 
+/**
+ * BasesService - CRUD de bases usando tabelas MySQL existentes
+ *
+ * Tabelas:
+ * - base: ID_BASE, NOME, BASE, TOKEN, SRV, etc.
+ * - base_config: FIREBIRD_HOST, FIREBIRD_PORT, FIREBIRD_DATABASE, etc.
+ */
 @Injectable()
 export class BasesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(BasesService.name);
+
+  constructor(private readonly db: BaseConfigService) {}
 
   async findAll(page = 1, limit = 10, search?: string) {
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-    const where = search
-      ? {
-          OR: [
-            { nome: { contains: search } },
-            { cnpj: { contains: search } },
-          ],
-        }
-      : {};
+    let whereClause = '1=1';
+    const params: any[] = [];
 
-    const [items, total] = await Promise.all([
-      this.prisma.base.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { nome: 'asc' },
-        include: {
-          _count: {
-            select: { users: true },
-          },
-        },
-      }),
-      this.prisma.base.count({ where }),
-    ]);
+    if (search) {
+      whereClause += ' AND (b.NOME LIKE ? OR b.BASE LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    // Query com paginação e contagem de usuários
+    const items = await this.db.query(
+      `SELECT
+        b.ID_BASE as id,
+        b.NOME as nome,
+        b.BASE as codigo,
+        b.TOKEN as token,
+        b.SRV as servidor,
+        bc.FIREBIRD_HOST as fbHost,
+        bc.FIREBIRD_PORT as fbPort,
+        bc.FIREBIRD_DATABASE as fbDatabase,
+        bc.FIREBIRD_ACTIVE as fbActive,
+        bc.CREATED_AT as createdAt,
+        bc.UPDATED_AT as updatedAt,
+        (SELECT COUNT(*) FROM ariusers WHERE ID_BASE = b.ID_BASE) as usuariosCount
+      FROM base b
+      LEFT JOIN base_config bc ON b.ID_BASE = bc.ID_BASE
+      WHERE ${whereClause}
+      ORDER BY b.NOME ASC
+      LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    // Count total
+    const countResult = await this.db.queryOne<{ total: number }>(
+      `SELECT COUNT(*) as total FROM base b WHERE ${whereClause}`,
+      params
+    );
+
+    const total = countResult?.total || 0;
 
     return {
-      items: items.map((base) => ({
+      items: items.map(base => ({
         id: base.id,
         nome: base.nome,
-        cnpj: base.cnpj,
-        ativo: base.ativo,
+        codigo: base.codigo,
+        token: base.token,
+        servidor: base.servidor,
+        hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
+        firebirdActive: base.fbActive === 1,
+        usuariosCount: base.usuariosCount || 0,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt,
-        hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
-        usuariosCount: base._count.users,
       })),
       total,
       page,
@@ -59,194 +86,282 @@ export class BasesService {
   }
 
   async findOne(id: number) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-      include: {
-        users: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                ativo: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const base = await this.db.queryOne(
+      `SELECT
+        b.ID_BASE as id,
+        b.NOME as nome,
+        b.BASE as codigo,
+        b.TOKEN as token,
+        b.SRV as servidor,
+        bc.FIREBIRD_HOST as fbHost,
+        bc.FIREBIRD_PORT as fbPort,
+        bc.FIREBIRD_DATABASE as fbDatabase,
+        bc.FIREBIRD_USER as fbUser,
+        bc.FIREBIRD_ROLE as fbRole,
+        bc.FIREBIRD_ACTIVE as fbActive,
+        bc.CREATED_AT as createdAt,
+        bc.UPDATED_AT as updatedAt
+      FROM base b
+      LEFT JOIN base_config bc ON b.ID_BASE = bc.ID_BASE
+      WHERE b.ID_BASE = ?`,
+      [id]
+    );
 
     if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+      throw new NotFoundException(`Base ${id} não encontrada`);
     }
+
+    // Buscar usuários da base
+    const usuarios = await this.db.query(
+      `SELECT id, nome, email, ativo, ultimo_acesso as lastLogin
+       FROM ariusers
+       WHERE ID_BASE = ?
+       ORDER BY nome ASC`,
+      [id]
+    );
 
     return {
       id: base.id,
       nome: base.nome,
-      cnpj: base.cnpj,
-      ativo: base.ativo,
+      codigo: base.codigo,
+      token: base.token,
+      servidor: base.servidor,
+      hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
+      firebirdActive: base.fbActive === 1,
       createdAt: base.createdAt,
       updatedAt: base.updatedAt,
-      hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
-      usuarios: base.users.map((ub) => ub.user),
+      usuarios: usuarios.map(u => ({
+        id: u.id,
+        nome: u.nome,
+        email: u.email,
+        ativo: u.ativo === 1,
+        lastLogin: u.lastLogin,
+      })),
     };
   }
 
   async create(dto: CreateBaseDto) {
-    const base = await this.prisma.base.create({
-      data: {
-        nome: dto.nome,
-        cnpj: dto.cnpj,
-        ativo: dto.ativo ?? true,
-        fbHost: dto.fbHost,
-        fbPort: dto.fbPort,
-        fbDatabase: dto.fbDatabase,
-        fbUser: dto.fbUser,
-        fbPassword: dto.fbPassword,
-      },
-    });
+    // Check if ID_BASE already exists
+    if (dto.id) {
+      const existing = await this.db.queryOne(
+        'SELECT ID_BASE FROM base WHERE ID_BASE = ?',
+        [dto.id]
+      );
+      if (existing) {
+        throw new BadRequestException(`Base com ID ${dto.id} já existe`);
+      }
+    }
 
-    return {
-      id: base.id,
-      nome: base.nome,
-      cnpj: base.cnpj,
-      ativo: base.ativo,
-      hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
-    };
+    // Get next ID_BASE if not provided
+    let baseId = dto.id;
+    if (!baseId) {
+      const maxId = await this.db.queryOne<{ maxId: number }>(
+        'SELECT MAX(ID_BASE) as maxId FROM base'
+      );
+      baseId = (maxId?.maxId || 0) + 1;
+    }
+
+    // Insert into base
+    await this.db.query(
+      `INSERT INTO base (ID_BASE, NOME, BASE, TOKEN, SRV) VALUES (?, ?, ?, ?, ?)`,
+      [baseId, dto.nome, dto.codigo || `BASE${baseId}`, dto.token || null, dto.servidor || 0]
+    );
+
+    // Insert into base_config
+    await this.db.query(
+      `INSERT INTO base_config (ID_BASE, FIREBIRD_HOST, FIREBIRD_PORT, FIREBIRD_DATABASE, FIREBIRD_USER, FIREBIRD_PASSWORD, FIREBIRD_ACTIVE)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        baseId,
+        dto.fbHost || 'localhost',
+        dto.fbPort || 3050,
+        dto.fbDatabase || null,
+        dto.fbUser || 'SYSDBA',
+        dto.fbPassword || null,
+        dto.fbActive ? 1 : 0,
+      ]
+    );
+
+    this.logger.log(`Base criada: ${dto.nome} (ID: ${baseId})`);
+
+    return this.findOne(baseId);
   }
 
   async update(id: number, dto: UpdateBaseDto) {
-    const existingBase = await this.prisma.base.findUnique({
-      where: { id },
-    });
+    const existing = await this.db.queryOne(
+      'SELECT ID_BASE FROM base WHERE ID_BASE = ?',
+      [id]
+    );
 
-    if (!existingBase) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+    if (!existing) {
+      throw new NotFoundException(`Base ${id} não encontrada`);
     }
 
-    const base = await this.prisma.base.update({
-      where: { id },
-      data: {
-        nome: dto.nome,
-        cnpj: dto.cnpj,
-        ativo: dto.ativo,
-      },
-    });
+    // Update base table
+    const baseData: Record<string, any> = {};
+    if (dto.nome) baseData.NOME = dto.nome;
+    if (dto.codigo) baseData.BASE = dto.codigo;
+    if (dto.token !== undefined) baseData.TOKEN = dto.token || null;
+    if (dto.servidor !== undefined) baseData.SRV = dto.servidor;
 
-    return {
-      id: base.id,
-      nome: base.nome,
-      cnpj: base.cnpj,
-      ativo: base.ativo,
-      hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
-    };
+    if (Object.keys(baseData).length > 0) {
+      await this.db.update('base', baseData, 'ID_BASE = ?', [id]);
+    }
+
+    this.logger.log(`Base atualizada: ID ${id}`);
+
+    return this.findOne(id);
   }
 
   async remove(id: number) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { users: true },
-        },
-      },
-    });
+    const base = await this.db.queryOne(
+      'SELECT ID_BASE, NOME FROM base WHERE ID_BASE = ?',
+      [id]
+    );
 
     if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+      throw new NotFoundException(`Base ${id} não encontrada`);
     }
 
-    if (base._count.users > 0) {
+    // Check if there are users
+    const userCount = await this.db.queryOne<{ count: number }>(
+      'SELECT COUNT(*) as count FROM ariusers WHERE ID_BASE = ?',
+      [id]
+    );
+
+    if (userCount?.count > 0) {
       throw new BadRequestException(
-        `Base possui ${base._count.users} usuario(s) vinculado(s). Remova os usuarios primeiro.`,
+        `Base possui ${userCount.count} usuário(s) vinculado(s). Remova os usuários primeiro.`
       );
     }
 
-    await this.prisma.base.delete({ where: { id } });
+    // Delete from base_config first (FK)
+    await this.db.delete('base_config', 'ID_BASE = ?', [id]);
+    // Delete from base
+    await this.db.delete('base', 'ID_BASE = ?', [id]);
+
+    this.logger.log(`Base removida: ${base.NOME} (ID: ${id})`);
 
     return { message: 'Base removida com sucesso' };
   }
 
   async getFirebirdConfig(id: number) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        fbHost: true,
-        fbPort: true,
-        fbDatabase: true,
-        fbUser: true,
-        // Don't return password for security
-      },
-    });
+    const config = await this.db.queryOne(
+      `SELECT
+        bc.FIREBIRD_HOST as host,
+        bc.FIREBIRD_PORT as port,
+        bc.FIREBIRD_DATABASE as database,
+        bc.FIREBIRD_USER as user,
+        bc.FIREBIRD_ROLE as role,
+        bc.FIREBIRD_CHARSET as charset,
+        bc.FIREBIRD_ACTIVE as active,
+        bc.FIREBIRD_PASSWORD as password
+      FROM base_config bc
+      WHERE bc.ID_BASE = ?`,
+      [id]
+    );
 
-    if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+    if (!config) {
+      throw new NotFoundException(`Configuração Firebird não encontrada para base ${id}`);
     }
 
     return {
-      host: base.fbHost,
-      port: base.fbPort,
-      database: base.fbDatabase,
-      user: base.fbUser,
-      hasPassword: !!(await this.prisma.base.findUnique({
-        where: { id },
-        select: { fbPassword: true },
-      }))?.fbPassword,
+      host: config.host,
+      port: config.port,
+      database: config.database,
+      user: config.user,
+      role: config.role,
+      charset: config.charset,
+      active: config.active === 1,
+      hasPassword: !!config.password,
     };
   }
 
   async updateFirebirdConfig(id: number, dto: FirebirdConfigDto) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-    });
+    // Check if base exists
+    const base = await this.db.queryOne(
+      'SELECT ID_BASE FROM base WHERE ID_BASE = ?',
+      [id]
+    );
 
     if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+      throw new NotFoundException(`Base ${id} não encontrada`);
     }
 
-    await this.prisma.base.update({
-      where: { id },
-      data: {
-        fbHost: dto.host,
-        fbPort: dto.port,
-        fbDatabase: dto.database,
-        fbUser: dto.user,
-        fbPassword: dto.password,
-      },
-    });
+    // Check if config exists
+    const configExists = await this.db.queryOne(
+      'SELECT ID_BASE FROM base_config WHERE ID_BASE = ?',
+      [id]
+    );
 
-    return { message: 'Configuracao Firebird atualizada com sucesso' };
+    const configData: Record<string, any> = {};
+    if (dto.host) configData.FIREBIRD_HOST = dto.host;
+    if (dto.port) configData.FIREBIRD_PORT = dto.port;
+    if (dto.database) configData.FIREBIRD_DATABASE = dto.database;
+    if (dto.user) configData.FIREBIRD_USER = dto.user;
+    if (dto.password) configData.FIREBIRD_PASSWORD = dto.password;
+    if (dto.role !== undefined) configData.FIREBIRD_ROLE = dto.role || null;
+    if (dto.active !== undefined) configData.FIREBIRD_ACTIVE = dto.active ? 1 : 0;
+
+    if (configExists) {
+      await this.db.update('base_config', configData, 'ID_BASE = ?', [id]);
+    } else {
+      configData.ID_BASE = id;
+      await this.db.insert('base_config', configData);
+    }
+
+    this.logger.log(`Configuração Firebird atualizada para base ${id}`);
+
+    return { message: 'Configuração Firebird atualizada com sucesso' };
   }
 
   async testFirebirdConnection(id: number) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-    });
+    const config = await this.db.queryOne(
+      `SELECT
+        FIREBIRD_HOST as host,
+        FIREBIRD_PORT as port,
+        FIREBIRD_DATABASE as database,
+        FIREBIRD_USER as user,
+        FIREBIRD_PASSWORD as password,
+        FIREBIRD_ROLE as role
+      FROM base_config
+      WHERE ID_BASE = ?`,
+      [id]
+    );
 
-    if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+    if (!config) {
+      throw new NotFoundException(`Configuração Firebird não encontrada para base ${id}`);
     }
 
-    if (!base.fbHost || !base.fbDatabase) {
-      throw new BadRequestException('Configuracao Firebird incompleta');
+    if (!config.host || !config.database) {
+      throw new BadRequestException('Configuração Firebird incompleta');
     }
 
     const options = {
-      host: base.fbHost,
-      port: base.fbPort || 3050,
-      database: base.fbDatabase,
-      user: base.fbUser || 'SYSDBA',
-      password: base.fbPassword || 'masterkey',
+      host: config.host,
+      port: config.port || 3050,
+      database: config.database,
+      user: config.user || 'SYSDBA',
+      password: config.password || 'masterkey',
+      role: config.role || null,
     };
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        resolve({
+          success: false,
+          message: 'Timeout ao conectar (10s)',
+        });
+      }, 10000);
+
       Firebird.attach(options, (err, db) => {
+        clearTimeout(timeout);
+
         if (err) {
+          this.logger.warn(`Erro ao conectar Firebird para base ${id}: ${err.message}`);
           resolve({
             success: false,
-            message: `Erro de conexao: ${err.message}`,
+            message: `Erro de conexão: ${err.message}`,
           });
           return;
         }
@@ -264,7 +379,7 @@ export class BasesService {
 
           resolve({
             success: true,
-            message: 'Conexao bem sucedida!',
+            message: 'Conexão bem sucedida!',
             serverTime: result[0]?.CURRENT_TIMESTAMP,
           });
         });
@@ -273,49 +388,64 @@ export class BasesService {
   }
 
   async getBaseStats(id: number) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { users: true },
-        },
-      },
-    });
+    const base = await this.db.queryOne(
+      'SELECT ID_BASE FROM base WHERE ID_BASE = ?',
+      [id]
+    );
 
     if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+      throw new NotFoundException(`Base ${id} não encontrada`);
     }
 
+    const userCount = await this.db.queryOne<{ count: number }>(
+      'SELECT COUNT(*) as count FROM ariusers WHERE ID_BASE = ?',
+      [id]
+    );
+
+    const config = await this.db.queryOne(
+      'SELECT FIREBIRD_HOST, FIREBIRD_DATABASE, FIREBIRD_ACTIVE FROM base_config WHERE ID_BASE = ?',
+      [id]
+    );
+
     return {
-      usuariosCount: base._count.users,
-      hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
+      usuariosCount: userCount?.count || 0,
+      hasFirebirdConfig: !!(config?.FIREBIRD_HOST && config?.FIREBIRD_DATABASE),
+      firebirdActive: config?.FIREBIRD_ACTIVE === 1,
     };
   }
 
   async getBaseUsuarios(id: number) {
-    const base = await this.prisma.base.findUnique({
-      where: { id },
-      include: {
-        users: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                nome: true,
-                email: true,
-                ativo: true,
-                lastLogin: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const base = await this.db.queryOne(
+      'SELECT ID_BASE FROM base WHERE ID_BASE = ?',
+      [id]
+    );
 
     if (!base) {
-      throw new NotFoundException(`Base ${id} nao encontrada`);
+      throw new NotFoundException(`Base ${id} não encontrada`);
     }
 
-    return base.users.map((ub) => ub.user);
+    const usuarios = await this.db.query(
+      `SELECT id, nome, email, ativo, ultimo_acesso as lastLogin
+       FROM ariusers
+       WHERE ID_BASE = ?
+       ORDER BY nome ASC`,
+      [id]
+    );
+
+    return usuarios.map(u => ({
+      id: u.id,
+      nome: u.nome,
+      email: u.email,
+      ativo: u.ativo === 1,
+      lastLogin: u.lastLogin,
+    }));
+  }
+
+  async getAllBases() {
+    const bases = await this.db.query(
+      `SELECT ID_BASE as id, NOME as nome FROM base ORDER BY NOME ASC`
+    );
+
+    return bases;
   }
 }

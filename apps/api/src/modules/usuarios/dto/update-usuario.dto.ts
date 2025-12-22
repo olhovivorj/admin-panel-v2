@@ -3,22 +3,25 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
-  IsArray,
   IsInt,
   MinLength,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * DTO para atualização de usuário
+ * Tabela: ariusers (MySQL)
+ */
 export class UpdateUsuarioDto {
   @ApiPropertyOptional({ example: 'usuario@email.com' })
   @IsOptional()
-  @IsEmail({}, { message: 'Email invalido' })
+  @IsEmail({}, { message: 'Email inválido' })
   email?: string;
 
-  @ApiPropertyOptional({ example: 'Nome do Usuario' })
+  @ApiPropertyOptional({ example: 'Nome do Usuário' })
   @IsOptional()
   @IsString()
-  @MinLength(2, { message: 'Nome deve ter no minimo 2 caracteres' })
+  @MinLength(2, { message: 'Nome deve ter no mínimo 2 caracteres' })
   nome?: string;
 
   @ApiPropertyOptional({ example: '11999999999' })
@@ -26,25 +29,38 @@ export class UpdateUsuarioDto {
   @IsString()
   telefone?: string;
 
-  @ApiPropertyOptional({ example: 'Observacoes sobre o usuario' })
+  @ApiPropertyOptional({ example: 49, description: 'ID da base (ID_BASE)' })
+  @IsOptional()
+  @IsInt()
+  baseId?: number;
+
+  @ApiPropertyOptional({ example: 'user', enum: ['user', 'admin', 'master', 'supervisor'] })
   @IsOptional()
   @IsString()
-  obs?: string;
+  funcao?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID do role (ari_roles)' })
+  @IsOptional()
+  @IsInt()
+  roleId?: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID do plano (ari_plans)' })
+  @IsOptional()
+  @IsInt()
+  planId?: number;
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   ativo?: boolean;
 
-  @ApiPropertyOptional({ example: [1, 2], description: 'IDs das roles' })
+  @ApiPropertyOptional({ example: 'dark', enum: ['light', 'dark'] })
   @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  roleIds?: number[];
+  @IsString()
+  theme?: string;
 
-  @ApiPropertyOptional({ example: [1], description: 'IDs das bases' })
+  @ApiPropertyOptional({ example: 'pt-BR' })
   @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  baseIds?: number[];
+  @IsString()
+  language?: string;
 }

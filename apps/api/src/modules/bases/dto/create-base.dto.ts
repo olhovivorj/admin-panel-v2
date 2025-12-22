@@ -1,22 +1,37 @@
 import { IsString, IsOptional, IsBoolean, IsInt, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * DTO para criação de base
+ * Tabelas: base + base_config (MySQL)
+ */
 export class CreateBaseDto {
+  @ApiPropertyOptional({ example: 100, description: 'ID_BASE (auto-gerado se não informado)' })
+  @IsOptional()
+  @IsInt()
+  id?: number;
+
   @ApiProperty({ example: 'Nome da Base' })
   @IsString()
-  @MinLength(2, { message: 'Nome deve ter no minimo 2 caracteres' })
+  @MinLength(2, { message: 'Nome deve ter no mínimo 2 caracteres' })
   nome: string;
 
-  @ApiPropertyOptional({ example: '12345678000190' })
+  @ApiPropertyOptional({ example: 'BASE100', description: 'Código da base' })
   @IsOptional()
   @IsString()
-  cnpj?: string;
+  codigo?: string;
 
-  @ApiPropertyOptional({ example: true, default: true })
+  @ApiPropertyOptional({ example: 'token-api', description: 'Token de API' })
   @IsOptional()
-  @IsBoolean()
-  ativo?: boolean;
+  @IsString()
+  token?: string;
 
+  @ApiPropertyOptional({ example: 1, description: 'Servidor (SRV)' })
+  @IsOptional()
+  @IsInt()
+  servidor?: number;
+
+  // Firebird config
   @ApiPropertyOptional({ example: 'localhost' })
   @IsOptional()
   @IsString()
@@ -27,7 +42,7 @@ export class CreateBaseDto {
   @IsInt()
   fbPort?: number;
 
-  @ApiPropertyOptional({ example: '/path/to/database.fdb' })
+  @ApiPropertyOptional({ example: '/opt/firebird/data/INVISTTO.FDB' })
   @IsOptional()
   @IsString()
   fbDatabase?: string;
@@ -41,4 +56,9 @@ export class CreateBaseDto {
   @IsOptional()
   @IsString()
   fbPassword?: string;
+
+  @ApiPropertyOptional({ example: true, default: false })
+  @IsOptional()
+  @IsBoolean()
+  fbActive?: boolean;
 }

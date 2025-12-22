@@ -1,16 +1,18 @@
 import {
   Controller,
   Get,
-  Post,
-  Delete,
-  Body,
   Param,
   ParseIntPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionsService } from './permissions.service';
-import { CreatePermissionDto } from './dto/create-permission.dto';
 
+/**
+ * PermissionsController - Lista páginas/permissões do sistema
+ *
+ * Páginas são cadastradas diretamente no banco (ari_pages)
+ * Este controller apenas lista as permissões disponíveis
+ */
 @ApiTags('permissions')
 @ApiBearerAuth()
 @Controller('permissions')
@@ -18,26 +20,26 @@ export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar permissoes' })
+  @ApiOperation({ summary: 'Listar todas as páginas/permissões' })
   async findAll() {
     return this.permissionsService.findAll();
   }
 
   @Get('grouped')
-  @ApiOperation({ summary: 'Listar permissoes agrupadas por modulo' })
+  @ApiOperation({ summary: 'Listar permissões agrupadas por app' })
   async findGrouped() {
     return this.permissionsService.findGrouped();
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Criar permissao' })
-  async create(@Body() dto: CreatePermissionDto) {
-    return this.permissionsService.create(dto);
+  @Get('apps')
+  @ApiOperation({ summary: 'Listar apps disponíveis' })
+  async getApps() {
+    return this.permissionsService.getApps();
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Remover permissao' })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.permissionsService.remove(id);
+  @Get('app/:appId')
+  @ApiOperation({ summary: 'Listar permissões de um app específico' })
+  async findByApp(@Param('appId', ParseIntPipe) appId: number) {
+    return this.permissionsService.findByApp(appId);
   }
 }

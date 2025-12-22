@@ -59,11 +59,11 @@ export class RolesController {
   }
 
   @Put(':id/permissions')
-  @ApiOperation({ summary: 'Atribuir permissoes a role' })
+  @ApiOperation({ summary: 'Atribuir permissões a role' })
   async setPermissions(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { permissionIds: number[] },
+    @Body() body: { permissions: Array<{ pageId: number; canAccess?: boolean; canEdit?: boolean; canDelete?: boolean }> },
   ) {
-    return this.rolesService.setPermissions(id, body.permissionIds);
+    return this.rolesService.setPermissions(id, body.permissions);
   }
 }

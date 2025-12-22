@@ -27,15 +27,18 @@ export class UsuariosController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'baseId', required: false, type: Number })
   async findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('baseId') baseId?: string,
   ) {
     return this.usuariosService.findAll(
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 10,
       search,
+      baseId ? parseInt(baseId, 10) : undefined,
     );
   }
 
@@ -96,11 +99,17 @@ export class UsuariosController {
   }
 
   @Post(':id/bases')
-  @ApiOperation({ summary: 'Atribuir bases ao usuario' })
-  async setUserBases(
+  @ApiOperation({ summary: 'Atribuir base ao usuario' })
+  async setUserBase(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { baseIds: number[] },
+    @Body() body: { baseId: number },
   ) {
-    return this.usuariosService.setUserBases(id, body.baseIds);
+    return this.usuariosService.setUserBase(id, body.baseId);
+  }
+
+  @Patch(':id/toggle-status')
+  @ApiOperation({ summary: 'Ativar/desativar usuario' })
+  async toggleStatus(@Param('id', ParseIntPipe) id: number) {
+    return this.usuariosService.toggleStatus(id);
   }
 }

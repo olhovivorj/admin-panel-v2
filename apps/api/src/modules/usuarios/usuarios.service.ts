@@ -1,66 +1,102 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { PrismaService } from '../../database/prisma.service';
+import { BaseConfigService } from '../../config/base-config.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 
+/**
+ * UsuariosService - CRUD de usuários usando tabela ariusers do MySQL
+ *
+ * Tabela: ariusers
+ * Campos principais: id, email, senha, nome, ID_BASE, funcao, role_id, plan_id, ativo
+ */
 @Injectable()
 export class UsuariosService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(UsuariosService.name);
 
-  async findAll(page = 1, limit = 10, search?: string) {
-    const skip = (page - 1) * limit;
+  constructor(private readonly db: BaseConfigService) {}
 
-    const where = search
-      ? {
-          OR: [
-            { nome: { contains: search } },
-            { email: { contains: search } },
-          ],
-        }
-      : {};
+  async findAll(page = 1, limit = 10, search?: string, baseId?: number) {
+    const offset = (page - 1) * limit;
 
-    const [items, total] = await Promise.all([
-      this.prisma.user.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          roles: {
-            include: {
-              role: true,
-            },
-          },
-          bases: {
-            include: {
-              base: true,
-            },
-          },
-        },
-      }),
-      this.prisma.user.count({ where }),
-    ]);
+    let whereClause = '1=1';
+    const params: any[] = [];
+
+    if (search) {
+      whereClause += ' AND (nome LIKE ? OR email LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+
+    if (baseId) {
+      whereClause += ' AND ID_BASE = ?';
+      params.push(baseId);
+    }
+
+    // Query com paginação
+    const items = await this.db.query(
+      `SELECT
+        u.id,
+        u.email,
+        u.nome,
+        u.telefone,
+        u.ID_BASE as baseId,
+        b.NOME as baseName,
+        u.funcao,
+        u.role_id,
+        r.name as roleName,
+        r.display_name as roleDisplayName,
+        u.plan_id,
+        p.name as planName,
+        u.ativo,
+        u.ultimo_acesso as lastLogin,
+        u.criado_em as createdAt,
+        u.atualizado_em as updatedAt
+      FROM ariusers u
+      LEFT JOIN base b ON u.ID_BASE = b.ID_BASE
+      LEFT JOIN ari_roles r ON u.role_id = r.id
+      LEFT JOIN ari_plans p ON u.plan_id = p.id
+      WHERE ${whereClause}
+      ORDER BY u.criado_em DESC
+      LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    // Count total
+    const countResult = await this.db.queryOne<{ total: number }>(
+      `SELECT COUNT(*) as total FROM ariusers u WHERE ${whereClause}`,
+      params
+    );
+
+    const total = countResult?.total || 0;
 
     return {
-      items: items.map((user) => ({
+      items: items.map(user => ({
         id: user.id,
         email: user.email,
         nome: user.nome,
         telefone: user.telefone,
-        obs: user.obs,
-        ativo: user.ativo,
+        baseId: user.baseId,
+        baseName: user.baseName,
+        funcao: user.funcao,
+        role: user.role_id ? {
+          id: user.role_id,
+          name: user.roleName,
+          displayName: user.roleDisplayName,
+        } : null,
+        plan: user.plan_id ? {
+          id: user.plan_id,
+          name: user.planName,
+        } : null,
+        ativo: user.ativo === 1,
+        lastLogin: user.lastLogin,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        lastLogin: user.lastLogin,
-        roles: user.roles.map((ur) => ur.role),
-        bases: user.bases.map((ub) => ub.base),
       })),
       total,
       page,
@@ -70,24 +106,38 @@ export class UsuariosService {
   }
 
   async findOne(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
-        bases: {
-          include: {
-            base: true,
-          },
-        },
-      },
-    });
+    const user = await this.db.queryOne(
+      `SELECT
+        u.id,
+        u.email,
+        u.nome,
+        u.telefone,
+        u.ID_BASE as baseId,
+        b.NOME as baseName,
+        u.funcao,
+        u.role_id,
+        r.name as roleName,
+        r.display_name as roleDisplayName,
+        u.plan_id,
+        p.name as planName,
+        p.display_name as planDisplayName,
+        u.ativo,
+        u.ultimo_acesso as lastLogin,
+        u.criado_em as createdAt,
+        u.atualizado_em as updatedAt,
+        u.theme,
+        u.language,
+        u.preferences
+      FROM ariusers u
+      LEFT JOIN base b ON u.ID_BASE = b.ID_BASE
+      LEFT JOIN ari_roles r ON u.role_id = r.id
+      LEFT JOIN ari_plans p ON u.plan_id = p.id
+      WHERE u.id = ?`,
+      [id]
+    );
 
     if (!user) {
-      throw new NotFoundException(`Usuario ${id} nao encontrado`);
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
     }
 
     return {
@@ -95,238 +145,224 @@ export class UsuariosService {
       email: user.email,
       nome: user.nome,
       telefone: user.telefone,
-      obs: user.obs,
-      ativo: user.ativo,
+      baseId: user.baseId,
+      baseName: user.baseName,
+      funcao: user.funcao,
+      role: user.role_id ? {
+        id: user.role_id,
+        name: user.roleName,
+        displayName: user.roleDisplayName,
+      } : null,
+      plan: user.plan_id ? {
+        id: user.plan_id,
+        name: user.planName,
+        displayName: user.planDisplayName,
+      } : null,
+      ativo: user.ativo === 1,
+      lastLogin: user.lastLogin,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      lastLogin: user.lastLogin,
-      roles: user.roles.map((ur) => ur.role),
-      bases: user.bases.map((ub) => ub.base),
+      theme: user.theme,
+      language: user.language,
+      preferences: user.preferences,
     };
   }
 
   async create(dto: CreateUsuarioDto) {
     // Check if email already exists
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    const existingUser = await this.db.queryOne(
+      'SELECT id FROM ariusers WHERE email = ?',
+      [dto.email.toLowerCase()]
+    );
 
     if (existingUser) {
-      throw new ConflictException('Email ja esta em uso');
+      throw new ConflictException('Email já está em uso');
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        password: hashedPassword,
-        nome: dto.nome,
-        telefone: dto.telefone,
-        obs: dto.obs,
-        ativo: dto.ativo ?? true,
-        roles: dto.roleIds?.length
-          ? {
-              create: dto.roleIds.map((roleId) => ({
-                role: { connect: { id: roleId } },
-              })),
-            }
-          : undefined,
-        bases: dto.baseIds?.length
-          ? {
-              create: dto.baseIds.map((baseId) => ({
-                base: { connect: { id: baseId } },
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
-        bases: {
-          include: {
-            base: true,
-          },
-        },
-      },
+    // Insert user
+    const insertId = await this.db.insert('ariusers', {
+      email: dto.email.toLowerCase(),
+      senha: hashedPassword,
+      nome: dto.nome,
+      telefone: dto.telefone || null,
+      ID_BASE: dto.baseId,
+      funcao: dto.funcao || 'user',
+      role_id: dto.roleId || null,
+      plan_id: dto.planId || null,
+      ativo: dto.ativo !== false ? 1 : 0,
     });
 
-    return {
-      id: user.id,
-      email: user.email,
-      nome: user.nome,
-      telefone: user.telefone,
-      ativo: user.ativo,
-      roles: user.roles.map((ur) => ur.role),
-      bases: user.bases.map((ub) => ub.base),
-    };
+    this.logger.log(`Usuário criado: ${dto.email} (ID: ${insertId})`);
+
+    return this.findOne(insertId);
   }
 
   async update(id: number, dto: UpdateUsuarioDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { id },
-    });
+    // Check if user exists
+    const existingUser = await this.db.queryOne(
+      'SELECT id, email FROM ariusers WHERE id = ?',
+      [id]
+    );
 
     if (!existingUser) {
-      throw new NotFoundException(`Usuario ${id} nao encontrado`);
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
     }
 
     // Check if email is already used by another user
-    if (dto.email && dto.email !== existingUser.email) {
-      const emailExists = await this.prisma.user.findUnique({
-        where: { email: dto.email },
-      });
+    if (dto.email && dto.email.toLowerCase() !== existingUser.email) {
+      const emailExists = await this.db.queryOne(
+        'SELECT id FROM ariusers WHERE email = ? AND id != ?',
+        [dto.email.toLowerCase(), id]
+      );
 
       if (emailExists) {
-        throw new ConflictException('Email ja esta em uso');
+        throw new ConflictException('Email já está em uso');
       }
     }
 
-    // Update user data
-    const user = await this.prisma.user.update({
-      where: { id },
-      data: {
-        email: dto.email,
-        nome: dto.nome,
-        telefone: dto.telefone,
-        obs: dto.obs,
-        ativo: dto.ativo,
-      },
-      include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
-        bases: {
-          include: {
-            base: true,
-          },
-        },
-      },
-    });
+    // Build update data
+    const updateData: Record<string, any> = {};
 
-    // Update roles if provided
-    if (dto.roleIds !== undefined) {
-      await this.prisma.userRole.deleteMany({ where: { userId: id } });
+    if (dto.email) updateData.email = dto.email.toLowerCase();
+    if (dto.nome) updateData.nome = dto.nome;
+    if (dto.telefone !== undefined) updateData.telefone = dto.telefone || null;
+    if (dto.funcao) updateData.funcao = dto.funcao;
+    if (dto.roleId !== undefined) updateData.role_id = dto.roleId || null;
+    if (dto.planId !== undefined) updateData.plan_id = dto.planId || null;
+    if (dto.baseId) updateData.ID_BASE = dto.baseId;
+    if (dto.ativo !== undefined) updateData.ativo = dto.ativo ? 1 : 0;
+    if (dto.theme) updateData.theme = dto.theme;
+    if (dto.language) updateData.language = dto.language;
 
-      if (dto.roleIds.length > 0) {
-        await this.prisma.userRole.createMany({
-          data: dto.roleIds.map((roleId) => ({
-            userId: id,
-            roleId,
-          })),
-        });
-      }
+    if (Object.keys(updateData).length > 0) {
+      await this.db.update('ariusers', updateData, 'id = ?', [id]);
+      this.logger.log(`Usuário atualizado: ID ${id}`);
     }
 
-    // Update bases if provided
-    if (dto.baseIds !== undefined) {
-      await this.prisma.userBase.deleteMany({ where: { userId: id } });
-
-      if (dto.baseIds.length > 0) {
-        await this.prisma.userBase.createMany({
-          data: dto.baseIds.map((baseId) => ({
-            userId: id,
-            baseId,
-          })),
-        });
-      }
-    }
-
-    // Fetch updated user
     return this.findOne(id);
   }
 
   async remove(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
+    const user = await this.db.queryOne(
+      'SELECT id, email FROM ariusers WHERE id = ?',
+      [id]
+    );
 
     if (!user) {
-      throw new NotFoundException(`Usuario ${id} nao encontrado`);
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
     }
 
-    await this.prisma.user.delete({ where: { id } });
+    await this.db.delete('ariusers', 'id = ?', [id]);
 
-    return { message: 'Usuario removido com sucesso' };
+    this.logger.log(`Usuário removido: ${user.email} (ID: ${id})`);
+
+    return { message: 'Usuário removido com sucesso' };
   }
 
   async changePassword(id: number, dto: ChangePasswordDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
+    const user = await this.db.queryOne(
+      'SELECT id, senha FROM ariusers WHERE id = ?',
+      [id]
+    );
 
     if (!user) {
-      throw new NotFoundException(`Usuario ${id} nao encontrado`);
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
+    }
+
+    // Verify current password if provided
+    if (dto.currentPassword) {
+      const isValid = await bcrypt.compare(dto.currentPassword, user.senha);
+      if (!isValid) {
+        throw new ConflictException('Senha atual incorreta');
+      }
     }
 
     const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
 
-    await this.prisma.user.update({
-      where: { id },
-      data: { password: hashedPassword },
-    });
+    await this.db.update('ariusers', { senha: hashedPassword }, 'id = ?', [id]);
+
+    this.logger.log(`Senha alterada para usuário ID: ${id}`);
 
     return { message: 'Senha alterada com sucesso' };
   }
 
   async checkEmail(email: string, excludeId?: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+    let sql = 'SELECT id FROM ariusers WHERE email = ?';
+    const params: any[] = [email.toLowerCase()];
 
-    if (user && (!excludeId || user.id !== excludeId)) {
-      return { available: false, message: 'Email ja esta em uso' };
+    if (excludeId) {
+      sql += ' AND id != ?';
+      params.push(excludeId);
+    }
+
+    const user = await this.db.queryOne(sql, params);
+
+    if (user) {
+      return { available: false, message: 'Email já está em uso' };
     }
 
     return { available: true };
   }
 
   async getUserBases(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        bases: {
-          include: {
-            base: true,
-          },
-        },
-      },
-    });
+    const user = await this.db.queryOne(
+      `SELECT u.ID_BASE as baseId, b.NOME as baseName
+       FROM ariusers u
+       LEFT JOIN base b ON u.ID_BASE = b.ID_BASE
+       WHERE u.id = ?`,
+      [id]
+    );
 
     if (!user) {
-      throw new NotFoundException(`Usuario ${id} nao encontrado`);
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
     }
 
-    return user.bases.map((ub) => ub.base);
+    // User has only one base in ariusers
+    if (user.baseId) {
+      return [{
+        id: user.baseId,
+        nome: user.baseName,
+      }];
+    }
+
+    return [];
   }
 
-  async setUserBases(id: number, baseIds: number[]) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
+  async setUserBase(id: number, baseId: number) {
+    const user = await this.db.queryOne(
+      'SELECT id FROM ariusers WHERE id = ?',
+      [id]
+    );
 
     if (!user) {
-      throw new NotFoundException(`Usuario ${id} nao encontrado`);
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
     }
 
-    // Remove existing bases
-    await this.prisma.userBase.deleteMany({ where: { userId: id } });
-
-    // Add new bases
-    if (baseIds.length > 0) {
-      await this.prisma.userBase.createMany({
-        data: baseIds.map((baseId) => ({
-          userId: id,
-          baseId,
-        })),
-      });
-    }
+    await this.db.update('ariusers', { ID_BASE: baseId }, 'id = ?', [id]);
 
     return this.getUserBases(id);
+  }
+
+  async toggleStatus(id: number) {
+    const user = await this.db.queryOne(
+      'SELECT id, ativo FROM ariusers WHERE id = ?',
+      [id]
+    );
+
+    if (!user) {
+      throw new NotFoundException(`Usuário ${id} não encontrado`);
+    }
+
+    const newStatus = user.ativo === 1 ? 0 : 1;
+    await this.db.update('ariusers', { ativo: newStatus }, 'id = ?', [id]);
+
+    return {
+      id,
+      ativo: newStatus === 1,
+      message: newStatus === 1 ? 'Usuário ativado' : 'Usuário desativado',
+    };
   }
 }

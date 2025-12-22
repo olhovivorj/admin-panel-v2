@@ -3,25 +3,30 @@ import {
   IsString,
   IsOptional,
   IsBoolean,
-  IsArray,
   IsInt,
   MinLength,
+  IsNotEmpty,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * DTO para criação de usuário
+ * Tabela: ariusers (MySQL)
+ */
 export class CreateUsuarioDto {
   @ApiProperty({ example: 'usuario@email.com' })
-  @IsEmail({}, { message: 'Email invalido' })
+  @IsEmail({}, { message: 'Email inválido' })
+  @IsNotEmpty({ message: 'Email é obrigatório' })
   email: string;
 
   @ApiProperty({ example: 'senha123' })
   @IsString()
-  @MinLength(6, { message: 'Senha deve ter no minimo 6 caracteres' })
+  @MinLength(6, { message: 'Senha deve ter no mínimo 6 caracteres' })
   password: string;
 
-  @ApiProperty({ example: 'Nome do Usuario' })
+  @ApiProperty({ example: 'Nome do Usuário' })
   @IsString()
-  @MinLength(2, { message: 'Nome deve ter no minimo 2 caracteres' })
+  @MinLength(2, { message: 'Nome deve ter no mínimo 2 caracteres' })
   nome: string;
 
   @ApiPropertyOptional({ example: '11999999999' })
@@ -29,25 +34,28 @@ export class CreateUsuarioDto {
   @IsString()
   telefone?: string;
 
-  @ApiPropertyOptional({ example: 'Observacoes sobre o usuario' })
+  @ApiProperty({ example: 49, description: 'ID da base (ID_BASE)' })
+  @IsInt({ message: 'Base deve ser um número' })
+  @IsNotEmpty({ message: 'Base é obrigatória' })
+  baseId: number;
+
+  @ApiPropertyOptional({ example: 'user', enum: ['user', 'admin', 'master', 'supervisor'] })
   @IsOptional()
   @IsString()
-  obs?: string;
+  funcao?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID do role (ari_roles)' })
+  @IsOptional()
+  @IsInt()
+  roleId?: number;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID do plano (ari_plans)' })
+  @IsOptional()
+  @IsInt()
+  planId?: number;
 
   @ApiPropertyOptional({ example: true, default: true })
   @IsOptional()
   @IsBoolean()
   ativo?: boolean;
-
-  @ApiPropertyOptional({ example: [1, 2], description: 'IDs das roles' })
-  @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  roleIds?: number[];
-
-  @ApiPropertyOptional({ example: [1], description: 'IDs das bases' })
-  @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  baseIds?: number[];
 }

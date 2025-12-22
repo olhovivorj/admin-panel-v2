@@ -1,19 +1,25 @@
-import { IsString, IsOptional, IsInt } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional, IsInt, IsBoolean } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
+/**
+ * DTO para configuração Firebird
+ * Tabela: base_config (MySQL)
+ */
 export class FirebirdConfigDto {
-  @ApiProperty({ example: 'localhost' })
+  @ApiPropertyOptional({ example: 'localhost' })
+  @IsOptional()
   @IsString()
-  host: string;
+  host?: string;
 
   @ApiPropertyOptional({ example: 3050, default: 3050 })
   @IsOptional()
   @IsInt()
   port?: number;
 
-  @ApiProperty({ example: '/path/to/database.fdb' })
+  @ApiPropertyOptional({ example: '/opt/firebird/data/INVISTTO.FDB' })
+  @IsOptional()
   @IsString()
-  database: string;
+  database?: string;
 
   @ApiPropertyOptional({ example: 'SYSDBA' })
   @IsOptional()
@@ -24,4 +30,14 @@ export class FirebirdConfigDto {
   @IsOptional()
   @IsString()
   password?: string;
+
+  @ApiPropertyOptional({ example: 'RDB$ADMIN' })
+  @IsOptional()
+  @IsString()
+  role?: string;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }
