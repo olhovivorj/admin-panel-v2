@@ -80,15 +80,15 @@ export class AppsService {
       `SELECT
         id,
         name,
-        display_name as displayName,
+        name as displayName,
         path,
         category,
         icon,
         is_active as isActive,
-        \`order\`
+        order_index as \`order\`
       FROM ari_pages
       WHERE app_id = ?
-      ORDER BY \`order\` ASC, name ASC`,
+      ORDER BY order_index ASC, name ASC`,
       [id]
     );
 
@@ -240,18 +240,18 @@ export class AppsService {
       `SELECT
         id,
         name,
-        display_name as displayName,
+        name as displayName,
         path,
         category,
         icon,
         description,
         is_active as isActive,
-        \`order\`,
+        order_index as \`order\`,
         created_at as createdAt,
-        updated_at as updatedAt
+        NULL as updatedAt
       FROM ari_pages
       WHERE app_id = ?
-      ORDER BY \`order\` ASC, name ASC`,
+      ORDER BY order_index ASC, name ASC`,
       [id]
     );
 

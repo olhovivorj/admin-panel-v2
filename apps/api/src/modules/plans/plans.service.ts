@@ -31,17 +31,17 @@ export class PlansService {
         p.name,
         p.display_name as displayName,
         p.description,
-        p.price,
+        p.price_monthly as price,
         p.is_active as isActive,
-        p.features,
-        p.limits,
+        p.max_users as maxUsers,
+        p.priority,
         p.created_at as createdAt,
         p.updated_at as updatedAt,
         (SELECT COUNT(*) FROM ari_plan_pages WHERE plan_id = p.id) as pagesCount,
         (SELECT COUNT(*) FROM ariusers WHERE plan_id = p.id) as usersCount
       FROM ari_plans p
       ${whereClause}
-      ORDER BY p.price ASC, p.name ASC`
+      ORDER BY p.priority DESC, p.name ASC`
     );
 
     return plans.map(plan => ({
@@ -51,8 +51,8 @@ export class PlansService {
       description: plan.description,
       price: plan.price,
       isActive: plan.isActive === 1,
-      features: this.parseJson(plan.features),
-      limits: this.parseJson(plan.limits),
+      maxUsers: plan.maxUsers,
+      priority: plan.priority,
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
       pagesCount: plan.pagesCount || 0,
@@ -67,10 +67,10 @@ export class PlansService {
         name,
         display_name as displayName,
         description,
-        price,
+        price_monthly as price,
         is_active as isActive,
-        features,
-        limits,
+        max_users as maxUsers,
+        priority,
         created_at as createdAt,
         updated_at as updatedAt
       FROM ari_plans
@@ -87,7 +87,7 @@ export class PlansService {
       `SELECT
         p.id,
         p.name,
-        p.display_name as displayName,
+        p.name as displayName,
         p.path,
         p.category,
         a.name as appName,
@@ -116,8 +116,8 @@ export class PlansService {
       description: plan.description,
       price: plan.price,
       isActive: plan.isActive === 1,
-      features: this.parseJson(plan.features),
-      limits: this.parseJson(plan.limits),
+      maxUsers: plan.maxUsers,
+      priority: plan.priority,
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
       pages: pages.map(p => ({
@@ -152,10 +152,10 @@ export class PlansService {
       name: dto.name,
       display_name: dto.displayName,
       description: dto.description || null,
-      price: dto.price || 0,
+      price_monthly: dto.price || 0,
       is_active: dto.isActive !== false ? 1 : 0,
-      features: dto.features ? JSON.stringify(dto.features) : null,
-      limits: dto.limits ? JSON.stringify(dto.limits) : null,
+      max_users: dto.maxUsers || null,
+      priority: dto.priority || 0,
     });
 
     this.logger.log(`Plano criado: ${dto.name} (ID: ${insertId})`);
@@ -189,10 +189,10 @@ export class PlansService {
     if (dto.name) updateData.name = dto.name;
     if (dto.displayName) updateData.display_name = dto.displayName;
     if (dto.description !== undefined) updateData.description = dto.description || null;
-    if (dto.price !== undefined) updateData.price = dto.price;
+    if (dto.price !== undefined) updateData.price_monthly = dto.price;
     if (dto.isActive !== undefined) updateData.is_active = dto.isActive ? 1 : 0;
-    if (dto.features !== undefined) updateData.features = dto.features ? JSON.stringify(dto.features) : null;
-    if (dto.limits !== undefined) updateData.limits = dto.limits ? JSON.stringify(dto.limits) : null;
+    if (dto.maxUsers !== undefined) updateData.max_users = dto.maxUsers;
+    if (dto.priority !== undefined) updateData.priority = dto.priority;
 
     if (Object.keys(updateData).length > 0) {
       await this.db.update('ari_plans', updateData, 'id = ?', [id]);
@@ -270,7 +270,7 @@ export class PlansService {
       `SELECT
         p.id,
         p.name,
-        p.display_name as displayName,
+        p.name as displayName,
         p.path,
         p.category,
         a.id as appId,

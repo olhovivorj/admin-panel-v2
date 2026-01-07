@@ -37,7 +37,7 @@ export class PagesService {
       `SELECT
         p.id,
         p.name,
-        p.display_name as displayName,
+        p.name as displayName,
         p.path,
         p.category,
         p.app_id as appId,
@@ -46,13 +46,13 @@ export class PagesService {
         p.icon,
         p.description,
         p.is_active as isActive,
-        p.\`order\`,
+        p.order_index as \`order\`,
         p.created_at as createdAt,
-        p.updated_at as updatedAt
+        NULL as updatedAt
       FROM ari_pages p
       LEFT JOIN ari_apps a ON p.app_id = a.id
       WHERE ${whereClause}
-      ORDER BY p.\`order\` ASC, p.name ASC`,
+      ORDER BY p.order_index ASC, p.name ASC`,
       params
     );
 
@@ -82,7 +82,7 @@ export class PagesService {
       `SELECT
         p.id,
         p.name,
-        p.display_name as displayName,
+        p.name as displayName,
         p.path,
         p.category,
         p.app_id as appId,
@@ -91,9 +91,9 @@ export class PagesService {
         p.icon,
         p.description,
         p.is_active as isActive,
-        p.\`order\`,
+        p.order_index as \`order\`,
         p.created_at as createdAt,
-        p.updated_at as updatedAt
+        NULL as updatedAt
       FROM ari_pages p
       LEFT JOIN ari_apps a ON p.app_id = a.id
       WHERE p.id = ?`,
@@ -190,14 +190,13 @@ export class PagesService {
 
     const insertId = await this.db.insert('ari_pages', {
       name: dto.name,
-      display_name: dto.displayName,
       path: dto.path,
       category: dto.category || null,
       app_id: dto.appId || null,
       icon: dto.icon || null,
       description: dto.description || null,
       is_active: dto.isActive !== false ? 1 : 0,
-      order: dto.order || 0,
+      order_index: dto.order || 0,
     });
 
     this.logger.log(`Página criada: ${dto.name} (ID: ${insertId})`);
@@ -241,14 +240,13 @@ export class PagesService {
 
     const updateData: Record<string, any> = {};
     if (dto.name) updateData.name = dto.name;
-    if (dto.displayName) updateData.display_name = dto.displayName;
     if (dto.path) updateData.path = dto.path;
     if (dto.category !== undefined) updateData.category = dto.category || null;
     if (dto.appId !== undefined) updateData.app_id = dto.appId || null;
     if (dto.icon !== undefined) updateData.icon = dto.icon || null;
     if (dto.description !== undefined) updateData.description = dto.description || null;
     if (dto.isActive !== undefined) updateData.is_active = dto.isActive ? 1 : 0;
-    if (dto.order !== undefined) updateData.order = dto.order;
+    if (dto.order !== undefined) updateData.order_index = dto.order;
 
     if (Object.keys(updateData).length > 0) {
       await this.db.update('ari_pages', updateData, 'id = ?', [id]);
@@ -304,7 +302,7 @@ export class PagesService {
 
   async reorder(pageIds: number[]) {
     for (let i = 0; i < pageIds.length; i++) {
-      await this.db.update('ari_pages', { order: i }, 'id = ?', [pageIds[i]]);
+      await this.db.update('ari_pages', { order_index: i }, 'id = ?', [pageIds[i]]);
     }
 
     this.logger.log(`Páginas reordenadas: ${pageIds.join(', ')}`);
