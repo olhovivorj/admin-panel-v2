@@ -28,37 +28,22 @@ const validatePhone = (phone: string | undefined) => {
   return cleaned.length === 10 || cleaned.length === 11
 }
 
-const userSchema = z
-  .object({
-    name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100),
-    email: z
-      .string()
-      .email('Email inválido')
-      .refine((val) => !val.includes(' '), 'Email não pode conter espaços')
-      .refine((val) => val === val.toLowerCase(), 'Email deve estar em minúsculas'),
-    telefone: z.string().optional().refine(validatePhone, 'Telefone inválido'),
-    password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres').optional(),
-    role_id: z.number().optional(), // FK para ari_roles
-    id_pessoa: z.number().optional(), // FK para ge_pessoa - OBRIGATÓRIO para NORMAL
-    tipo_usuario: z.enum(['NORMAL', 'API']).optional(),
-    active: z.boolean().optional(),
-    // API fields
-    rate_limit_per_hour: z.number().min(1).max(10000).optional(),
-    ip_whitelist: z.array(z.string()).optional(),
-  })
-  .refine(
-    (data) => {
-      // Se tipo_usuario é NORMAL, id_pessoa é OBRIGATÓRIO
-      if (data.tipo_usuario === 'NORMAL' && !data.id_pessoa) {
-        return false
-      }
-      return true
-    },
-    {
-      message: 'Usuários do tipo NORMAL devem ter uma pessoa vinculada (id_pessoa)',
-      path: ['id_pessoa'],
-    }
-  )
+const userSchema = z.object({
+  name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(100),
+  email: z
+    .string()
+    .email('Email inválido')
+    .refine((val) => !val.includes(' '), 'Email não pode conter espaços')
+    .refine((val) => val === val.toLowerCase(), 'Email deve estar em minúsculas'),
+  telefone: z.string().optional(),
+  password: z.string().optional(),
+  role_id: z.any().optional(), // FK para ari_roles - flexível
+  id_pessoa: z.any().optional(), // FK para ge_pessoa - flexível
+  tipo_usuario: z.enum(['NORMAL', 'API']).optional(),
+  active: z.boolean().optional(),
+  rate_limit_per_hour: z.number().optional(),
+  ip_whitelist: z.array(z.string()).optional(),
+})
 
 type UserFormData = z.infer<typeof userSchema>
 
@@ -114,7 +99,7 @@ export function UserFormModalWithTabs({
         name: user.name,
         email: user.email,
         telefone: user.telefone || '',
-        role_id: (user as any).role_id || undefined,
+        role_id: user.role?.id || undefined,
         id_pessoa: user.id_pessoa || undefined,
         tipo_usuario: user.tipo_usuario || 'NORMAL',
         active: ativoValue, // Usar campo ativo do backend
@@ -131,10 +116,37 @@ export function UserFormModalWithTabs({
   // Mutation para criar/atualizar
   const mutation = useMutation({
     mutationFn: async (data: UserFormData) => {
+      // Construir payload limpo (só campos com valor)
+      const payload: any = {}
+
+      // Campos obrigatórios
+      if (data.name) payload.nome = data.name
+      if (data.email) payload.email = data.email
+
+      // Campos opcionais (só incluir se tiver valor)
+      if (data.telefone) payload.telefone = data.telefone
+      if (data.password) payload.password = data.password
+      if (data.tipo_usuario) payload.tipo_usuario = data.tipo_usuario
+
+      // role_id → roleId (backend espera camelCase)
+      if (data.role_id !== undefined && data.role_id !== null) {
+        payload.roleId = Number(data.role_id)
+      }
+
+      // id_pessoa (só se tiver valor válido)
+      if (data.id_pessoa !== undefined && data.id_pessoa !== null && data.id_pessoa !== '') {
+        payload.id_pessoa = Number(data.id_pessoa)
+      }
+
+      // active → ativo
+      payload.ativo = data.active === true
+
+      logger.info('📦 Payload limpo para API:', 'MUTATION', payload)
+
       if (isEditing) {
-        return usersService.updateUser(user.id, data as any)
+        return usersService.updateUser(user.id, payload)
       } else {
-        return usersService.createUser({ ...data, baseId: selectedBaseId } as any)
+        return usersService.createUser({ ...payload, baseId: selectedBaseId })
       }
     },
     onSuccess: () => {
@@ -152,7 +164,16 @@ export function UserFormModalWithTabs({
   })
 
   const onSubmit = (data: UserFormData) => {
+    logger.info('🚀 Form submit - dados válidos', 'FORM', data)
     mutation.mutate(data)
+  }
+
+  const onError = (errors: any) => {
+    logger.error('❌ Erros de validação', 'FORM', errors)
+    const firstError = Object.values(errors)[0] as any
+    if (firstError?.message) {
+      toast.error(`Erro: ${firstError.message}`)
+    }
   }
 
   const tabs = [
@@ -183,7 +204,7 @@ export function UserFormModalWithTabs({
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <form onSubmit={handleSubmit(onSubmit, onError)}>
             {/* Tabs */}
             <Tab.Group selectedIndex={selectedTab} onChange={setSelectedTab}>
               <Tab.List className="flex border-b border-gray-200 dark:border-gray-700 px-6">

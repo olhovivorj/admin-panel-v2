@@ -229,8 +229,8 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
         </div>
       )}
 
-      {/* Campo hidden para id_pessoa */}
-      <input type="hidden" {...register('id_pessoa', { valueAsNumber: true })} />
+      {/* Campo hidden para id_pessoa - NÃO usar valueAsNumber pois converte vazio para NaN */}
+      <input type="hidden" {...register('id_pessoa')} />
 
       {/* Nome */}
       <div>
