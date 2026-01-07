@@ -13,6 +13,9 @@ import { Users } from '@/pages/users/Users'
 import { Bases } from '@/pages/Bases'
 import { Roles } from '@/pages/Roles'
 import { RolePermissions } from '@/pages/RolePermissions'
+import { Apps } from '@/pages/Apps'
+import { Pages } from '@/pages/Pages'
+import { Plans } from '@/pages/Plans'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -51,6 +54,9 @@ function App() {
                     <Route path="bases" element={<Bases />} />
                     <Route path="roles" element={<Roles />} />
                     <Route path="roles/:roleId/permissions" element={<RolePermissions />} />
+                    <Route path="apps" element={<Apps />} />
+                    <Route path="pages" element={<Pages />} />
+                    <Route path="plans" element={<Plans />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>

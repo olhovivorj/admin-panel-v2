@@ -6,6 +6,9 @@ import {
   ShieldCheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CubeIcon,
+  DocumentTextIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/utils/cn'
 import { useSuperAdmin } from '@/hooks/useSuperAdmin'
@@ -14,7 +17,10 @@ import { useSidebar } from '@/contexts/SidebarContext'
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Usuários', href: '/users', icon: UsersIcon },
+  { name: 'Apps', href: '/apps', icon: CubeIcon, adminOnly: true },
+  { name: 'Páginas', href: '/pages', icon: DocumentTextIcon, adminOnly: true },
   { name: 'Roles & Permissões', href: '/roles', icon: ShieldCheckIcon, adminOnly: true },
+  { name: 'Planos', href: '/plans', icon: CreditCardIcon, adminOnly: true },
   { name: 'Bases de Dados', href: '/bases', icon: CircleStackIcon, adminOnly: true },
 ]
 

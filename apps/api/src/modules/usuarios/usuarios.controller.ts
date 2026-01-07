@@ -8,9 +8,11 @@ import {
   Body,
   Param,
   Query,
+  Headers,
   ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -111,5 +113,35 @@ export class UsuariosController {
   @ApiOperation({ summary: 'Ativar/desativar usuario' })
   async toggleStatus(@Param('id', ParseIntPipe) id: number) {
     return this.usuariosService.toggleStatus(id);
+  }
+
+  // ==================== SYS-USERS (Firebird) ====================
+
+  @Get('sys-users/available')
+  @ApiOperation({ summary: 'Listar sys-users disponiveis para vinculacao' })
+  @ApiHeader({ name: 'X-Base-Id', required: true, description: 'ID da base' })
+  @ApiQuery({ name: 'baseId', required: false, type: Number, description: 'ID da base (alternativa ao header)' })
+  async getSysUsersAvailable(
+    @Headers('x-base-id') baseIdHeader?: string,
+    @Query('baseId') baseIdQuery?: string,
+  ) {
+    const baseId = baseIdQuery ? parseInt(baseIdQuery, 10) : (baseIdHeader ? parseInt(baseIdHeader, 10) : null);
+
+    if (!baseId || isNaN(baseId)) {
+      throw new BadRequestException('baseId é obrigatório (header X-Base-Id ou query param)');
+    }
+
+    const data = await this.usuariosService.getSysUsersAvailable(baseId);
+    return { success: true, data };
+  }
+
+  @Get('sys-users/:baseId/user/:sysUserId/lojas')
+  @ApiOperation({ summary: 'Listar lojas de um sys-user' })
+  async getSysUserLojas(
+    @Param('baseId', ParseIntPipe) baseId: number,
+    @Param('sysUserId', ParseIntPipe) sysUserId: number,
+  ) {
+    const data = await this.usuariosService.getSysUserLojas(baseId, sysUserId);
+    return { success: true, data };
   }
 }

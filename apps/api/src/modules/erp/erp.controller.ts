@@ -67,6 +67,23 @@ export class ErpController {
     return this.erpService.getPessoa(baseId, id);
   }
 
+  @Get('pessoas/disponiveis-vinculacao')
+  @ApiOperation({ summary: 'Listar pessoas disponiveis para vinculacao com usuario' })
+  @ApiHeader({ name: 'X-Base-Id', required: true, description: 'ID da base' })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getPessoasDisponiveisVinculacao(
+    @Headers('x-base-id') baseIdHeader: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const baseId = this.getBaseId(baseIdHeader);
+    return this.erpService.getPessoasDisponiveisVinculacao(baseId, {
+      search,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
   // ==================== EMPRESAS ====================
 
   @Get('empresas')
@@ -86,106 +103,6 @@ export class ErpController {
   ) {
     const baseId = this.getBaseId(baseIdHeader);
     return this.erpService.getEmpresa(baseId, id);
-  }
-
-  // ==================== PRODUTOS ====================
-
-  @Get('produtos')
-  @ApiOperation({ summary: 'Listar produtos' })
-  @ApiHeader({ name: 'X-Base-Id', required: true, description: 'ID da base' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'grupoId', required: false, type: Number })
-  async getProdutos(
-    @Headers('x-base-id') baseIdHeader: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-    @Query('grupoId') grupoId?: string,
-  ) {
-    const baseId = this.getBaseId(baseIdHeader);
-    return this.erpService.getProdutos(baseId, {
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 20,
-      search,
-      grupoId: grupoId ? parseInt(grupoId, 10) : undefined,
-    });
-  }
-
-  // ==================== ESTOQUE ====================
-
-  @Get('estoque')
-  @ApiOperation({ summary: 'Consultar estoque' })
-  @ApiHeader({ name: 'X-Base-Id', required: true, description: 'ID da base' })
-  @ApiQuery({ name: 'empresaId', required: true, type: Number })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  async getEstoque(
-    @Headers('x-base-id') baseIdHeader: string,
-    @Query('empresaId') empresaIdStr: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-    @Query('search') search?: string,
-  ) {
-    const baseId = this.getBaseId(baseIdHeader);
-    const empresaId = parseInt(empresaIdStr, 10);
-
-    if (isNaN(empresaId)) {
-      throw new BadRequestException('empresaId e obrigatorio');
-    }
-
-    return this.erpService.getEstoque(baseId, empresaId, {
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 20,
-      search,
-    });
-  }
-
-  // ==================== VENDAS ====================
-
-  @Get('vendas')
-  @ApiOperation({ summary: 'Relatorio de vendas' })
-  @ApiHeader({ name: 'X-Base-Id', required: true, description: 'ID da base' })
-  @ApiQuery({ name: 'empresaId', required: false, type: Number })
-  @ApiQuery({ name: 'dataInicio', required: false, type: String })
-  @ApiQuery({ name: 'dataFim', required: false, type: String })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  async getVendas(
-    @Headers('x-base-id') baseIdHeader: string,
-    @Query('empresaId') empresaId?: string,
-    @Query('dataInicio') dataInicio?: string,
-    @Query('dataFim') dataFim?: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    const baseId = this.getBaseId(baseIdHeader);
-    return this.erpService.getVendas(baseId, {
-      empresaId: empresaId ? parseInt(empresaId, 10) : undefined,
-      dataInicio,
-      dataFim,
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 20,
-    });
-  }
-
-  // ==================== DASHBOARD ====================
-
-  @Get('dashboard')
-  @ApiOperation({ summary: 'Dados do dashboard' })
-  @ApiHeader({ name: 'X-Base-Id', required: true, description: 'ID da base' })
-  @ApiQuery({ name: 'empresaId', required: false, type: Number })
-  async getDashboard(
-    @Headers('x-base-id') baseIdHeader: string,
-    @Query('empresaId') empresaId?: string,
-  ) {
-    const baseId = this.getBaseId(baseIdHeader);
-    return this.erpService.getDashboard(
-      baseId,
-      empresaId ? parseInt(empresaId, 10) : undefined,
-    );
   }
 
   // ==================== TEST CONNECTION ====================

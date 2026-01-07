@@ -297,9 +297,14 @@ export class BaseConfigService implements OnModuleInit, OnModuleDestroy {
    * @param sql - Query SQL
    * @param params - Parâmetros
    * @returns Resultado da query
+   *
+   * NOTA: Usa pool.query() ao invés de pool.execute() porque:
+   * - execute() usa prepared statements com restrições de tipos
+   * - LIMIT/OFFSET como placeholders pode falhar com execute() em algumas versões MySQL
+   * - query() faz escape seguro dos valores e funciona universalmente
    */
   async query<T = any>(sql: string, params: any[] = []): Promise<T[]> {
-    const [rows] = await this.pool.execute(sql, params);
+    const [rows] = await this.pool.query(sql, params);
     return rows as T[];
   }
 
@@ -320,7 +325,7 @@ export class BaseConfigService implements OnModuleInit, OnModuleDestroy {
     const placeholders = keys.map(() => '?').join(', ');
 
     const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-    const [result] = await this.pool.execute(sql, values);
+    const [result] = await this.pool.query(sql, values);
     return (result as any).insertId;
   }
 
@@ -332,7 +337,7 @@ export class BaseConfigService implements OnModuleInit, OnModuleDestroy {
     const values = [...Object.values(data), ...whereParams];
 
     const sql = `UPDATE ${table} SET ${setClauses} WHERE ${where}`;
-    const [result] = await this.pool.execute(sql, values);
+    const [result] = await this.pool.query(sql, values);
     return (result as any).affectedRows;
   }
 
@@ -341,7 +346,7 @@ export class BaseConfigService implements OnModuleInit, OnModuleDestroy {
    */
   async delete(table: string, where: string, whereParams: any[]): Promise<number> {
     const sql = `DELETE FROM ${table} WHERE ${where}`;
-    const [result] = await this.pool.execute(sql, whereParams);
+    const [result] = await this.pool.query(sql, whereParams);
     return (result as any).affectedRows;
   }
 

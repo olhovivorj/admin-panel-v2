@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { BaseConfigService } from '../../config/base-config.service';
+import { FirebirdService } from '../erp/firebird.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -20,7 +21,10 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 export class UsuariosService {
   private readonly logger = new Logger(UsuariosService.name);
 
-  constructor(private readonly db: BaseConfigService) {}
+  constructor(
+    private readonly db: BaseConfigService,
+    private readonly firebird: FirebirdService,
+  ) {}
 
   async findAll(page = 1, limit = 10, search?: string, baseId?: number) {
     const offset = (page - 1) * limit;
@@ -34,7 +38,7 @@ export class UsuariosService {
     }
 
     if (baseId) {
-      whereClause += ' AND ID_BASE = ?';
+      whereClause += ' AND u.ID_BASE = ?';
       params.push(baseId);
     }
 
@@ -364,5 +368,83 @@ export class UsuariosService {
       ativo: newStatus === 1,
       message: newStatus === 1 ? 'Usuário ativado' : 'Usuário desativado',
     };
+  }
+
+  // ==================== SYS-USERS (Firebird) ====================
+
+  /**
+   * Lista sys_users disponíveis para vinculação
+   * Busca na tabela SYS_USER do Firebird e verifica se já tem usuário ARI vinculado
+   */
+  async getSysUsersAvailable(baseId: number) {
+    this.logger.log(`Buscando sys-users disponíveis para base ${baseId}`);
+
+    // Buscar sys_users do Firebird
+    const sql = `
+      SELECT
+        u.ID_USER,
+        u.ID_EMPRESA,
+        u.NOME,
+        u.NOME_COMPLETO,
+        u.EMAIL,
+        u.SUPERVISOR,
+        COALESCE(g.DESCRICAO, 'Sem Grupo') AS GRUPO
+      FROM SYS_USER u
+      LEFT JOIN SYS_GRUPO g ON g.ID_GRUPO = u.ID_GRUPO
+      WHERE u.ATIVO = 'S'
+      ORDER BY u.NOME_COMPLETO, u.NOME
+    `;
+
+    const sysUsers = await this.firebird.query(baseId, sql);
+
+    // Buscar quais já têm usuário ARI vinculado (campo iduser na tabela ariusers)
+    const vinculados = await this.db.query<{ iduser: number }>(
+      'SELECT iduser FROM ariusers WHERE ID_BASE = ? AND iduser IS NOT NULL',
+      [baseId]
+    );
+    const idsVinculados = new Set(vinculados.map(v => v.iduser));
+
+    return sysUsers.map((u: any) => ({
+      baseId,
+      idUser: u.ID_USER,
+      idEmpresa: u.ID_EMPRESA,
+      name: u.NOME,
+      completeName: u.NOME_COMPLETO || u.NOME,
+      email: u.EMAIL,
+      supervisor: u.SUPERVISOR === 'S',
+      grupo: u.GRUPO,
+      hasAriUser: idsVinculados.has(u.ID_USER),
+    }));
+  }
+
+  /**
+   * Lista lojas (empresas) vinculadas a um sys_user
+   */
+  async getSysUserLojas(baseId: number, sysUserId: number) {
+    this.logger.log(`Buscando lojas do sys-user ${sysUserId} na base ${baseId}`);
+
+    const sql = `
+      SELECT
+        e.ID_EMPRESA,
+        p.FANTASIA,
+        p.RAZAO,
+        pe.CIDADE,
+        pe.UF
+      FROM SYS_USER_EMPRESA ue
+      JOIN GE_EMPRESA e ON e.ID_EMPRESA = ue.ID_EMPRESA
+      JOIN GE_PESSOA p ON p.ID_PESSOA = e.ID_PESSOA
+      LEFT JOIN GE_PESSOA_ENDERECO pe ON pe.ID_PESSOA = p.ID_PESSOA AND pe.PRINCIPAL = 'S'
+      WHERE ue.ID_USER = ?
+      ORDER BY p.FANTASIA
+    `;
+
+    const lojas = await this.firebird.query(baseId, sql, [sysUserId]);
+
+    return lojas.map((l: any) => ({
+      id: l.ID_EMPRESA,
+      nome: l.FANTASIA || l.RAZAO,
+      cidade: l.CIDADE,
+      uf: l.UF,
+    }));
   }
 }

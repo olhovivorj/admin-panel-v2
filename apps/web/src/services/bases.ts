@@ -135,7 +135,7 @@ export const basesService = {
 
   // Buscar base por ID
   async getBase(id: number) {
-    const response = await api.get<BaseWithStats>(`/erp/bases/${id}`)
+    const response = await api.get<BaseWithStats>(`/bases/${id}`)
     return response.data
   },
 

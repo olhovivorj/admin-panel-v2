@@ -52,8 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (token && savedUser) {
         // Verificar se token não expirou fazendo verificação no backend
         try {
-          const response = await api.get('/auth/verify')
-          if (response.data.success) {
+          const response = await api.get('/auth/validate')
+          if (response.data.valid) {
             api.defaults.headers.authorization = `Bearer ${token}`
             setUser(JSON.parse(savedUser))
             logger.info('Token válido - usuário autenticado', {}, 'AUTH')
@@ -84,12 +84,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await api.post('/auth/login', { email, password })
       const responseData = response.data
 
-      if (!responseData.success) {
-        throw new Error(responseData.error?.message || 'Erro ao fazer login')
+      // Suporta dois formatos de resposta:
+      // 1. { success: true, data: { access_token, ... } } (formato antigo)
+      // 2. { access_token, user: { ... } } (formato novo do backend próprio)
+      let access_token: string
+      let userData: any
+
+      if (responseData.success !== undefined) {
+        // Formato antigo (ari-nest)
+        if (!responseData.success) {
+          throw new Error(responseData.error?.message || 'Erro ao fazer login')
+        }
+        userData = responseData.data
+        access_token = userData.access_token
+      } else {
+        // Formato novo (backend próprio admin-panel-v2)
+        access_token = responseData.access_token
+        userData = responseData.user
       }
 
-      const userData = responseData.data
-      const access_token = userData.access_token
+      if (!access_token) {
+        throw new Error('Token não retornado pelo servidor')
+      }
 
       const user = {
         id: userData.id,

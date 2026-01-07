@@ -20,18 +20,25 @@ const auditLogger = {
 function getBaseURL() {
   const savedUrl = localStorage.getItem('@ari:apiUrl')
   const savedEnv = localStorage.getItem('@ari:environment')
-  
+
   if (savedUrl) {
-    return `${savedUrl}/api`
+    // Se savedUrl já tem /api, usar como está
+    return savedUrl.includes('/api') ? savedUrl : `${savedUrl}/api`
   }
-  
+
   // Fallback baseado no ambiente salvo
   if (savedEnv === 'production') {
     return 'https://ierp.invistto.com/api'
   }
-  
-  // Default para local
-  return 'http://localhost:3000/api'
+
+  // Usar variável de ambiente ou fallback para backend próprio (3001)
+  const envUrl = import.meta.env.VITE_API_URL
+  if (envUrl) {
+    return envUrl
+  }
+
+  // Default para backend próprio do admin-panel-v2 (SEM /api)
+  return 'http://localhost:3001'
 }
 
 export const api = axios.create({
@@ -214,7 +221,7 @@ api.interceptors.response.use(
 
     // Backend não disponível (detecção prioritária)
     if (isBackendUnavailableError(error)) {
-      const message = 'Backend ari-nest não está disponível. Verifique se o serviço está rodando.'
+      const message = 'Backend não está disponível. Verifique se o serviço está rodando na porta 3001.'
       toast.error(message, {
         duration: 5000,
         id: 'backend-unavailable', // Evita toasts duplicados

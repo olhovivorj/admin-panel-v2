@@ -6,6 +6,9 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { BasesModule } from './modules/bases/bases.module';
 import { RolesModule } from './modules/roles/roles.module';
 import { ErpModule } from './modules/erp/erp.module';
+import { AppsModule } from './modules/apps/apps.module';
+import { PagesModule } from './modules/pages/pages.module';
+import { PlansModule } from './modules/plans/plans.module';
 
 /**
  * AppModule - Módulo principal do Admin Panel V2
@@ -35,6 +38,9 @@ import { ErpModule } from './modules/erp/erp.module';
     BasesModule,
     RolesModule,
     ErpModule,
+    AppsModule,
+    PagesModule,
+    PlansModule,
   ],
 })
 export class AppModule {}
