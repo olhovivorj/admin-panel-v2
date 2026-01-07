@@ -12,20 +12,17 @@ export function Dashboard() {
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       // Buscar dados em paralelo
-      const [usersResponse, bases] = await Promise.all([
-        usersService.getUsers({ page: 1, limit: 100 }), // Buscar primeiros 100 usuários para estatísticas
+      const [usersStats, bases] = await Promise.all([
+        usersService.getUserStats(), // Usar endpoint de stats
         basesService.getBases(),
       ])
 
-      // Backend retorna: { users: [...], total, page, limit, totalPages }
-      const users = usersResponse.data?.users || []
-      const totalUsers = usersResponse.data?.total || 0
-
+      // Backend /usuarios/stats retorna: { total, active, inactive, byRole }
       return {
-        totalUsers,
-        activeUsers: users.filter((u: any) => u.active || u.ativo).length || 0,
+        totalUsers: usersStats.total || 0,
+        activeUsers: usersStats.active || 0,
         totalBases: bases.length,
-        activeBases: bases.filter((b: any) => b.ativo).length,
+        activeBases: bases.filter((b: any) => b.ativo || b.firebirdActive).length,
       }
     },
     refetchInterval: 60000, // Atualizar a cada minuto

@@ -28,11 +28,13 @@ export class CreatePlanDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ description: 'Features do plano (JSON)' })
+  @ApiPropertyOptional({ description: 'Máximo de usuários' })
   @IsOptional()
-  features?: Record<string, any>;
+  @IsNumber()
+  maxUsers?: number;
 
-  @ApiPropertyOptional({ description: 'Limites do plano (JSON)' })
+  @ApiPropertyOptional({ description: 'Prioridade do plano', default: 0 })
   @IsOptional()
-  limits?: Record<string, any>;
+  @IsNumber()
+  priority?: number;
 }

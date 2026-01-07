@@ -6,7 +6,7 @@ import { logger } from '../../../utils/logger'
 interface Role {
   id: number
   name: string
-  display_name: string
+  displayName: string // Backend usa camelCase
   description: string
   priority: number
 }
@@ -24,7 +24,9 @@ export const PermissoesTab = ({ register, control }: PermissoesTabProps) => {
     const loadRoles = async () => {
       try {
         const response = await usersService.getRoles()
-        setRoles(response.data || [])
+        // getRoles() já retorna response.data (array de roles)
+        const rolesData = Array.isArray(response) ? response : (response.data || response || [])
+        setRoles(rolesData)
       } catch (error) {
         logger.error('Erro ao carregar roles:', error)
         setRoles([])
@@ -60,7 +62,7 @@ export const PermissoesTab = ({ register, control }: PermissoesTabProps) => {
             <option value="">-- Selecione um cargo --</option>
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
-                {role.display_name} - {role.description}
+                {role.displayName} - {role.description}
               </option>
             ))}
           </select>

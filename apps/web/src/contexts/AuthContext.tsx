@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isSupervisor: userData.isSupervisor,
         permissions: userData.permissions || [],
         tipoUsuario: userData.tipoUsuario || 'COMUM',
-        canChangeBase: userData.canChangeBase || false,
+        canChangeBase: userData.canChangeBase ?? userData.isMaster ?? false,
         // Novos campos do sistema de roles
         roleId: userData.roleId,
         roleName: userData.roleName,

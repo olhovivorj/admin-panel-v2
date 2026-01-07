@@ -23,6 +23,29 @@ export class BasesService {
 
   constructor(private readonly db: BaseConfigService) {}
 
+  /**
+   * Lista simplificada de bases (sem estatísticas) - carregamento rápido
+   */
+  async findAllSimples() {
+    const items = await this.db.query(
+      `SELECT
+        b.ID_BASE,
+        b.NOME,
+        b.BASE
+      FROM base b
+      ORDER BY b.NOME ASC`
+    );
+
+    return {
+      success: true,
+      data: items.map(base => ({
+        ID_BASE: base.ID_BASE,
+        NOME: base.NOME,
+        BASE: base.BASE,
+      })),
+    };
+  }
+
   async findAll(page = 1, limit = 10, search?: string) {
     const offset = (page - 1) * limit;
 

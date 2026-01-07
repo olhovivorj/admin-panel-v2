@@ -58,6 +58,15 @@ export class UsuariosController {
     );
   }
 
+  @Get('stats')
+  @ApiOperation({ summary: 'Estatísticas de usuários' })
+  @ApiQuery({ name: 'baseId', required: false, type: Number })
+  async getStats(@Query('baseId') baseId?: string) {
+    return this.usuariosService.getStats(
+      baseId ? parseInt(baseId, 10) : undefined,
+    );
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Buscar usuario por ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {

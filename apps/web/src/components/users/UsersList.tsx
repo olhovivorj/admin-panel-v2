@@ -527,8 +527,15 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   }
 
   const responseData = usersResponse as any
-  const users = responseData?.data?.users || responseData?.data || []
-  const total = responseData?.data?.total || responseData?.total || 0
+  // Backend retorna: { items: [...], total, page, pageSize, totalPages }
+  // Mapear campos do backend (nome) para frontend (name)
+  const rawUsers = responseData?.items || responseData?.data?.users || responseData?.data || []
+  const users = rawUsers.map((u: any) => ({
+    ...u,
+    name: u.name || u.nome, // Backend usa 'nome', frontend espera 'name'
+    role: typeof u.role === 'object' ? u.role?.name : u.role,
+  }))
+  const total = responseData?.total || responseData?.data?.total || 0
   const totalPages = Math.ceil(total / limit)
 
   return (

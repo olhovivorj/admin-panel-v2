@@ -38,6 +38,12 @@ export class BasesController {
     );
   }
 
+  @Get('simples/list')
+  @ApiOperation({ summary: 'Listar bases simples (sem estatísticas)' })
+  async findAllSimples() {
+    return this.basesService.findAllSimples();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Buscar base por ID' })
   async findOne(@Param('id', ParseIntPipe) id: number) {

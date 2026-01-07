@@ -370,6 +370,57 @@ export class UsuariosService {
     };
   }
 
+  /**
+   * Retorna estatísticas de usuários
+   */
+  async getStats(baseId?: number) {
+    let whereClause = '1=1';
+    const params: any[] = [];
+
+    if (baseId) {
+      whereClause += ' AND ID_BASE = ?';
+      params.push(baseId);
+    }
+
+    const stats = await this.db.queryOne<{
+      total: number;
+      active: number;
+      inactive: number;
+    }>(
+      `SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN ativo = 1 THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN ativo = 0 THEN 1 ELSE 0 END) as inactive
+      FROM ariusers
+      WHERE ${whereClause}`,
+      params
+    );
+
+    // Contar por role
+    const byRole = await this.db.query<{ roleName: string; count: number }>(
+      `SELECT
+        COALESCE(r.name, 'sem_perfil') as roleName,
+        COUNT(*) as count
+      FROM ariusers u
+      LEFT JOIN ari_roles r ON u.role_id = r.id
+      WHERE ${whereClause}
+      GROUP BY r.name`,
+      params
+    );
+
+    const byRoleMap: Record<string, number> = {};
+    byRole.forEach(r => {
+      byRoleMap[r.roleName] = Number(r.count);
+    });
+
+    return {
+      total: stats?.total || 0,
+      active: Number(stats?.active) || 0,
+      inactive: Number(stats?.inactive) || 0,
+      byRole: byRoleMap,
+    };
+  }
+
   // ==================== SYS-USERS (Firebird) ====================
 
   /**

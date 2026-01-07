@@ -51,6 +51,7 @@ const userSchema = z.object({
     .max(50, 'Senha muito longa')
     .optional(),
   role: z.enum(['admin', 'user', 'operator', 'viewer']).optional(),
+  role_id: z.number().optional(), // ID do cargo (ari_roles)
   baseId: z.number().optional(),
   active: z.boolean().optional(),
   // Campos para usuários API
@@ -380,6 +381,7 @@ Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
         telefone: user.telefone || '', // Campo telefone
         obs: user.obs || user.notes || '', // Campo observações (obs ou notes)
         role: user.role || 'user',
+        role_id: user.role?.id || undefined, // ID do cargo para o PermissoesTab
         baseId: user.baseId,
         active: user.ativo === true || (user.ativo as any) === 1, // Usar campo ativo do backend
         tipo_usuario: user.tipo_usuario as 'NORMAL' | 'API', // Não fazer fallback aqui
@@ -415,6 +417,7 @@ Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
         obs: '', // Campo observações
         password: '',
         role: 'viewer',
+        role_id: undefined, // Cargo vazio para novo usuário
         baseId: selectedBaseId,
         active: true, // Boolean para ativo
         tipo_usuario: (localStorage.getItem('newUserType') as 'NORMAL' | 'API') || 'NORMAL',
@@ -491,6 +494,12 @@ Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
     if (data.sysUserId) {
       payload.iduser = data.sysUserId
       delete payload.sysUserId
+    }
+
+    // Converter role_id para roleId (campo esperado pelo backend)
+    if (data.role_id !== undefined) {
+      payload.roleId = data.role_id || null
+      delete payload.role_id
     }
 
     // Log para debug

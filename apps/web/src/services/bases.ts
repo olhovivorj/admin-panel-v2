@@ -94,23 +94,34 @@ export const basesService = {
       const response = await api.get('/bases', {
         signal: controller.signal,
         timeout: timeout,
+        params: { limit: 500 }, // Buscar todas as bases
       })
 
       clearTimeout(timeoutId)
 
-      if (!response.data.success) {
-        logger.error('Erro ao buscar bases', 'BASE', {
-          error: response.data.error,
-          fullResponse: response.data,
-        })
-        throw new Error(`${response.data.error?.code || 'UNKNOWN'}: ${response.data.error?.message || 'Erro desconhecido'}`)
+      // Backend pode retornar:
+      // - Novo formato: { items: [...], total, page, ... }
+      // - Antigo formato: { success: true, data: [...] }
+      let basesData: any[] = []
+
+      if (response.data.items) {
+        // Novo formato paginado
+        basesData = response.data.items
+      } else if (response.data.success && response.data.data) {
+        // Antigo formato
+        basesData = response.data.data
+      } else if (Array.isArray(response.data)) {
+        // Array direto
+        basesData = response.data
       }
 
-      // Transformar ID_BASE para baseId para compatibilidade com frontend
-      const basesTransformadas = response.data.data?.map((base: any) => ({
+      // Transformar para formato compatível com frontend
+      const basesTransformadas = basesData.map((base: any) => ({
         ...base,
-        baseId: base.ID_BASE,
-      })) || []
+        baseId: base.ID_BASE || base.id,
+        ID_BASE: base.ID_BASE || base.id,
+        ativo: base.firebirdActive ?? true,
+      }))
 
       logger.info(`Bases completas carregadas: ${basesTransformadas.length} bases`, 'BASE')
       return basesTransformadas
