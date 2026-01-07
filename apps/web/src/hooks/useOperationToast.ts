@@ -48,11 +48,11 @@ export function useOperationToast<TData = unknown, TError = unknown, TVariables 
       }
 
       const message = typeof errorMessage === 'function'
-        ? errorMessage(error, variables)
+        ? errorMessage(error as TError, variables)
         : errorMessage
 
       toast.error(message)
-      onError?.(error, variables)
+      onError?.(error as TError, variables)
     },
   })
 }

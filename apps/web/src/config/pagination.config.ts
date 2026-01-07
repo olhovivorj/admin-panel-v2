@@ -53,10 +53,15 @@ export const ENDPOINT_CONFIGS: Record<string, Partial<PaginationConfig>> = {
 
 // Classe para gerenciar configurações
 export class PaginationManager {
-  private config: PaginationConfig
+  private _config: PaginationConfig
 
   constructor() {
-    this.config = this.loadConfig()
+    this._config = this.loadConfig()
+  }
+
+  // Getter público para config
+  get config(): PaginationConfig {
+    return this._config
   }
 
   // Carregar configuração (localStorage > env > default)
@@ -86,14 +91,14 @@ export class PaginationManager {
 
   // Salvar configuração
   saveConfig(updates: Partial<PaginationConfig>) {
-    this.config = { ...this.config, ...updates }
-    localStorage.setItem('@ari:paginationConfig', JSON.stringify(this.config))
+    this._config = { ...this._config, ...updates }
+    localStorage.setItem('@ari:paginationConfig', JSON.stringify(this._config))
   }
 
   // Obter configuração para endpoint específico
   getEndpointConfig(endpoint: string): PaginationConfig {
     const endpointOverrides = ENDPOINT_CONFIGS[endpoint] || {}
-    return { ...this.config, ...endpointOverrides }
+    return { ...this._config, ...endpointOverrides }
   }
 
   // Calcular parâmetros de paginação
@@ -143,13 +148,13 @@ export class PaginationManager {
     const options = isAdmin ? adminOptions : standardOptions
 
     return options.filter(
-      size => size >= this.config.minPageSize && size <= this.config.maxPageSize,
+      size => size >= this._config.minPageSize && size <= this._config.maxPageSize,
     )
   }
 
   // Validar se precisa streaming baseado no total
   needsStreaming(total: number): boolean {
-    return total > this.config.streamingThreshold
+    return total > this._config.streamingThreshold
   }
 }
 

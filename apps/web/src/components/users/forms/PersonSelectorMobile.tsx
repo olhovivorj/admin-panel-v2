@@ -184,7 +184,7 @@ export function PersonSelectorMobile({
 
             {searching && (
               <div className="absolute right-12 top-3.5">
-                <LoadingSpinner size="small" />
+                <LoadingSpinner size="sm" />
               </div>
             )}
           </div>

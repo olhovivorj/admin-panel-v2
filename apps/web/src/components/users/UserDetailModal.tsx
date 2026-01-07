@@ -20,16 +20,20 @@ export function UserDetailModal({ user, isOpen, onClose }: UserDetailModalProps)
   const isAdmin = checkIsAdmin(currentUser)
 
   // Query para buscar bases (para mostrar nomes ao invés de IDs)
-  const { data: bases = [], error: basesError } = useQuery({
+  const { data: basesData = [], error: basesError } = useQuery({
     queryKey: ['bases'],
     queryFn: () => basesService.getBases(),
     staleTime: 1000 * 60 * 5, // 5 minutos
     retry: false, // Não retentar se der erro
-    onError: (error: any) => {
-      console.error('❌ Erro ao buscar bases no UserDetailModal:', error)
-      console.error('❌ Response:', error.response?.data)
-    }
   })
+
+  // Cast para array se necessário
+  const bases = (Array.isArray(basesData) ? basesData : []) as any[]
+
+  // Log error se existir
+  if (basesError) {
+    console.error('❌ Erro ao buscar bases no UserDetailModal:', basesError)
+  }
 
   const getBaseName = (baseId: number) => {
     // Mapear nomes conhecidos
@@ -111,7 +115,7 @@ export function UserDetailModal({ user, isOpen, onClose }: UserDetailModalProps)
                 <XCircleIcon className="h-5 w-5 text-red-500" />
               )}
               <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {user.status === 'active' ? 'Ativo' : user.status === 'suspended' ? 'Suspenso' : 'Inativo'}
+                {user.status === 'active' ? 'Ativo' : (user.status as string) === 'suspended' ? 'Suspenso' : 'Inativo'}
               </span>
             </div>
 
@@ -167,7 +171,7 @@ export function UserDetailModal({ user, isOpen, onClose }: UserDetailModalProps)
                   Total de Acessos
                 </label>
                 <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                  {user.total_requisicoes_api || 0} acesso{(user.total_requisicoes_api || 0) !== 1 ? 's' : ''}
+                  {(user as any).total_requisicoes_api || 0} acesso{((user as any).total_requisicoes_api || 0) !== 1 ? 's' : ''}
                 </p>
               </div>
 

@@ -99,7 +99,7 @@ export function UserFormModalWithTabs({
   // Carregar dados ao editar
   useEffect(() => {
     if (user && isOpen) {
-      const ativoValue = user.ativo === true || user.ativo === 1
+      const ativoValue = user.ativo === true || (user.ativo as any) === 1
       console.log('🔍 DEBUG UserFormModalWithTabs:', {
         userId: user.id,
         userName: user.name,
@@ -114,7 +114,7 @@ export function UserFormModalWithTabs({
         name: user.name,
         email: user.email,
         telefone: user.telefone || '',
-        role_id: user.role_id || undefined,
+        role_id: (user as any).role_id || undefined,
         id_pessoa: user.id_pessoa || undefined,
         tipo_usuario: user.tipo_usuario || 'NORMAL',
         active: ativoValue, // Usar campo ativo do backend
@@ -132,9 +132,9 @@ export function UserFormModalWithTabs({
   const mutation = useMutation({
     mutationFn: async (data: UserFormData) => {
       if (isEditing) {
-        return usersService.updateUser(user.id, data)
+        return usersService.updateUser(user.id, data as any)
       } else {
-        return usersService.createUser({ ...data, baseId: selectedBaseId })
+        return usersService.createUser({ ...data, baseId: selectedBaseId } as any)
       }
     },
     onSuccess: () => {
@@ -224,7 +224,7 @@ export function UserFormModalWithTabs({
 
                 {watch('tipo_usuario') === 'API' && (
                   <Tab.Panel>
-                    <LimitesAcessoTab register={register} errors={errors} />
+                    <LimitesAcessoTab register={register as any} errors={errors as any} />
                   </Tab.Panel>
                 )}
               </Tab.Panels>

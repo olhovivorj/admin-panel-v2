@@ -83,13 +83,13 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
     queryKey: ['users', page, limit, filters, selectedBaseId],
     queryFn: async () => {
       logger.info(`🔍 [UsersList] Carregando usuários - Página ${page}, Base ${selectedBaseId}`, 'USER')
-      logger.info('🔍 [UsersList] Query habilitada:', {
+      logger.info('🔍 [UsersList] Query habilitada:', 'USER', {
         enabled: !!selectedBaseId,
         selectedBaseId,
         page,
         limit,
         filters,
-      }, 'USER')
+      })
       const result = await usersService.getUsers({
         page,
         limit,
@@ -100,12 +100,12 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
       // DEBUG: Mostrar primeiro usuário para verificar dados
       if (result?.data?.length > 0) {
         const firstUser = result.data[0]
-        logger.info('🔍 DEBUG - Primeiro usuário da lista:', {
+        logger.info('🔍 DEBUG - Primeiro usuário da lista:', 'USER', {
           id: firstUser.id,
           name: firstUser.name,
           telefone: firstUser.telefone,
           obs: firstUser.obs,
-        }, 'USER')
+        })
       }
 
       return result
@@ -114,22 +114,16 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
     gcTime: 1000 * 60 * 10, // 10 minutos no cache
     enabled: !!selectedBaseId, // Só carregar se tiver baseId selecionado
     refetchOnWindowFocus: false, // Não recarregar ao focar janela
-    onSuccess: (data) => {
-      logger.info(`✅ [UsersList] ${data?.data?.length || 0} usuários carregados da base ${selectedBaseId}`, 'USER')
-    },
-    onError: (error) => {
-      logger.error('❌ [UsersList] Erro ao carregar usuários:', error, 'USER')
-    },
   })
 
   // Debug adicional
-  logger.info('🔍 [UsersList] Estado da query:', {
+  logger.info('🔍 [UsersList] Estado da query:', 'USER', {
     selectedBaseId,
     isLoading,
-    error: error?.message,
-    dataLength: usersResponse?.data?.length,
+    error: (error as any)?.message,
+    dataLength: (usersResponse as any)?.data?.length,
     enabled: !!selectedBaseId,
-  }, 'USER')
+  })
 
   // Mutations usando o hook personalizado
   const deleteMutation = useOperationToast({
@@ -168,6 +162,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
       logger.info('🔑 Regenerando API Key:', 'USER', { userId })
       return await usersService.regenerateApiKey(userId)
     },
+    loadingMessage: 'Regenerando API Key...',
     successMessage: (data: any) => {
       logger.info('📦 Dados retornados da API:', 'USER', data)
       
@@ -307,25 +302,27 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   ]
 
   const handleExportCSV = () => {
-    if (!usersResponse?.data || usersResponse.data.length === 0) {
-      operationToast.warning('Nenhum usuário para exportar')
+    const data = (usersResponse as any)?.data
+    if (!data || data.length === 0) {
+      toast('Nenhum usuário para exportar', { icon: '⚠️' })
       return
     }
 
     const filename = `usuarios_${format(new Date(), 'yyyyMMdd_HHmmss')}.csv`
-    ExcelExporter.downloadCSV(filename, usersResponse.data, exportColumns)
-    operationToast.success(`Arquivo ${filename} baixado com sucesso`)
+    ExcelExporter.downloadCSV(filename, data, exportColumns)
+    toast.success(`Arquivo ${filename} baixado com sucesso`)
   }
 
   const handleExportExcel = () => {
-    if (!usersResponse?.data || usersResponse.data.length === 0) {
-      operationToast.warning('Nenhum usuário para exportar')
+    const data = (usersResponse as any)?.data
+    if (!data || data.length === 0) {
+      toast('Nenhum usuário para exportar', { icon: '⚠️' })
       return
     }
 
     const filename = `usuarios_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`
-    ExcelExporter.downloadXLSX(filename, usersResponse.data, exportColumns)
-    operationToast.success(`Arquivo ${filename} baixado com sucesso`)
+    ExcelExporter.downloadXLSX(filename, data, exportColumns)
+    toast.success(`Arquivo ${filename} baixado com sucesso`)
   }
 
   const handleEdit = async (user: UsuarioResponseDto) => {
@@ -393,7 +390,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
 
   // Helper para verificar se usuário está ativo
   const isUserActive = (user: UsuarioResponseDto) => {
-    return user.ativo === true || user.ativo === 1
+    return user.ativo === true || (user.ativo as any) === 1
   }
 
   const handleDelete = async (user: UsuarioResponseDto) => {
@@ -425,7 +422,7 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
   }
 
   const handleToggleStatus = async (user: UsuarioResponseDto) => {
-    const isCurrentlyActive = user.ativo === true || user.ativo === 1
+    const isCurrentlyActive = user.ativo === true || (user.ativo as any) === 1
     const newActiveValue = !isCurrentlyActive
     const action = isCurrentlyActive ? 'inativar' : 'ativar'
 
@@ -529,8 +526,9 @@ export function UsersList({ filters, selectedBaseId }: UsersListProps) {
     )
   }
 
-  const users = usersResponse?.data?.users || usersResponse?.data || []
-  const total = usersResponse?.data?.total || usersResponse?.total || 0
+  const responseData = usersResponse as any
+  const users = responseData?.data?.users || responseData?.data || []
+  const total = responseData?.data?.total || responseData?.total || 0
   const totalPages = Math.ceil(total / limit)
 
   return (

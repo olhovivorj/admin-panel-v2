@@ -93,7 +93,7 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
       setLojas(lojasFormatadas)
 
       if (lojasFormatadas.length === 0) {
-        toast.info('Nenhuma loja encontrada nesta base')
+        toast('Nenhuma loja encontrada nesta base', { icon: 'ℹ️' })
       }
     } catch (error: any) {
       console.error('❌ Erro completo:', error)

@@ -27,6 +27,7 @@ interface ApiTokenManagerProps {
 }
 
 interface Token {
+  id: number
   token: string
   endpoint: string
   maxRecords: number
@@ -64,7 +65,7 @@ export const ApiTokenManager: React.FC<ApiTokenManagerProps> = ({
   // Buscar tokens existentes
   const { data: tokens = [], isLoading } = useQuery({
     queryKey: ['api-tokens', userId, baseId],
-    queryFn: () => usersService.listApiTokens(userId, baseId),
+    queryFn: () => usersService.listApiTokens(userId),
     refetchInterval: 30000, // Atualizar a cada 30s
   })
 
@@ -74,7 +75,7 @@ export const ApiTokenManager: React.FC<ApiTokenManagerProps> = ({
       usersService.generateInitialLoadToken(userId, data),
     onSuccess: (data) => {
       setGeneratedToken(data)
-      queryClient.invalidateQueries(['api-tokens', userId, baseId])
+      queryClient.invalidateQueries({ queryKey: ['api-tokens', userId, baseId] })
       toast.success('Token gerado com sucesso!')
     },
     onError: (error) => {
@@ -85,9 +86,9 @@ export const ApiTokenManager: React.FC<ApiTokenManagerProps> = ({
 
   // Mutation para revogar token
   const revokeTokenMutation = useMutation({
-    mutationFn: (token: string) => usersService.revokeApiToken(userId, token),
+    mutationFn: (tokenId: number) => usersService.revokeApiToken(tokenId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['api-tokens', userId, baseId])
+      queryClient.invalidateQueries({ queryKey: ['api-tokens', userId, baseId] })
       toast.success('Token revogado com sucesso')
     },
     onError: () => {
@@ -241,7 +242,7 @@ export const ApiTokenManager: React.FC<ApiTokenManagerProps> = ({
                   <button
                     onClick={() => {
                       if (confirm('Tem certeza que deseja revogar este token?')) {
-                        revokeTokenMutation.mutate(token.token)
+                        revokeTokenMutation.mutate(token.id)
                       }
                     }}
                     className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
@@ -327,10 +328,10 @@ export const ApiTokenManager: React.FC<ApiTokenManagerProps> = ({
                         description: tokenDescription || undefined,
                       })
                     }}
-                    disabled={!selectedEndpoint || generateTokenMutation.isLoading}
+                    disabled={!selectedEndpoint || generateTokenMutation.isPending}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {generateTokenMutation.isLoading ? 'Gerando...' : 'Gerar Token'}
+                    {generateTokenMutation.isPending ? 'Gerando...' : 'Gerar Token'}
                   </button>
                 </div>
               </>

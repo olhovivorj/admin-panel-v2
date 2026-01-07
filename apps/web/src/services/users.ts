@@ -79,6 +79,26 @@ export interface ChangePasswordDto {
   newPassword: string
 }
 
+export interface LojaDisponivel {
+  id: number
+  nome: string
+  cidade?: string
+  uf?: string
+}
+
+export interface UsuarioLojaDto {
+  lojaId: number
+  lojaNome: string
+  acessoTotal?: boolean
+}
+
+export interface UserStatsResponse {
+  total: number
+  active: number
+  inactive: number
+  byRole: Record<string, number>
+}
+
 export const usersService = {
   // Listar usuários
   async getUsers(params?: {
@@ -194,6 +214,54 @@ export const usersService = {
     const response = await api.get('/erp/pessoas/disponiveis-vinculacao', {
       params: { search }
     })
+    return response.data
+  },
+
+  // Regenerar API Key de um usuário API
+  async regenerateApiKey(userId: number) {
+    const response = await api.post(`/usuarios/${userId}/regenerate-api-key`)
+    return response.data
+  },
+
+  // Listar tokens API de um usuário
+  async listApiTokens(userId: number) {
+    const response = await api.get(`/usuarios/${userId}/api-tokens`)
+    return response.data
+  },
+
+  // Gerar token de carga inicial
+  async generateInitialLoadToken(userId: number, data: { endpoint: string; description?: string }) {
+    const response = await api.post(`/usuarios/${userId}/initial-load-token`, data)
+    return response.data
+  },
+
+  // Revogar token API
+  async revokeApiToken(tokenId: number) {
+    const response = await api.delete(`/usuarios/api-tokens/${tokenId}`)
+    return response.data
+  },
+
+  // Buscar lojas do usuário
+  async getUserLojas(userId: number) {
+    const response = await api.get(`/usuarios/${userId}/lojas`)
+    return response.data
+  },
+
+  // Buscar lojas disponíveis
+  async getAvailableLojas(baseId: number) {
+    const response = await api.get(`/usuarios/lojas/available`, { params: { baseId } })
+    return response.data
+  },
+
+  // Atualizar lojas do usuário
+  async updateUserLojas(userId: number, lojas: number[]) {
+    const response = await api.put(`/usuarios/${userId}/lojas`, { lojas })
+    return response.data
+  },
+
+  // Buscar estatísticas de usuários
+  async getUserStats(baseId?: number) {
+    const response = await api.get(`/usuarios/stats`, { params: { baseId } })
     return response.data
   },
 }

@@ -62,6 +62,7 @@ export function ApiUserFormModal({ user, isOpen, onClose, onSuccess }: ApiUserFo
     reset,
     setValue,
     watch,
+    setError,
     formState: { errors },
   } = useForm<ApiUserFormData>({
     resolver: zodResolver(apiUserSchema),

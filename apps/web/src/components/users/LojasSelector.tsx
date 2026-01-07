@@ -248,7 +248,7 @@ export function LojasSelector({ userId, userName, onUpdate, readOnly = false }: 
             >
               {isSaving ? (
                 <>
-                  <LoadingSpinner size="xs" />
+                  <LoadingSpinner size="sm" />
                   Salvando...
                 </>
               ) : (

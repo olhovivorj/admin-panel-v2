@@ -189,7 +189,7 @@ export function SearchableSelector({
       <Combobox
         value={value}
         onChange={handleSelection}
-        multiple={multiple}
+        multiple={multiple as any}
         disabled={disabled}
       >
         <div className="relative">

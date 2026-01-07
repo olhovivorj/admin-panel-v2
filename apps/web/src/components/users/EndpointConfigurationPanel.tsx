@@ -181,7 +181,7 @@ export function EndpointConfigurationPanel({
               {isExpanded && (
                 <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4">
                   {endpoints.map((endpoint) => {
-                    const permission = value[endpoint.key] || {}
+                    const permission = (value[endpoint.key] || {}) as Partial<EndpointPermission>
                     const isEnabled = permission.enabled ?? false
                     
                     return (

@@ -1,7 +1,8 @@
-import { UseFormRegister } from 'react-hook-form'
+import { UseFormRegister, FieldErrors } from 'react-hook-form'
 
 interface LimitesAcessoTabProps {
   register: UseFormRegister<any>
+  errors?: FieldErrors<any>
 }
 
 export const LimitesAcessoTab = ({ register }: LimitesAcessoTabProps) => {

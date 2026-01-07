@@ -82,7 +82,7 @@ export function Sidebar() {
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!isCollapsed && <span>{item.name}</span>}
-                {item.highlight && (
+                {'highlight' in item && item.highlight && (
                   <span className="absolute top-1 right-1 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>

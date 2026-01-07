@@ -161,7 +161,7 @@ export function LojaAccessTest({ userId }: { userId: number }) {
         >
           {testing ? (
             <>
-              <LoadingSpinner size="xs" />
+              <LoadingSpinner size="sm" />
               Testando...
             </>
           ) : (

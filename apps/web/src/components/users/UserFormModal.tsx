@@ -170,7 +170,7 @@ export function UserFormModal({ user, isOpen, onClose, onSuccess }: UserFormModa
       logger.error('🔴 PONTOMARKET - Estado do componente:', 'FORM', {
         isApiUser,
         effectiveTipoUsuario,
-        shouldShowSysUser: !isApiUser && effectiveTipoUsuario !== 'API',
+        shouldShowSysUser: !isApiUser && (effectiveTipoUsuario as string) !== 'API',
         userTipoUsuario: user?.tipo_usuario,
         isEditing,
         isOpen,
@@ -233,13 +233,14 @@ export function UserFormModal({ user, isOpen, onClose, onSuccess }: UserFormModa
       // DEBUG: Mostrar erro detalhado
       const debugMode = localStorage.getItem('userFormDebugMode') === 'true'
       if (debugMode) {
+        const axiosError = error as any
         const debugError = `
 ❌ ERRO - Criação de Usuário
 ================================
 ${errorMsg}
 
-Status: ${error.response?.status || 'N/A'}
-Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
+Status: ${axiosError.response?.status || 'N/A'}
+Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
 ================================
 
 💡 Dica: Para desativar estes alertas, desmarque
@@ -306,13 +307,14 @@ Obs: ${response?.obs || '(vazio)'}
 
       // DEBUG: Mostrar erro detalhado
       if (debugMode) {
+        const axiosError = error as any
         const debugError = `
 ❌ ERRO - Resposta do Servidor
 ================================
 ${errorMsg}
 
-Status: ${error.response?.status || 'N/A'}
-Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
+Status: ${axiosError.response?.status || 'N/A'}
+Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
 ================================
 
 💡 Dica: Para desativar estes alertas, desmarque
@@ -357,7 +359,7 @@ Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
         ativo_type: typeof user.ativo,
         active_raw: user.active,
         status_raw: user.status,
-        ativo_calculado: user.ativo === true || user.ativo === 1,
+        ativo_calculado: user.ativo === true || (user.ativo as any) === 1,
         permissoes_endpoints_raw: user.permissoes_endpoints,
         full_user: user,
       })
@@ -379,7 +381,7 @@ Detalhes: ${JSON.stringify(error.response?.data, null, 2)}
         obs: user.obs || user.notes || '', // Campo observações (obs ou notes)
         role: user.role || 'user',
         baseId: user.baseId,
-        active: user.ativo === true || user.ativo === 1, // Usar campo ativo do backend
+        active: user.ativo === true || (user.ativo as any) === 1, // Usar campo ativo do backend
         tipo_usuario: user.tipo_usuario as 'NORMAL' | 'API', // Não fazer fallback aqui
         sysUserId: user.iduser || undefined,
         permissions: Array.isArray(user.permissions) ? user.permissions : [],
@@ -637,9 +639,9 @@ Clique OK para criar o usuário
                   Erros de validação:
                 </h4>
                 <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
-                  {Object.entries(errors).map(([field, error]) => (
+                  {Object.entries(errors).map(([field, err]) => (
                     <li key={field}>
-                      <strong>{field}:</strong> {error?.message || 'Erro desconhecido'}
+                      <strong>{field}:</strong> {(err as any)?.message || 'Erro desconhecido'}
                     </li>
                   ))}
                 </ul>
@@ -669,9 +671,9 @@ Clique OK para criar o usuário
               }
               
               // PROTEÇÃO CRÍTICA: Verificar múltiplas condições
-              const isDefinitelyApiUser = 
-                isApiUser || 
-                effectiveTipoUsuario === 'API' || 
+              const isDefinitelyApiUser =
+                isApiUser ||
+                (effectiveTipoUsuario as string) === 'API' ||
                 (user && user.tipo_usuario === 'API') ||
                 (user && user.api_key && user.api_key.length > 0)
               
@@ -711,8 +713,8 @@ Clique OK para criar o usuário
               <>
                 <SysUserSelector
                   selectedBaseId={selectedBaseId}
-                  setValue={setValue}
-                  watch={watch}
+                  setValue={setValue as any}
+                  watch={watch as any}
                   isOpen={isOpen}
                   allowEmpty={false} // Usuários normais DEVEM ter sys-user
                   isEditing={isEditing} // Para mostrar read-only na edição

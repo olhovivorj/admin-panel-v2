@@ -202,7 +202,7 @@ export const VinculosERPTab = ({ register, watch, setValue, errors, user, isEdit
           {/* Campo hidden para id_pessoa */}
           <input type="hidden" {...register('id_pessoa', { valueAsNumber: true })} />
           {errors.id_pessoa && (
-            <p className="mt-1 text-sm text-red-600">{errors.id_pessoa.message}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.id_pessoa.message as string}</p>
           )}
         </div>
       )}

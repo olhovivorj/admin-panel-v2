@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = sessionStorage.getItem('@ari:token')
       const savedUser = sessionStorage.getItem('@ari:user')
 
-      logger.info('SECURITY CHECK', { hasToken: !!token, hasSavedUser: !!savedUser }, 'AUTH')
+      logger.info('SECURITY CHECK', 'AUTH', { hasToken: !!token, hasSavedUser: !!savedUser })
 
       if (token && savedUser) {
         // Verificar se token não expirou fazendo verificação no backend
@@ -56,20 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (response.data.valid) {
             api.defaults.headers.authorization = `Bearer ${token}`
             setUser(JSON.parse(savedUser))
-            logger.info('Token válido - usuário autenticado', {}, 'AUTH')
+            logger.info('Token válido - usuário autenticado', 'AUTH')
           } else {
             throw new Error('Token inválido')
           }
         } catch (error) {
-          logger.warn('Token inválido - limpando dados', {}, 'AUTH')
+          logger.warn('Token inválido - limpando dados', 'AUTH')
           localStorage.clear()
           sessionStorage.clear()
         }
       } else {
-        logger.info('Sem token ou usuário - não autenticado', {}, 'AUTH')
+        logger.info('Sem token ou usuário - não autenticado', 'AUTH')
       }
     } catch (error) {
-      logger.error('Erro ao carregar usuário', { error }, 'AUTH')
+      logger.error('Erro ao carregar usuário', 'AUTH', { error })
       localStorage.clear()
       sessionStorage.clear()
     } finally {
@@ -107,11 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Token não retornado pelo servidor')
       }
 
-      const user = {
+      const user: User = {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: userData.isMaster ? 'admin' : (userData.isSupervisor ? 'user' : 'viewer'),
+        role: userData.isMaster ? 'admin' : (userData.isSupervisor ? 'user' : 'viewer') as 'admin' | 'user' | 'viewer',
         baseId: userData.baseId,
         base: userData.base,
         isMaster: userData.isMaster,

@@ -65,7 +65,7 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
   const [loadedSysUser, setLoadedSysUser] = useState<any>(null)
   const { bases } = useBase()
 
-  const watchedSysUserId = watch('sysUserId') || watch('iduser')
+  const watchedSysUserId = watch('sysUserId' as any) || watch('iduser' as any)
 
   // PROTEÇÃO: Verificar se o componente deve estar visível
   // Este componente só deve ser usado para usuários NORMAL
@@ -77,23 +77,23 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
   
   useEffect(() => {
     // Verificar no localStorage se estamos editando um usuário API
-    const editingUserType = watch('tipo_usuario')
+    const editingUserType = watch('tipo_usuario' as any)
     if (editingUserType === 'API' || isPontomarket) {
-      logger.error('⚠️ SysUserSelector renderizado para usuário API! Isto não deveria acontecer.')
+      logger.error('⚠️ SysUserSelector renderizado para usuário API! Isto não deveria acontecer.', 'USER')
       setShouldBeVisible(false)
     }
   }, [watch, isPontomarket])
 
   // PROTEÇÃO CRÍTICA: Determinar se deve estar habilitado
-  const isEnabled = shouldBeVisible && !isPontomarket && 
-                   watch('tipo_usuario') !== 'API' &&
-                   !watch('email')?.toLowerCase().includes('sturm')
+  const isEnabled = shouldBeVisible && !isPontomarket &&
+                   watch('tipo_usuario' as any) !== 'API' &&
+                   !(watch('email') as any)?.toLowerCase().includes('sturm')
   
   // Buscar sys_users disponíveis (SEM filtro de loja)
   const { data: sysUsers, isLoading: loadingSysUsers, error } = useQuery({
     queryKey: ['sys-users-available', selectedBaseId],
     queryFn: async () => {
-      logger.info('🔍 Carregando sys-users para baseId:', selectedBaseId)
+      logger.info('🔍 Carregando sys-users para baseId:', 'USER', { baseId: selectedBaseId })
       
       // PROTEÇÃO ADICIONAL
       if (!shouldBeVisible || !isEnabled) {
@@ -104,10 +104,10 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
       try {
         const params: any = { baseId: selectedBaseId }
         const response = await api.get('/usuarios/sys-users/available', { params })
-        logger.info('✅ Sys-users carregados:', response.data.data)
+        logger.info('✅ Sys-users carregados:', 'USER', { count: response.data.data?.length })
         return response.data.data as SysUser[]
       } catch (error) {
-        logger.warn('⚠️ Erro ao carregar sys-users:', error)
+        logger.warn('⚠️ Erro ao carregar sys-users:', 'USER', { error })
         
         // Se for 401, propagar o erro para redirecionar ao login
         if ((error as any).response?.status === 401) {
@@ -115,7 +115,7 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
         }
         
         // Para outros erros (403, 400, etc), retornar array vazio
-        logger.info('💡 Retornando array vazio devido ao erro')
+        logger.info('💡 Retornando array vazio devido ao erro', 'USER')
         return []
       }
     },
@@ -130,34 +130,34 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
     queryFn: async () => {
       if (!selectedBaseId || !selectedSysUser?.idUser) return []
       
-      logger.info('🏢 Buscando lojas do sys_user:', selectedSysUser.idUser)
+      logger.info('🏢 Buscando lojas do sys_user:', 'USER', { idUser: selectedSysUser.idUser })
       const response = await usersService.getLojasBySysUser(selectedBaseId, selectedSysUser.idUser)
-      logger.info('✅ Lojas carregadas:', response.data)
+      logger.info('✅ Lojas carregadas:', 'USER', { count: response.data?.length })
       return response.data as Loja[]
     },
     enabled: !!selectedBaseId && !!selectedSysUser?.idUser,
   })
 
   // Debug da query
-  logger.debug('🔍 SysUserSelector Debug:', {
+  logger.debug('🔍 SysUserSelector Debug:', 'USER', {
     isOpen,
     selectedBaseId,
     enabled: isOpen && !!selectedBaseId && shouldBeVisible && isEnabled,
     shouldBeVisible,
     loadingSysUsers,
     sysUsersCount: sysUsers?.length || 0,
-    error: error?.message,
-    tipoUsuario: watch('tipo_usuario'),
+    error: (error as any)?.message,
+    tipoUsuario: watch('tipo_usuario' as any),
   })
   
   // PROTEÇÃO FINAL: Se não deve ser visível ou é pontomarket ou é API, retornar null
-  if (!shouldBeVisible || isPontomarket || !isEnabled || watch('tipo_usuario') === 'API') {
-    logger.warn('⚠️ SysUserSelector retornando null - usuário API detectado!', {
+  if (!shouldBeVisible || isPontomarket || !isEnabled || watch('tipo_usuario' as any) === 'API') {
+    logger.warn('⚠️ SysUserSelector retornando null - usuário API detectado!', 'USER', {
       shouldBeVisible,
       isPontomarket,
       isEnabled,
-      tipo: watch('tipo_usuario'),
-      email: watch('email')
+      tipo: watch('tipo_usuario' as any),
+      email: watch('email'),
     })
     return null
   }
@@ -210,7 +210,7 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
     ...(sysUsers || [])
       .map(user => {
         // Buscar nome da base
-        const baseName = bases.find(base => base.baseId === user.baseId)?.NOME || bases.find(base => base.baseId === user.baseId)?.nome || `Base ${user.baseId}`
+        const baseName = bases.find(base => base.baseId === user.baseId)?.NOME || (bases.find(base => base.baseId === user.baseId) as any)?.nome || `Base ${user.baseId}`
 
         return {
           value: user.idUser.toString(),
@@ -310,8 +310,8 @@ export function SysUserSelector({ selectedBaseId, setValue, watch, isOpen, allow
                 ? 'Buscar usuário do ERP (ou deixe vazio para API)...'
                 : 'Buscar e selecionar usuário do ERP...'
               }
-              noOptionsMessage={sysUsers?.every(u => u.hasAriUser) 
-                ? "Todos os usuários do ERP já possuem conta ARI" 
+              noOptionsMessage={() => sysUsers?.every(u => u.hasAriUser)
+                ? "Todos os usuários do ERP já possuem conta ARI"
                 : "Nenhum usuário disponível do ERP"
               }
               isDisabled={loadingSysUsers}

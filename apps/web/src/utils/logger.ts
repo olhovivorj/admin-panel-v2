@@ -1,7 +1,7 @@
 import api from '@/services/api'
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug'
-type LogContext = 'PANEL' | 'AUTH' | 'API' | 'USER' | 'BASE' | 'CONFIG' | 'FORM' | 'ERROR'
+type LogContext = 'PANEL' | 'AUTH' | 'API' | 'USER' | 'BASE' | 'CONFIG' | 'FORM' | 'ERROR' | 'API_FORM' | 'EMPRESA' | string
 
 interface LogEntry {
   id: string

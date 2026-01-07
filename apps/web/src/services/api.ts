@@ -5,14 +5,14 @@ import { logger } from '@/utils/logger'
 // Auditoria de segurança conforme contrato técnico
 const auditLogger = {
   logApiAccess: (method: string, url: string, baseId?: number, status?: number) => {
-    logger.info('[AUDIT] API access', {
+    logger.info('[AUDIT] API access', 'API', {
       method,
       url,
       baseId,
       status,
       timestamp: new Date().toISOString(),
       type: 'API_ACCESS',
-    }, 'API')
+    })
   },
 }
 
@@ -53,7 +53,7 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Marcar timestamp da requisição
-    config.metadata = { startTime: Date.now() }
+    (config as any).metadata = { startTime: Date.now() }
 
     // Verificar se já tem credenciais API (X-API-Key e X-API-Secret)
     const hasApiCredentials = config.headers['X-API-Key'] && config.headers['X-API-Secret']
@@ -251,8 +251,9 @@ api.interceptors.response.use(
       }
 
       // Mensagem simples, não objeto
-      const errorMessage = typeof error.response?.data?.message === 'string'
-        ? error.response.data.message
+      const responseData = error.response?.data as any
+      const errorMessage = typeof responseData?.message === 'string'
+        ? responseData.message
         : 'Sessão expirada. Faça login novamente.'
 
       toast.error(errorMessage)
@@ -271,7 +272,8 @@ api.interceptors.response.use(
     }
 
     // Base não selecionada
-    if (error.response?.status === 400 && typeof error.response?.data?.message === 'string' && error.response?.data?.message?.includes('base')) {
+    const errorData = error.response?.data as any
+    if (error.response?.status === 400 && typeof errorData?.message === 'string' && errorData?.message?.includes('base')) {
       toast.error('Selecione uma base para continuar.')
     }
 

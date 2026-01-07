@@ -39,7 +39,7 @@ export function BaseProvider({ children }: { children: ReactNode }) {
   // Debug do usuário
   useEffect(() => {
     if (user) {
-      logger.debug('👤 [BaseContext] User loaded:', {
+      logger.debug('👤 [BaseContext] User loaded:', 'BASE', {
         email: user.email,
         baseId: user.baseId,
         isAdmin,
@@ -61,7 +61,7 @@ export function BaseProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(cachedBases)
         setBasesFromCache(parsed)
         setHasBasesInCache(true)
-        logger.info('⚡ [BaseContext] Bases carregadas do cache localStorage - ZERO latência', {
+        logger.info('⚡ [BaseContext] Bases carregadas do cache localStorage - ZERO latência', 'BASE', {
           basesCount: parsed.length,
           cacheSize: cachedBases.length,
         })
@@ -232,7 +232,7 @@ export function BaseProvider({ children }: { children: ReactNode }) {
     setSelectedBaseId(null)
     localStorage.removeItem(appConfig.selectedBaseKey)
     localStorage.removeItem(appConfig.selectedBaseIdKey)
-    toast.info('Nenhuma base selecionada')
+    toast('Nenhuma base selecionada', { icon: 'ℹ️' })
   }
 
   // Função para carregar bases APENAS no primeiro login
@@ -251,7 +251,7 @@ export function BaseProvider({ children }: { children: ReactNode }) {
         selectedBaseCode,
         selectedBaseId,
         isLoading,
-        error: error?.message || null,
+        error: error || null,
         selectBase,
         clearSelection,
         refreshBases,

@@ -254,7 +254,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
           placeholder="João da Silva"
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          <p className="mt-1 text-sm text-red-600">{errors.name.message as string}</p>
         )}
       </div>
 
@@ -275,7 +275,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
           placeholder="joao@empresa.com"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-600">{errors.email.message as string}</p>
         )}
       </div>
 
@@ -296,7 +296,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
           placeholder="(21) 99999-9999"
         />
         {errors.telefone && (
-          <p className="mt-1 text-sm text-red-600">{errors.telefone.message}</p>
+          <p className="mt-1 text-sm text-red-600">{errors.telefone.message as string}</p>
         )}
       </div>
 
@@ -334,7 +334,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
           </button>
         </div>
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-red-600">{errors.password.message as string}</p>
         )}
       </div>
 

@@ -26,7 +26,7 @@ export function UserStats({ stats }: UserStatsProps) {
     },
     {
       title: 'Inativos',
-      value: stats.inactive || 0,
+      value: (stats as any).inactive || 0,
       icon: UserPlusIcon,
       color: 'bg-purple-500',
     },

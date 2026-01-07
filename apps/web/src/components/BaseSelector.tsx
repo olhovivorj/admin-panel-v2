@@ -133,7 +133,7 @@ export function BaseSelector() {
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{base.NOME}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       {base.BASE} • ID: {base.baseId}
-                      {base.clienteCount !== undefined && ` • ${base.clienteCount} clientes`}
+                      {(base as any).clienteCount !== undefined && ` • ${(base as any).clienteCount} clientes`}
                     </div>
                   </div>
                   {selectedBase?.BASE === base.BASE && (

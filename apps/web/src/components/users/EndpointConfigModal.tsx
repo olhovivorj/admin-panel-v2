@@ -114,7 +114,7 @@ export function EndpointConfigModal({ user, isOpen, onClose }: EndpointConfigMod
             })
           }
           
-          logger.info('📋 Carregando configurações de endpoints:', {
+          logger.info('📋 Carregando configurações de endpoints:', 'CONFIG', {
             userId: updatedUser.id,
             userEmail: updatedUser.email,
             permissoes_raw: updatedUser.permissoes_endpoints,
@@ -203,7 +203,7 @@ export function EndpointConfigModal({ user, isOpen, onClose }: EndpointConfigMod
       ip_whitelist: ipWhitelist.length > 0 ? ipWhitelist : null
     }
 
-    logger.info('🔧 Salvando configurações de endpoints:', { 
+    logger.info('🔧 Salvando configurações de endpoints:', 'CONFIG', {
       userId: user.id,
       userEmail: user.email,
       permissoes_enviadas: permissoes_endpoints,
