@@ -84,25 +84,28 @@ export function UserFormModalWithTabs({
   // Carregar dados ao editar
   useEffect(() => {
     if (user && isOpen) {
+      // Backend retorna 'nome', frontend usa 'name'
+      const userName = (user as any).nome || user.name || ''
       const ativoValue = user.ativo === true || (user.ativo as any) === 1
+
       console.log('🔍 DEBUG UserFormModalWithTabs:', {
         userId: user.id,
-        userName: user.name,
-        ativo_raw: user.ativo,
-        ativo_type: typeof user.ativo,
-        ativo_calculado: ativoValue,
-        status_raw: user.status,
-        active_raw: user.active,
+        userName_field: user.name,
+        userNome_field: (user as any).nome,
+        userName_used: userName,
+        role: user.role,
+        role_id: user.role?.id,
+        ativo: ativoValue,
       })
 
       reset({
-        name: user.name,
+        name: userName,
         email: user.email,
         telefone: user.telefone || '',
         role_id: user.role?.id || undefined,
         id_pessoa: user.id_pessoa || undefined,
         tipo_usuario: user.tipo_usuario || 'NORMAL',
-        active: ativoValue, // Usar campo ativo do backend
+        active: ativoValue,
         rate_limit_per_hour: user.rate_limit_per_hour,
       })
     } else if (!user && isOpen) {
@@ -116,36 +119,37 @@ export function UserFormModalWithTabs({
   // Mutation para criar/atualizar
   const mutation = useMutation({
     mutationFn: async (data: UserFormData) => {
-      // Construir payload limpo (só campos com valor)
+      // Construir payload limpo - APENAS campos aceitos pelo backend DTO
       const payload: any = {}
 
-      // Campos obrigatórios
+      // Campos básicos (aceitos pelo UpdateUsuarioDto)
       if (data.name) payload.nome = data.name
       if (data.email) payload.email = data.email
-
-      // Campos opcionais (só incluir se tiver valor)
       if (data.telefone) payload.telefone = data.telefone
-      if (data.password) payload.password = data.password
-      if (data.tipo_usuario) payload.tipo_usuario = data.tipo_usuario
 
       // role_id → roleId (backend espera camelCase)
       if (data.role_id !== undefined && data.role_id !== null) {
         payload.roleId = Number(data.role_id)
       }
 
-      // id_pessoa (só se tiver valor válido)
-      if (data.id_pessoa !== undefined && data.id_pessoa !== null && data.id_pessoa !== '') {
-        payload.id_pessoa = Number(data.id_pessoa)
-      }
-
       // active → ativo
       payload.ativo = data.active === true
 
-      logger.info('📦 Payload limpo para API:', 'MUTATION', payload)
-
       if (isEditing) {
+        // UPDATE: Só envia campos aceitos pelo UpdateUsuarioDto
+        // NÃO enviar: tipo_usuario, id_pessoa, password
+        // Nota: Para mudar senha, usar endpoint específico /usuarios/:id/change-password
+        logger.info('📦 Payload UPDATE para API:', 'MUTATION', payload)
         return usersService.updateUser(user.id, payload)
       } else {
+        // CREATE: Pode enviar mais campos
+        if (data.password) payload.password = data.password
+        if (data.tipo_usuario) payload.tipo_usuario = data.tipo_usuario
+        if (data.id_pessoa !== undefined && data.id_pessoa !== null && data.id_pessoa !== '') {
+          payload.id_pessoa = Number(data.id_pessoa)
+        }
+
+        logger.info('📦 Payload CREATE para API:', 'MUTATION', { ...payload, baseId: selectedBaseId })
         return usersService.createUser({ ...payload, baseId: selectedBaseId })
       }
     },

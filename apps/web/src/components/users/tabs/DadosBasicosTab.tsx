@@ -23,32 +23,37 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
   const [selectedPessoa, setSelectedPessoa] = useState<any>(null)
   const [showPassword, setShowPassword] = useState(false)
 
+  // Backend retorna 'nome', frontend usa 'name'
+  const userName = user?.nome || user?.name || ''
+
   // DEBUG
-  console.log('🔍 DEBUG:', {
+  console.log('🔍 DEBUG DadosBasicosTab:', {
     isEditing,
     'user?.id_pessoa': user?.id_pessoa,
+    'user?.nome': user?.nome,
     'user?.name': user?.name,
+    'userName_used': userName,
     'watch(name)': watch('name'),
-    'Deve desabilitar?': isEditing && !!user?.id_pessoa
   })
 
   // Carregar pessoa quando estiver editando
   useEffect(() => {
     if (isOpen && isEditing && user?.id_pessoa) {
       // Simular pessoa selecionada com dados básicos do usuário
+      // Backend retorna 'nome', não 'name'
       setSelectedPessoa({
         id_pessoa: user.id_pessoa,
-        nome: user.pessoaNome || user.name, // Priorizar pessoaNome se existir
+        nome: user.pessoaNome || userName,
       })
       // Preencher o campo de busca com o nome da pessoa
-      setSearchTerm(user.pessoaNome || user.name || '')
+      setSearchTerm(user.pessoaNome || userName)
     } else if (!isOpen) {
       // Limpar estados quando modal fechar
       setSelectedPessoa(null)
       setSearchTerm('')
       setSearchResults([])
     }
-  }, [isOpen, isEditing, user])
+  }, [isOpen, isEditing, user, userName])
 
   // Debounced search
   useEffect(() => {
@@ -148,7 +153,7 @@ export const DadosBasicosTab = ({ register, watch, setValue, errors, user, isEdi
           </label>
           <input
             type="text"
-            value={isEditing ? (watch('name') || user?.name || '') : searchTerm}
+            value={isEditing ? (watch('name') || userName) : searchTerm}
             onChange={(e) => !isEditing && setSearchTerm(e.target.value)}
             disabled={isEditing}
             readOnly={isEditing}

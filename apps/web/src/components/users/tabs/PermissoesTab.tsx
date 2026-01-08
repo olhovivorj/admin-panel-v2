@@ -1,4 +1,4 @@
-import { UseFormRegister, useWatch, Control } from 'react-hook-form'
+import { UseFormRegister, useWatch, Control, Controller } from 'react-hook-form'
 import { useState, useEffect } from 'react'
 import { usersService } from '../../../services/users'
 import { logger } from '../../../utils/logger'
@@ -20,12 +20,20 @@ export const PermissoesTab = ({ register, control }: PermissoesTabProps) => {
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Debug: observar valor atual do role_id no form
+  const currentRoleId = useWatch({ control, name: 'role_id' })
+
+  useEffect(() => {
+    console.log('🔍 PermissoesTab - role_id atual:', currentRoleId)
+  }, [currentRoleId])
+
   useEffect(() => {
     const loadRoles = async () => {
       try {
         const response = await usersService.getRoles()
         // getRoles() já retorna response.data (array de roles)
         const rolesData = Array.isArray(response) ? response : (response.data || response || [])
+        console.log('🔍 PermissoesTab - roles carregadas:', rolesData)
         setRoles(rolesData)
       } catch (error) {
         logger.error('Erro ao carregar roles:', error)
@@ -55,17 +63,39 @@ export const PermissoesTab = ({ register, control }: PermissoesTabProps) => {
             <option>Carregando...</option>
           </select>
         ) : (
-          <select
-            {...register('role_id', { valueAsNumber: true })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="">-- Selecione um cargo --</option>
-            {roles.map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.displayName} - {role.description}
-              </option>
-            ))}
-          </select>
+          <Controller
+            name="role_id"
+            control={control}
+            render={({ field }) => {
+              // HTML select usa strings, então converter para string
+              const selectValue = field.value !== undefined && field.value !== null
+                ? String(field.value)
+                : ''
+              console.log('🔍 PermissoesTab render - field.value:', field.value, '→ selectValue:', selectValue)
+
+              return (
+                <select
+                  value={selectValue}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    console.log('🔍 PermissoesTab - selecionado:', val)
+                    field.onChange(val ? Number(val) : undefined)
+                  }}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">-- Selecione um cargo --</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={String(role.id)}>
+                      {role.displayName} {role.description ? `- ${role.description}` : ''}
+                    </option>
+                  ))}
+                </select>
+              )
+            }}
+          />
         )}
         <p className="mt-1 text-xs text-gray-500">
           Define as permissões de acesso do usuário às páginas do sistema.
