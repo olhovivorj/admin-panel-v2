@@ -185,44 +185,28 @@ export const basesService = {
   // Buscar configuração Firebird de uma base
   async getFirebirdConfig(id: number) {
     const response = await api.get(`/bases/${id}/firebird`)
-
-    if (!response.data.success) {
-      throw new Error(`${response.data.error.code}: ${response.data.error.message}`)
-    }
-
-    return response.data.data
+    // API retorna dados diretamente (não encapsulados em success/data)
+    return response.data
   },
 
   // Atualizar configuração Firebird
   async updateFirebirdConfig(id: number, config: FirebirdConfig) {
     const response = await api.put(`/bases/${id}/firebird-config`, config)
-
-    if (!response.data.success) {
-      throw new Error(`${response.data.error.code}: ${response.data.error.message}`)
-    }
-
-    return response.data.data
+    // API retorna { message: '...' } diretamente
+    return response.data
   },
 
   // Validar conexão Firebird (teste de conectividade)
   async testFirebirdConnection(id: number) {
-    const response = await api.post(`/bases/${id}/firebird/test`)
-
-    if (!response.data.success) {
-      throw new Error(`${response.data.error.code}: ${response.data.error.message}`)
-    }
-
-    return response.data.data
+    const response = await api.post(`/bases/${id}/test-firebird`)
+    // Resposta direta do endpoint (não usa wrapper success/data)
+    return response.data
   },
 
   // Listar lojas de uma base
   async getLojasDaBase(id: number) {
     const response = await api.get(`/bases/${id}/lojas`)
-
-    if (!response.data.success) {
-      throw new Error(`${response.data.error.code}: ${response.data.error.message}`)
-    }
-
-    return response.data.data
+    // API retorna array diretamente
+    return response.data
   },
 }

@@ -99,6 +99,7 @@ export function FirebirdConfigModal({
 
   const handleInputChange = (field: keyof FirebirdConfig, value: any) => {
     setConfig(prev => ({ ...prev, [field]: value }))
+    setTestResult(null) // Limpar resultado do teste ao alterar config
 
     // Limpar erro do campo ao digitar
     if (errors[field]) {

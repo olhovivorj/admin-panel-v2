@@ -150,8 +150,8 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
               </button>
             </div>
 
-            {/* Search */}
-            <div className="mt-4">
+            {/* Search - fixo */}
+            <div className="mt-4 sticky top-0 bg-white dark:bg-gray-800 pb-2 z-10">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -166,8 +166,8 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
               </div>
             </div>
 
-            {/* Content */}
-            <div className="max-h-96 overflow-y-auto">
+            {/* Content - scroll apenas aqui */}
+            <div className="max-h-80 overflow-y-auto mt-2">
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
                   <LoadingSpinner size="lg" />

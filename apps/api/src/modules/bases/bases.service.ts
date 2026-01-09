@@ -4,7 +4,6 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import * as Firebird from 'node-firebird';
 import { BaseConfigService } from '../../config/base-config.service';
 import { CreateBaseDto } from './dto/create-base.dto';
 import { UpdateBaseDto } from './dto/update-base.dto';
@@ -279,14 +278,14 @@ export class BasesService {
   async getFirebirdConfig(id: number) {
     const config = await this.db.queryOne(
       `SELECT
-        bc.FIREBIRD_HOST as host,
-        bc.FIREBIRD_PORT as port,
-        bc.FIREBIRD_DATABASE as database,
-        bc.FIREBIRD_USER as user,
-        bc.FIREBIRD_ROLE as role,
-        bc.FIREBIRD_CHARSET as charset,
-        bc.FIREBIRD_ACTIVE as active,
-        bc.FIREBIRD_PASSWORD as password
+        bc.FIREBIRD_HOST as fbHost,
+        bc.FIREBIRD_PORT as fbPort,
+        bc.FIREBIRD_DATABASE as fbDatabase,
+        bc.FIREBIRD_USER as fbUser,
+        bc.FIREBIRD_ROLE as fbRole,
+        bc.FIREBIRD_CHARSET as fbCharset,
+        bc.FIREBIRD_ACTIVE as fbActive,
+        bc.FIREBIRD_PASSWORD as fbPassword
       FROM base_config bc
       WHERE bc.ID_BASE = ?`,
       [id]
@@ -297,14 +296,15 @@ export class BasesService {
     }
 
     return {
-      host: config.host,
-      port: config.port,
-      database: config.database,
-      user: config.user,
-      role: config.role,
-      charset: config.charset,
-      active: config.active === 1,
-      hasPassword: !!config.password,
+      host: config.fbHost,
+      port: config.fbPort,
+      database: config.fbDatabase,
+      user: config.fbUser,
+      role: config.fbRole,
+      charset: config.fbCharset,
+      active: config.fbActive === 1,
+      hasPassword: !!config.fbPassword,
+      passwordConfigured: !!config.fbPassword,
     };
   }
 
@@ -344,78 +344,6 @@ export class BasesService {
     this.logger.log(`Configuração Firebird atualizada para base ${id}`);
 
     return { message: 'Configuração Firebird atualizada com sucesso' };
-  }
-
-  async testFirebirdConnection(id: number) {
-    const config = await this.db.queryOne(
-      `SELECT
-        FIREBIRD_HOST as host,
-        FIREBIRD_PORT as port,
-        FIREBIRD_DATABASE as database,
-        FIREBIRD_USER as user,
-        FIREBIRD_PASSWORD as password,
-        FIREBIRD_ROLE as role
-      FROM base_config
-      WHERE ID_BASE = ?`,
-      [id]
-    );
-
-    if (!config) {
-      throw new NotFoundException(`Configuração Firebird não encontrada para base ${id}`);
-    }
-
-    if (!config.host || !config.database) {
-      throw new BadRequestException('Configuração Firebird incompleta');
-    }
-
-    const options = {
-      host: config.host,
-      port: config.port || 3050,
-      database: config.database,
-      user: config.user || 'SYSDBA',
-      password: config.password || 'masterkey',
-      role: config.role || null,
-    };
-
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => {
-        resolve({
-          success: false,
-          message: 'Timeout ao conectar (10s)',
-        });
-      }, 10000);
-
-      Firebird.attach(options, (err, db) => {
-        clearTimeout(timeout);
-
-        if (err) {
-          this.logger.warn(`Erro ao conectar Firebird para base ${id}: ${err.message}`);
-          resolve({
-            success: false,
-            message: `Erro de conexão: ${err.message}`,
-          });
-          return;
-        }
-
-        db.query('SELECT CURRENT_TIMESTAMP FROM RDB$DATABASE', [], (err, result) => {
-          db.detach();
-
-          if (err) {
-            resolve({
-              success: false,
-              message: `Erro na query: ${err.message}`,
-            });
-            return;
-          }
-
-          resolve({
-            success: true,
-            message: 'Conexão bem sucedida!',
-            serverTime: result[0]?.CURRENT_TIMESTAMP,
-          });
-        });
-      });
-    });
   }
 
   async getBaseStats(id: number) {
@@ -481,92 +409,39 @@ export class BasesService {
   }
 
   /**
-   * Busca lojas (empresas) do Firebird para uma base
+   * Busca lojas (empresas) do MySQL para uma base
    */
   async getLojas(baseId: number) {
-    // Buscar configuração Firebird
-    const config = await this.db.queryOne(
+    const lojas = await this.db.query(
       `SELECT
-        FIREBIRD_HOST as fbHost,
-        FIREBIRD_PORT as fbPort,
-        FIREBIRD_DATABASE as fbDatabase,
-        FIREBIRD_USER as fbUser,
-        FIREBIRD_PASSWORD as fbPassword
-      FROM base_config
-      WHERE ID_BASE = ?`,
+        id,
+        id_empresa,
+        nome_empresa,
+        cnpj,
+        ativo,
+        dt_cadastro,
+        dt_atualizacao
+      FROM base_config_empresas
+      WHERE id_base = ?
+      ORDER BY nome_empresa`,
       [baseId]
     );
 
-    if (!config || !config.fbHost || !config.fbDatabase) {
-      this.logger.warn(`Base ${baseId} não possui configuração Firebird`);
-      return [];
-    }
+    this.logger.log(`Encontradas ${lojas.length} lojas na base ${baseId}`);
 
-    const options = {
-      host: config.fbHost,
-      port: config.fbPort || 3050,
-      database: config.fbDatabase,
-      user: config.fbUser || 'SYSDBA',
-      password: config.fbPassword || 'masterkey',
-    };
-
-    return new Promise((resolve) => {
-      const timeout = setTimeout(() => {
-        this.logger.warn(`Timeout ao buscar lojas da base ${baseId}`);
-        resolve([]);
-      }, 15000);
-
-      Firebird.attach(options, (err, db) => {
-        if (err) {
-          clearTimeout(timeout);
-          this.logger.error(`Erro ao conectar Firebird para lojas: ${err.message}`);
-          resolve([]);
-          return;
-        }
-
-        const sql = `
-          SELECT
-            e.ID_EMPRESA,
-            p.FANTASIA as NOME_FANTASIA,
-            p.RAZAO as RAZAO_SOCIAL,
-            COALESCE(pj.CNPJ, '') as CNPJ,
-            CURRENT_DATE as DATA_INICIO,
-            'S' as ATIVO
-          FROM GE_EMPRESA e
-          JOIN GE_PESSOA p ON p.ID_PESSOA = e.ID_PESSOA
-          LEFT JOIN GE_PESSOA_JURIDICA pj ON pj.ID_PESSOA = p.ID_PESSOA
-          ORDER BY p.FANTASIA
-        `;
-
-        db.query(sql, [], (err, result) => {
-          clearTimeout(timeout);
-          db.detach();
-
-          if (err) {
-            this.logger.error(`Erro ao buscar lojas: ${err.message}`);
-            resolve([]);
-            return;
-          }
-
-          const lojas = (result || []).map((row: any) => ({
-            ID_EMPRESA: row.ID_EMPRESA,
-            id_empresa: row.ID_EMPRESA,
-            NOME_FANTASIA: row.NOME_FANTASIA?.trim() || '',
-            nome_fantasia: row.NOME_FANTASIA?.trim() || '',
-            RAZAO_SOCIAL: row.RAZAO_SOCIAL?.trim() || '',
-            razao_social: row.RAZAO_SOCIAL?.trim() || '',
-            CNPJ: row.CNPJ?.trim() || '',
-            cnpj: row.CNPJ?.trim() || '',
-            DATA_INICIO: row.DATA_INICIO,
-            data_inicio: row.DATA_INICIO,
-            ATIVO: row.ATIVO === 'S' ? 1 : 0,
-            ativo: row.ATIVO === 'S',
-          }));
-
-          this.logger.log(`Encontradas ${lojas.length} lojas na base ${baseId}`);
-          resolve(lojas);
-        });
-      });
-    });
+    return lojas.map((row: any) => ({
+      ID_EMPRESA: row.id_empresa,
+      id_empresa: row.id_empresa,
+      NOME_FANTASIA: row.nome_empresa || '',
+      nome_fantasia: row.nome_empresa || '',
+      RAZAO_SOCIAL: row.nome_empresa || '',
+      razao_social: row.nome_empresa || '',
+      CNPJ: row.cnpj || '',
+      cnpj: row.cnpj || '',
+      DATA_INICIO: row.dt_cadastro,
+      data_inicio: row.dt_cadastro,
+      ATIVO: row.ativo === 'S' ? 1 : 0,
+      ativo: row.ativo === 'S',
+    }));
   }
 }

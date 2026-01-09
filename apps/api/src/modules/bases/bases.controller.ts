@@ -86,12 +86,6 @@ export class BasesController {
     return this.basesService.updateFirebirdConfig(id, dto);
   }
 
-  @Post(':id/test-firebird')
-  @ApiOperation({ summary: 'Testar conexao Firebird' })
-  async testFirebirdConnection(@Param('id', ParseIntPipe) id: number) {
-    return this.basesService.testFirebirdConnection(id);
-  }
-
   @Get(':id/usuarios')
   @ApiOperation({ summary: 'Listar usuarios da base' })
   async getBaseUsuarios(@Param('id', ParseIntPipe) id: number) {
