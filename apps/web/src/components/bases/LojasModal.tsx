@@ -19,7 +19,6 @@ interface Loja {
   cnpj: string
   logo_url: string
   data_inicio: string
-  ativo: boolean
 }
 
 interface LojasModalProps {
@@ -83,8 +82,6 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
           cnpj: empresa.CNPJ || empresa.cnpj || '',
           logo_url: empresa.LOGO_URL || empresa.logo_url || '',
           data_inicio: empresa.DATA_INICIO || empresa.data_inicio || new Date().toISOString(),
-          ativo: empresa.ATIVO === 1 || empresa.ATIVO === true || empresa.ativo === true || empresa.ativo === 1,
-          atividade: empresa.ATIVIDADE || empresa.atividade || '',
         }
       }) : []
 
@@ -184,11 +181,7 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
                   {filteredLojas.map((loja) => (
                     <div
                       key={loja.id_empresa}
-                      className={`p-4 border rounded-lg ${
-                        loja.ativo
-                          ? 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-700'
-                          : 'border-gray-200 bg-gray-50 dark:bg-gray-700 dark:border-gray-600'
-                      }`}
+                      className="p-4 border rounded-lg border-gray-200 bg-white dark:bg-gray-700 dark:border-gray-600"
                     >
                       <div className="flex items-start space-x-4">
                         {/* Logo */}
@@ -211,18 +204,9 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
 
                         {/* Informações */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                              {loja.nome_fantasia || loja.razao_social}
-                            </h4>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              loja.ativo
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300'
-                            }`}>
-                              {loja.ativo ? 'Ativa' : 'Inativa'}
-                            </span>
-                          </div>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {loja.nome_fantasia || loja.razao_social}
+                          </h4>
 
                           {loja.nome_fantasia && loja.razao_social && loja.nome_fantasia !== loja.razao_social && (
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -258,7 +242,7 @@ export function LojasModal({ isOpen, onClose, baseId, baseName }: LojasModalProp
 
             {lojas.length > 0 && (
               <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                {lojas.filter(l => l.ativo).length} de {lojas.length} lojas ativas
+                {lojas.length} {lojas.length === 1 ? 'loja' : 'lojas'}
               </div>
             )}
           </div>

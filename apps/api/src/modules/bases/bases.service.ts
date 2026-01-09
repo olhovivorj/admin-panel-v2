@@ -410,6 +410,7 @@ export class BasesService {
 
   /**
    * Busca lojas (empresas) de ge_empresa para uma base
+   * Filtra apenas lojas de varejo (exclui ADM e LAB)
    */
   async getLojas(baseId: number) {
     const lojas = await this.db.query(
@@ -417,11 +418,12 @@ export class BasesService {
         e.ID_EMPRESA,
         COALESCE(e.NOME_REDUZIDO, e.ABREV, p.RAZAO, '') as NOME,
         COALESCE(p.RAZAO, e.NOME_REDUZIDO, '') as RAZAO_SOCIAL,
-        COALESCE(p.DATA_CADASTRO, e.DT_LUPD) as DATA_CADASTRO,
-        'S' as ATIVO
+        COALESCE(p.DATA_CADASTRO, e.DT_LUPD) as DATA_CADASTRO
       FROM ge_empresa e
       LEFT JOIN ge_pessoa p ON e.ID_PESSOA = p.ID_PESSOA AND e.ID_BASE = p.ID_BASE
       WHERE e.ID_BASE = ?
+        AND COALESCE(e.FG_ADM, 'N') <> 'S'
+        AND COALESCE(e.FG_LAB, 'N') <> 'S'
       ORDER BY NOME`,
       [baseId]
     );
@@ -439,8 +441,6 @@ export class BasesService {
       cnpj: '',
       DATA_INICIO: row.DATA_CADASTRO,
       data_inicio: row.DATA_CADASTRO,
-      ATIVO: row.ATIVO === 'S' ? 1 : 0,
-      ativo: row.ATIVO === 'S',
     }));
   }
 }
