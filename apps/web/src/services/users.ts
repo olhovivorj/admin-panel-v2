@@ -8,7 +8,13 @@ export interface UsuarioResponseDto {
   telefone?: string
   obs?: string
   notes?: string
-  role: 'admin' | 'user' | 'operator' | 'viewer'
+  // Backend retorna role como objeto (via JOIN com ari_roles)
+  role: {
+    id: number
+    name: string
+    displayName: string
+  } | null
+  funcao?: string  // Campo funcao da tabela ariusers
   status: 'active' | 'inactive'
   active?: boolean
   ativo?: boolean  // Campo do backend (boolean no MySQL tinyint)
@@ -57,18 +63,25 @@ export interface CreateUsuarioDto {
 export type CreateUserDto = CreateUsuarioDto
 
 export interface UpdateUsuarioDto {
-  name?: string
+  // Campos que o backend espera (após conversões no frontend)
+  nome?: string         // Backend espera 'nome' (não 'name')
   email?: string
   telefone?: string
   obs?: string
-  role?: 'admin' | 'user' | 'operator' | 'viewer'
+  funcao?: string       // Backend espera 'funcao' (não 'role')
+  roleId?: number       // ID da role (ari_roles)
+  planId?: number       // ID do plano (ari_plans)
   ativo?: boolean
+  baseId?: number
   tipo_usuario?: 'NORMAL' | 'API'
   iduser?: number
+  theme?: string
+  language?: string
+  // Campos API
   permissions?: string[]
   ip_whitelist?: string[]
   rate_limit_per_hour?: number
-  permissoes_endpoints?: any
+  permissoes_endpoints?: Record<string, any>
 }
 
 // Alias para compatibilidade
@@ -124,7 +137,7 @@ export const usersService = {
   // Buscar usuário por ID
   async getUser(id: number) {
     const response = await api.get(`/usuarios/${id}`)
-    return response.data.data // Retornar apenas os dados do usuário, não o wrapper
+    return response.data.data || response.data // Backend retorna direto, sem wrapper
   },
 
   // Criar usuário

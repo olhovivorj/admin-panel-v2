@@ -103,4 +103,10 @@ export class BasesController {
   async getBaseStats(@Param('id', ParseIntPipe) id: number) {
     return this.basesService.getBaseStats(id);
   }
+
+  @Get(':id/lojas')
+  @ApiOperation({ summary: 'Listar lojas (empresas) da base via Firebird' })
+  async getLojas(@Param('id', ParseIntPipe) id: number) {
+    return this.basesService.getLojas(id);
+  }
 }

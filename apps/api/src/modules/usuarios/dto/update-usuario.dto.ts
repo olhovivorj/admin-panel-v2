@@ -29,6 +29,11 @@ export class UpdateUsuarioDto {
   @IsString()
   telefone?: string;
 
+  @ApiPropertyOptional({ example: 'Observações sobre o usuário' })
+  @IsOptional()
+  @IsString()
+  obs?: string;
+
   @ApiPropertyOptional({ example: 49, description: 'ID da base (ID_BASE)' })
   @IsOptional()
   @IsInt()

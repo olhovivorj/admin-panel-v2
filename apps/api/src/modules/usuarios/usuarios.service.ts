@@ -49,6 +49,7 @@ export class UsuariosService {
         u.email,
         u.nome,
         u.telefone,
+        u.obs,
         u.ID_BASE as baseId,
         b.NOME as baseName,
         u.funcao,
@@ -85,6 +86,7 @@ export class UsuariosService {
         email: user.email,
         nome: user.nome,
         telefone: user.telefone,
+        obs: user.obs,
         baseId: user.baseId,
         baseName: user.baseName,
         funcao: user.funcao,
@@ -97,6 +99,7 @@ export class UsuariosService {
           id: user.plan_id,
           name: user.planName,
         } : null,
+        plan_id: user.plan_id,
         ativo: user.ativo === 1,
         lastLogin: user.lastLogin,
         createdAt: user.createdAt,
@@ -116,6 +119,7 @@ export class UsuariosService {
         u.email,
         u.nome,
         u.telefone,
+        u.obs,
         u.ID_BASE as baseId,
         b.NOME as baseName,
         u.funcao,
@@ -149,6 +153,7 @@ export class UsuariosService {
       email: user.email,
       nome: user.nome,
       telefone: user.telefone,
+      obs: user.obs,
       baseId: user.baseId,
       baseName: user.baseName,
       funcao: user.funcao,
@@ -162,6 +167,7 @@ export class UsuariosService {
         name: user.planName,
         displayName: user.planDisplayName,
       } : null,
+      plan_id: user.plan_id,
       ativo: user.ativo === 1,
       lastLogin: user.lastLogin,
       createdAt: user.createdAt,
@@ -192,10 +198,12 @@ export class UsuariosService {
       senha: hashedPassword,
       nome: dto.nome,
       telefone: dto.telefone || null,
+      obs: dto.obs || null,
       ID_BASE: dto.baseId,
       funcao: dto.funcao || 'user',
       role_id: dto.roleId || null,
       plan_id: dto.planId || null,
+      tipo_usuario: dto.tipo_usuario || 'NORMAL',
       ativo: dto.ativo !== false ? 1 : 0,
     });
 
@@ -233,6 +241,7 @@ export class UsuariosService {
     if (dto.email) updateData.email = dto.email.toLowerCase();
     if (dto.nome) updateData.nome = dto.nome;
     if (dto.telefone !== undefined) updateData.telefone = dto.telefone || null;
+    if (dto.obs !== undefined) updateData.obs = dto.obs || null;
     if (dto.funcao) updateData.funcao = dto.funcao;
     if (dto.roleId !== undefined) updateData.role_id = dto.roleId || null;
     if (dto.planId !== undefined) updateData.plan_id = dto.planId || null;

@@ -39,6 +39,8 @@ const userSchema = z.object({
   password: z.string().optional(),
   role_id: z.any().optional(), // FK para ari_roles - flexível
   id_pessoa: z.any().optional(), // FK para ge_pessoa - flexível
+  plano_id: z.any().optional(), // FK para ari_plans - Plano de acesso
+  obs: z.string().optional(), // Observações sobre o usuário
   tipo_usuario: z.enum(['NORMAL', 'API']).optional(),
   active: z.boolean().optional(),
   rate_limit_per_hour: z.number().optional(),
@@ -104,6 +106,8 @@ export function UserFormModalWithTabs({
         telefone: user.telefone || '',
         role_id: user.role?.id || undefined,
         id_pessoa: user.id_pessoa || undefined,
+        plano_id: user.plan_id || user.plan?.id || (user as any).plano_id || undefined,
+        obs: user.obs || '',
         tipo_usuario: user.tipo_usuario || 'NORMAL',
         active: ativoValue,
         rate_limit_per_hour: user.rate_limit_per_hour,
@@ -126,10 +130,16 @@ export function UserFormModalWithTabs({
       if (data.name) payload.nome = data.name
       if (data.email) payload.email = data.email
       if (data.telefone) payload.telefone = data.telefone
+      if (data.obs !== undefined) payload.obs = data.obs
 
       // role_id → roleId (backend espera camelCase)
       if (data.role_id !== undefined && data.role_id !== null) {
         payload.roleId = Number(data.role_id)
+      }
+
+      // plano_id → planId (backend espera camelCase)
+      if (data.plano_id !== undefined && data.plano_id !== null) {
+        payload.planId = Number(data.plano_id)
       }
 
       // active → ativo
@@ -244,7 +254,7 @@ export function UserFormModalWithTabs({
                 </Tab.Panel>
 
                 <Tab.Panel>
-                  <PermissoesTab register={register} control={control} />
+                  <PermissoesTab register={register} control={control} watch={watch} setValue={setValue} />
                 </Tab.Panel>
 
                 {watch('tipo_usuario') === 'API' && (

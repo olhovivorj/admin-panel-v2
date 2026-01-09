@@ -34,6 +34,11 @@ export class CreateUsuarioDto {
   @IsString()
   telefone?: string;
 
+  @ApiPropertyOptional({ example: 'Observações sobre o usuário' })
+  @IsOptional()
+  @IsString()
+  obs?: string;
+
   @ApiProperty({ example: 49, description: 'ID da base (ID_BASE)' })
   @IsInt({ message: 'Base deve ser um número' })
   @IsNotEmpty({ message: 'Base é obrigatória' })
@@ -58,4 +63,9 @@ export class CreateUsuarioDto {
   @IsOptional()
   @IsBoolean()
   ativo?: boolean;
+
+  @ApiPropertyOptional({ example: 'NORMAL', enum: ['NORMAL', 'API'], default: 'NORMAL' })
+  @IsOptional()
+  @IsString()
+  tipo_usuario?: string;
 }

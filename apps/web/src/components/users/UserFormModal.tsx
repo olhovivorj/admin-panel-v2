@@ -380,7 +380,7 @@ Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
         email: user.email,
         telefone: user.telefone || '', // Campo telefone
         obs: user.obs || user.notes || '', // Campo observações (obs ou notes)
-        role: user.role || 'user',
+        role: (user.funcao || user.role?.name || 'user') as 'admin' | 'user' | 'operator' | 'viewer',
         role_id: user.role?.id || undefined, // ID do cargo para o PermissoesTab
         baseId: user.baseId,
         active: user.ativo === true || (user.ativo as any) === 1, // Usar campo ativo do backend
@@ -475,7 +475,7 @@ Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
       return
     }
 
-    const payload = {
+    const payload: Record<string, any> = {
       ...data,
       baseId: data.baseId || selectedBaseId, // Garantir que baseId seja fornecido
       // Limpar formatação do telefone se existir
@@ -500,6 +500,24 @@ Detalhes: ${JSON.stringify(axiosError.response?.data, null, 2)}
     if (data.role_id !== undefined) {
       payload.roleId = data.role_id || null
       delete payload.role_id
+    }
+
+    // Converter name para nome (backend espera nome)
+    if (data.name) {
+      payload.nome = data.name
+      delete payload.name
+    }
+
+    // Converter role para funcao (backend espera funcao)
+    if (data.role) {
+      payload.funcao = data.role
+      delete payload.role
+    }
+
+    // Converter plano_id para planId (backend espera planId)
+    if (data.plano_id !== undefined) {
+      payload.planId = data.plano_id
+      delete payload.plano_id
     }
 
     // Log para debug
@@ -850,7 +868,7 @@ Clique OK para criar o usuário
             </div>
 
             {/* Selector de Pessoa do ERP - Mobile optimized */}
-            <div className="col-span-2">
+            <div>
               <PersonSelectorMobile
                 baseId={selectedBaseId || 60}
                 value={watch('ID_PESSOA')}
@@ -861,14 +879,21 @@ Clique OK para criar o usuário
               />
             </div>
 
-            {/* Selector de Plano de Acesso - Mobile optimized */}
-            <div className="col-span-2">
+            {/* Selector de Plano de Acesso */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
               <PlanSelectorMobile
                 value={watch('plano_id')}
                 onChange={(planId) => setValue('plano_id', planId)}
                 disabled={false}
                 required={false}
               />
+            </div>
+
+            {/* Informações adicionais */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                Informações Adicionais
+              </h3>
             </div>
 
             <div>

@@ -90,13 +90,21 @@ export class BasesService {
 
     return {
       items: items.map(base => ({
-        id: base.id,
-        nome: base.nome,
-        codigo: base.codigo,
+        // Campos em MAIÚSCULO (padrão frontend)
+        ID_BASE: base.id,
+        NOME: base.nome,
+        BASE: base.codigo,
+        // Campos adicionais
+        baseId: base.id,
         token: base.token,
         servidor: base.servidor,
         hasFirebirdConfig: !!(base.fbHost && base.fbDatabase),
         firebirdActive: base.fbActive === 1,
+        firebird_active: base.fbActive === 1,
+        firebird_status: (base.fbHost && base.fbDatabase) ? 'CONFIGURED' : 'PENDING_CONFIG',
+        firebird_host: base.fbHost,
+        firebird_port: base.fbPort,
+        firebird_database: base.fbDatabase,
         usuariosCount: base.usuariosCount || 0,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt,
@@ -470,5 +478,95 @@ export class BasesService {
     );
 
     return bases;
+  }
+
+  /**
+   * Busca lojas (empresas) do Firebird para uma base
+   */
+  async getLojas(baseId: number) {
+    // Buscar configuração Firebird
+    const config = await this.db.queryOne(
+      `SELECT
+        FIREBIRD_HOST as fbHost,
+        FIREBIRD_PORT as fbPort,
+        FIREBIRD_DATABASE as fbDatabase,
+        FIREBIRD_USER as fbUser,
+        FIREBIRD_PASSWORD as fbPassword
+      FROM base_config
+      WHERE ID_BASE = ?`,
+      [baseId]
+    );
+
+    if (!config || !config.fbHost || !config.fbDatabase) {
+      this.logger.warn(`Base ${baseId} não possui configuração Firebird`);
+      return [];
+    }
+
+    const options = {
+      host: config.fbHost,
+      port: config.fbPort || 3050,
+      database: config.fbDatabase,
+      user: config.fbUser || 'SYSDBA',
+      password: config.fbPassword || 'masterkey',
+    };
+
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        this.logger.warn(`Timeout ao buscar lojas da base ${baseId}`);
+        resolve([]);
+      }, 15000);
+
+      Firebird.attach(options, (err, db) => {
+        if (err) {
+          clearTimeout(timeout);
+          this.logger.error(`Erro ao conectar Firebird para lojas: ${err.message}`);
+          resolve([]);
+          return;
+        }
+
+        const sql = `
+          SELECT
+            e.ID_EMPRESA,
+            p.FANTASIA as NOME_FANTASIA,
+            p.RAZAO as RAZAO_SOCIAL,
+            COALESCE(pj.CNPJ, '') as CNPJ,
+            CURRENT_DATE as DATA_INICIO,
+            'S' as ATIVO
+          FROM GE_EMPRESA e
+          JOIN GE_PESSOA p ON p.ID_PESSOA = e.ID_PESSOA
+          LEFT JOIN GE_PESSOA_JURIDICA pj ON pj.ID_PESSOA = p.ID_PESSOA
+          ORDER BY p.FANTASIA
+        `;
+
+        db.query(sql, [], (err, result) => {
+          clearTimeout(timeout);
+          db.detach();
+
+          if (err) {
+            this.logger.error(`Erro ao buscar lojas: ${err.message}`);
+            resolve([]);
+            return;
+          }
+
+          const lojas = (result || []).map((row: any) => ({
+            ID_EMPRESA: row.ID_EMPRESA,
+            id_empresa: row.ID_EMPRESA,
+            NOME_FANTASIA: row.NOME_FANTASIA?.trim() || '',
+            nome_fantasia: row.NOME_FANTASIA?.trim() || '',
+            RAZAO_SOCIAL: row.RAZAO_SOCIAL?.trim() || '',
+            razao_social: row.RAZAO_SOCIAL?.trim() || '',
+            CNPJ: row.CNPJ?.trim() || '',
+            cnpj: row.CNPJ?.trim() || '',
+            DATA_INICIO: row.DATA_INICIO,
+            data_inicio: row.DATA_INICIO,
+            ATIVO: row.ATIVO === 'S' ? 1 : 0,
+            ativo: row.ATIVO === 'S',
+          }));
+
+          this.logger.log(`Encontradas ${lojas.length} lojas na base ${baseId}`);
+          resolve(lojas);
+        });
+      });
+    });
   }
 }

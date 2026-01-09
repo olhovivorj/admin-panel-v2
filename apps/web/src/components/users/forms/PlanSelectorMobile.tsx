@@ -11,10 +11,14 @@ import api from '@/services/api'
 interface AccessPlan {
   id: number
   name: string
-  display_name: string
-  level: number
+  displayName: string  // Backend usa camelCase
+  display_name?: string  // Fallback
+  description?: string
+  level?: number
   price: number
-  is_admin: boolean
+  is_admin?: boolean
+  isActive?: boolean
+  priority?: number
   features?: string[]
 }
 
@@ -74,8 +78,8 @@ export function PlanSelectorMobile({
 
   const loadPlans = async () => {
     try {
-      const response = await api.get('/access-plans')
-      const plansData = response.data || []
+      const response = await api.get('/plans')
+      const plansData = response.data?.items || response.data || []
       // Adicionar features aos planos
       const plansWithFeatures = plansData.map((plan: AccessPlan) => ({
         ...plan,
@@ -89,7 +93,7 @@ export function PlanSelectorMobile({
         {
           id: 1,
           name: 'basic',
-          display_name: 'Básico',
+          displayName: 'Básico',
           level: 1,
           price: 0,
           is_admin: false,
@@ -98,7 +102,7 @@ export function PlanSelectorMobile({
         {
           id: 2,
           name: 'standard',
-          display_name: 'Standard',
+          displayName: 'Standard',
           level: 2,
           price: 49.90,
           is_admin: false,
@@ -107,7 +111,7 @@ export function PlanSelectorMobile({
         {
           id: 3,
           name: 'premium',
-          display_name: 'Premium',
+          displayName: 'Premium',
           level: 3,
           price: 99.90,
           is_admin: false,
@@ -116,7 +120,7 @@ export function PlanSelectorMobile({
         {
           id: 4,
           name: 'admin',
-          display_name: 'Administrador',
+          displayName: 'Administrador',
           level: 4,
           price: 0,
           is_admin: true,
@@ -181,14 +185,16 @@ export function PlanSelectorMobile({
 
                       <div className="text-left">
                         <p className={`font-semibold text-base ${isSelected ? 'text-gray-900' : 'text-gray-700'}`}>
-                          {plan.display_name}
+                          {plan.displayName || plan.display_name || plan.name}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {plan.price > 0 ? (
-                            <>R$ {plan.price.toFixed(2)}<span className="text-xs">/mês</span></>
-                          ) : (
-                            plan.is_admin ? 'Acesso total' : 'Gratuito'
-                          )}
+                          {(() => {
+                            const price = Number(plan.price) || 0
+                            if (price > 0) {
+                              return <>R$ {price.toFixed(2)}<span className="text-xs">/mês</span></>
+                            }
+                            return (plan.is_admin || plan.name === 'admin') ? 'Acesso total' : 'Gratuito'
+                          })()}
                         </p>
                       </div>
                     </div>
@@ -228,7 +234,7 @@ export function PlanSelectorMobile({
                 )}
 
                 {/* Badge admin */}
-                {plan.is_admin && (
+                {(plan.is_admin || plan.name === 'admin') && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                     Admin
                   </span>

@@ -102,7 +102,7 @@ export function UserDetailModal({ user, isOpen, onClose }: UserDetailModalProps)
                   {user.email}
                 </p>
                 <div className="mt-1">
-                  {getRoleBadge(user.role)}
+                  {getRoleBadge(user.funcao || user.role?.name || 'user')}
                 </div>
               </div>
             </div>
