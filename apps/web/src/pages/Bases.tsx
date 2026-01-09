@@ -10,6 +10,7 @@ import {
 import { basesService, BaseWithStats } from '@/services/bases'
 import { FirebirdConfigModal } from '@/components/bases/FirebirdConfigModal'
 import { LojasConfigModal } from '@/components/bases/LojasConfigModal'
+import { BaseConfigModal } from '@/components/bases/BaseConfigModal'
 import { logger } from '@/utils/logger'
 
 export function Bases() {
@@ -19,8 +20,10 @@ export function Bases() {
   const [selectedBase, setSelectedBase] = useState<BaseWithStats | null>(null)
   const [showFirebirdModal, setShowFirebirdModal] = useState(false)
   const [showLojasModal, setShowLojasModal] = useState(false)
+  const [showBaseConfigModal, setShowBaseConfigModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name'>('name')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   useEffect(() => {
     carregarBases()
@@ -92,6 +95,17 @@ export function Bases() {
   const filteredBases = useMemo(() => {
     let filtered = bases
 
+    // Filtro por status (ativo/inativo)
+    if (statusFilter === 'active') {
+      filtered = filtered.filter(base =>
+        base.firebird_status === 'CONFIGURED' && base.firebird_active
+      )
+    } else if (statusFilter === 'inactive') {
+      filtered = filtered.filter(base =>
+        base.firebird_status !== 'CONFIGURED' || !base.firebird_active
+      )
+    }
+
     // Filtro por busca
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase().trim()
@@ -109,7 +123,17 @@ export function Bases() {
     })
 
     return filtered
-  }, [bases, searchTerm, sortBy])
+  }, [bases, searchTerm, sortBy, statusFilter])
+
+  // Contagem por status
+  const statusCounts = useMemo(() => {
+    const active = bases.filter(b => b.firebird_status === 'CONFIGURED' && b.firebird_active).length
+    return {
+      all: bases.length,
+      active,
+      inactive: bases.length - active,
+    }
+  }, [bases])
 
   if (loading) {
     return (
@@ -194,6 +218,39 @@ export function Bases() {
             )}
           </div>
 
+          {/* Filtro por status */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                statusFilter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              Todas ({statusCounts.all})
+            </button>
+            <button
+              onClick={() => setStatusFilter('active')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                statusFilter === 'active'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              Ativas ({statusCounts.active})
+            </button>
+            <button
+              onClick={() => setStatusFilter('inactive')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                statusFilter === 'inactive'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              Inativas ({statusCounts.inactive})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -248,7 +305,7 @@ export function Bases() {
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
                     >
                       <CogIcon className="h-4 w-4 mr-1" />
-                      Config Firebird
+                      Firebird
                     </button>
                     <button
                       onClick={() => {
@@ -258,7 +315,17 @@ export function Bases() {
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800"
                     >
                       <CogIcon className="h-4 w-4 mr-1" />
-                      Config Lojas
+                      Lojas
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedBase(base)
+                        setShowBaseConfigModal(true)
+                      }}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800"
+                    >
+                      <CogIcon className="h-4 w-4 mr-1" />
+                      Base
                     </button>
                   </td>
                 </tr>
@@ -287,6 +354,18 @@ export function Bases() {
           isOpen={showLojasModal}
           onClose={() => {
             setShowLojasModal(false)
+            setSelectedBase(null)
+          }}
+          baseId={selectedBase.ID_BASE || selectedBase.baseId}
+          baseName={selectedBase.NOME}
+        />
+      )}
+
+      {showBaseConfigModal && selectedBase && (
+        <BaseConfigModal
+          isOpen={showBaseConfigModal}
+          onClose={() => {
+            setShowBaseConfigModal(false)
             setSelectedBase(null)
           }}
           baseId={selectedBase.ID_BASE || selectedBase.baseId}

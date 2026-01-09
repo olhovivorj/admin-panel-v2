@@ -9,6 +9,7 @@ import {
   CubeIcon,
   DocumentTextIcon,
   CreditCardIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/utils/cn'
 import { useSuperAdmin } from '@/hooks/useSuperAdmin'
@@ -22,6 +23,7 @@ const navigationItems = [
   { name: 'Roles & Permissões', href: '/roles', icon: ShieldCheckIcon, adminOnly: true },
   { name: 'Planos', href: '/plans', icon: CreditCardIcon, adminOnly: true },
   { name: 'Bases de Dados', href: '/bases', icon: CircleStackIcon, adminOnly: true },
+  { name: 'Agendamentos', href: '/schedules', icon: ClockIcon, adminOnly: true },
 ]
 
 export function Sidebar() {

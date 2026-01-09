@@ -128,4 +128,22 @@ export class BasesController {
   ) {
     return this.basesService.saveLojaConfig(id, data);
   }
+
+  @Get(':id/zeiss-config')
+  @ApiOperation({ summary: 'Buscar configurações Zeiss da base' })
+  async getZeissConfig(@Param('id', ParseIntPipe) id: number) {
+    return this.basesService.getZeissConfig(id);
+  }
+
+  @Put(':id/zeiss-config')
+  @ApiOperation({ summary: 'Atualizar configurações Zeiss da base' })
+  async updateZeissConfig(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: {
+      precoPorCnpj?: 'S' | 'N';
+      ativo?: boolean;
+    },
+  ) {
+    return this.basesService.updateZeissConfig(id, data);
+  }
 }

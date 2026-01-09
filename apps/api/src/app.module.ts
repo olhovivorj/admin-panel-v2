@@ -9,6 +9,7 @@ import { ErpModule } from './modules/erp/erp.module';
 import { AppsModule } from './modules/apps/apps.module';
 import { PagesModule } from './modules/pages/pages.module';
 import { PlansModule } from './modules/plans/plans.module';
+import { SchedulesModule } from './modules/schedules/schedules.module';
 
 /**
  * AppModule - Módulo principal do Admin Panel V2
@@ -41,6 +42,7 @@ import { PlansModule } from './modules/plans/plans.module';
     AppsModule,
     PagesModule,
     PlansModule,
+    SchedulesModule,
   ],
 })
 export class AppModule {}

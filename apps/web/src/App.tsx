@@ -16,6 +16,7 @@ import { RolePermissions } from '@/pages/RolePermissions'
 import { Apps } from '@/pages/Apps'
 import { Pages } from '@/pages/Pages'
 import { Plans } from '@/pages/Plans'
+import { Schedules } from '@/pages/Schedules'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -57,6 +58,7 @@ function App() {
                     <Route path="apps" element={<Apps />} />
                     <Route path="pages" element={<Pages />} />
                     <Route path="plans" element={<Plans />} />
+                    <Route path="schedules" element={<Schedules />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>

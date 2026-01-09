@@ -578,4 +578,71 @@ export class BasesService {
       ativo: updated.ativo,
     };
   }
+
+  /**
+   * Busca configurações Zeiss da base (base_config)
+   * Campos que afetam toda a base, não por loja
+   */
+  async getZeissConfig(baseId: number) {
+    const config = await this.db.queryOne(
+      `SELECT
+        COALESCE(ZEISS_PRECO_POR_CNPJ, 'S') as precoPorCnpj,
+        COALESCE(FIREBIRD_ACTIVE, 0) as ativo
+      FROM base_config
+      WHERE ID_BASE = ?`,
+      [baseId]
+    );
+
+    if (!config) {
+      return {
+        precoPorCnpj: 'S',
+        ativo: false,
+      };
+    }
+
+    return {
+      precoPorCnpj: config.precoPorCnpj || 'S',
+      ativo: config.ativo === 1 || config.ativo === '1',
+    };
+  }
+
+  /**
+   * Atualiza configurações Zeiss da base
+   */
+  async updateZeissConfig(baseId: number, data: {
+    precoPorCnpj?: 'S' | 'N';
+    ativo?: boolean;
+  }) {
+    // Verificar se config existe
+    const configExists = await this.db.queryOne(
+      'SELECT ID_BASE FROM base_config WHERE ID_BASE = ?',
+      [baseId]
+    );
+
+    const updateData: Record<string, any> = {};
+
+    if (data.precoPorCnpj !== undefined) {
+      updateData.ZEISS_PRECO_POR_CNPJ = data.precoPorCnpj;
+    }
+    if (data.ativo !== undefined) {
+      updateData.FIREBIRD_ACTIVE = data.ativo ? 1 : 0;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return this.getZeissConfig(baseId);
+    }
+
+    if (configExists) {
+      await this.db.update('base_config', updateData, 'ID_BASE = ?', [baseId]);
+    } else {
+      await this.db.insert('base_config', {
+        ID_BASE: baseId,
+        ...updateData,
+      });
+    }
+
+    this.logger.log(`Config Zeiss atualizada para base ${baseId}: ${JSON.stringify(data)}`);
+
+    return this.getZeissConfig(baseId);
+  }
 }

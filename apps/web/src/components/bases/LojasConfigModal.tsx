@@ -5,17 +5,15 @@
  * - ZEISS_USA_CATALOGO: Recebe catálogo/preços (sync batch)
  * - ZEISS_USA_SAO: Envio de pedidos produção
  * - ZEISS_USA_ZVC: Compliance/sellout (franquias)
- * - ZEISS_USA_MARKETPLACE: Marketplace Zeiss (requer ZVC)
+ * - ZEISS_USA_MARKETPLACE: Marketplace Zeiss
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import {
   XMarkIcon,
   BuildingStorefrontIcon,
   ArrowPathIcon,
   CheckIcon,
-  XCircleIcon,
-  CheckCircleIcon,
   MagnifyingGlassIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline'
@@ -94,13 +92,59 @@ const FlagButton: React.FC<{
   </button>
 ))
 
+// Componente de cabeçalho de coluna clicável
+// Clique esquerdo: toggle (marca/desmarca todos)
+// Clique direito: inverte seleção
+const ColumnHeader: React.FC<{
+  icon: React.ElementType
+  label: string
+  allSelected: boolean
+  onToggle: () => void
+  onInvert: () => void
+}> = ({ icon: Icon, label, allSelected, onToggle, onInvert }) => {
+  return (
+    <button
+      onClick={onToggle}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        onInvert()
+      }}
+      className={`flex items-center gap-1 mx-auto rounded px-1.5 py-0.5 transition-colors cursor-pointer ${
+        allSelected
+          ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400'
+          : 'hover:bg-gray-200 dark:hover:bg-gray-600'
+      }`}
+      title={`${label}\nClique: ${allSelected ? 'desmarcar' : 'marcar'} todos\nClique direito: inverter`}
+    >
+      <Icon className="w-4 h-4" />
+    </button>
+  )
+}
+
+type FiltroStatus = 'todas' | 'configuradas' | 'nao-configuradas'
+
 export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasConfigModalProps) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [lojas, setLojas] = useState<Loja[]>([])
-  const [stats, setStats] = useState<Stats>({ total: 0, configuradas: 0, catalogo: 0, sao: 0, zvc: 0, marketplace: 0 })
   const [filtro, setFiltro] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState<FiltroStatus>('todas')
   const [savingId, setSavingId] = useState<number | null>(null)
+
+  // Stats calculados automaticamente a partir do estado lojas
+  const stats = useMemo<Stats>(() => ({
+    total: lojas.length,
+    configuradas: lojas.filter(l => l.config && (
+      l.config.ZEISS_USA_CATALOGO === 'S' ||
+      l.config.ZEISS_USA_SAO === 'S' ||
+      l.config.ZEISS_USA_ZVC === 'S' ||
+      l.config.ZEISS_USA_MARKETPLACE === 'S'
+    )).length,
+    catalogo: lojas.filter(l => l.config?.ZEISS_USA_CATALOGO === 'S').length,
+    sao: lojas.filter(l => l.config?.ZEISS_USA_SAO === 'S').length,
+    zvc: lojas.filter(l => l.config?.ZEISS_USA_ZVC === 'S').length,
+    marketplace: lojas.filter(l => l.config?.ZEISS_USA_MARKETPLACE === 'S').length,
+  }), [lojas])
 
   const carregarDados = useCallback(async () => {
     setLoading(true)
@@ -109,7 +153,6 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
       const data = response.data
 
       setLojas(data.lojas || [])
-      setStats(data.stats || { total: 0, configuradas: 0, catalogo: 0, sao: 0, zvc: 0, marketplace: 0 })
     } catch (error: any) {
       console.error('Erro ao carregar lojas:', error)
       toast.error(error.response?.data?.message || 'Erro ao carregar lojas')
@@ -145,15 +188,6 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
         const newValue = currentConfig[flag] === 'S' ? 'N' : 'S'
         const updatedConfig: LojaConfig = { ...currentConfig, [flag]: newValue }
 
-        // Regra: Marketplace requer ZVC
-        if (flag === 'ZEISS_USA_MARKETPLACE' && newValue === 'S' && currentConfig.ZEISS_USA_ZVC !== 'S') {
-          updatedConfig.ZEISS_USA_ZVC = 'S'
-        }
-        // Se desativar ZVC, desativa Marketplace também
-        if (flag === 'ZEISS_USA_ZVC' && newValue === 'N') {
-          updatedConfig.ZEISS_USA_MARKETPLACE = 'N'
-        }
-
         return { ...loja, config: updatedConfig, modificada: true }
       })
     )
@@ -182,10 +216,74 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
     )
   }
 
-  const salvarLoja = async (loja: Loja) => {
-    if (!loja.config) return
+  // Funções de seleção em massa
+  const bulkSetFlag = useCallback((
+    flag: 'ZEISS_USA_CATALOGO' | 'ZEISS_USA_SAO' | 'ZEISS_USA_ZVC' | 'ZEISS_USA_MARKETPLACE',
+    value: 'S' | 'N'
+  ) => {
+    setLojas(prev =>
+      prev.map(loja => {
+        const currentConfig: LojaConfig = loja.config ? { ...loja.config } : {
+          ZEISS_USA_CATALOGO: 'N',
+          ZEISS_USA_SAO: 'N',
+          ZEISS_USA_ZVC: 'N',
+          ZEISS_USA_MARKETPLACE: 'N',
+          ZEISS_CODIGO_LOJA: null,
+          ativo: 'S',
+        }
 
-    setSavingId(loja.id_empresa)
+        // Só modifica se o valor for diferente
+        if (currentConfig[flag] === value) {
+          return loja
+        }
+
+        const updatedConfig: LojaConfig = { ...currentConfig, [flag]: value }
+
+        return { ...loja, config: updatedConfig, modificada: true }
+      })
+    )
+  }, [])
+
+  // Toggle coluna: se algum está desmarcado, marca todos; senão desmarca todos
+  const toggleColumnFlag = useCallback((
+    flag: 'ZEISS_USA_CATALOGO' | 'ZEISS_USA_SAO' | 'ZEISS_USA_ZVC' | 'ZEISS_USA_MARKETPLACE'
+  ) => {
+    const allSelected = lojas.every(l => l.config?.[flag] === 'S')
+    bulkSetFlag(flag, allSelected ? 'N' : 'S')
+  }, [lojas, bulkSetFlag])
+
+  const invertFlag = useCallback((
+    flag: 'ZEISS_USA_CATALOGO' | 'ZEISS_USA_SAO' | 'ZEISS_USA_ZVC' | 'ZEISS_USA_MARKETPLACE'
+  ) => {
+    setLojas(prev =>
+      prev.map(loja => {
+        const currentConfig: LojaConfig = loja.config ? { ...loja.config } : {
+          ZEISS_USA_CATALOGO: 'N',
+          ZEISS_USA_SAO: 'N',
+          ZEISS_USA_ZVC: 'N',
+          ZEISS_USA_MARKETPLACE: 'N',
+          ZEISS_CODIGO_LOJA: null,
+          ativo: 'S',
+        }
+
+        const newValue = currentConfig[flag] === 'S' ? 'N' : 'S'
+        const updatedConfig: LojaConfig = { ...currentConfig, [flag]: newValue }
+
+        return { ...loja, config: updatedConfig, modificada: true }
+      })
+    )
+  }, [])
+
+  // Verificar se todos estão selecionados para cada flag
+  const allCatalogoSelected = useMemo(() => lojas.length > 0 && lojas.every(l => l.config?.ZEISS_USA_CATALOGO === 'S'), [lojas])
+  const allSaoSelected = useMemo(() => lojas.length > 0 && lojas.every(l => l.config?.ZEISS_USA_SAO === 'S'), [lojas])
+  const allZvcSelected = useMemo(() => lojas.length > 0 && lojas.every(l => l.config?.ZEISS_USA_ZVC === 'S'), [lojas])
+  const allMarketplaceSelected = useMemo(() => lojas.length > 0 && lojas.every(l => l.config?.ZEISS_USA_MARKETPLACE === 'S'), [lojas])
+
+  // Função interna de salvamento (sem toast - usada pelo batch)
+  const salvarLojaInterno = async (loja: Loja): Promise<boolean> => {
+    if (!loja.config) return false
+
     try {
       const response = await api.post(`/bases/${baseId}/lojas/config`, {
         id_empresa: loja.id_empresa,
@@ -206,46 +304,78 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
             : l
         )
       )
+      return true
+    } catch (error) {
+      console.error('Erro ao salvar loja:', loja.id_empresa, error)
+      return false
+    }
+  }
 
-      toast.success('Configuração salva!')
-    } catch (error: any) {
-      console.error('Erro ao salvar:', error)
-      toast.error(error.response?.data?.message || 'Erro ao salvar')
+  // Salvamento individual (com toast e loading visual)
+  const salvarLoja = async (loja: Loja) => {
+    if (!loja.config) return
+
+    setSavingId(loja.id_empresa)
+    try {
+      const success = await salvarLojaInterno(loja)
+      if (success) {
+        toast.success('Configuração salva!')
+      } else {
+        toast.error('Erro ao salvar configuração')
+      }
     } finally {
       setSavingId(null)
     }
   }
 
+  // Salvamento em massa (um único toast no final)
   const salvarTodas = async () => {
     const modificadas = lojas.filter(l => l.modificada && l.config)
     if (modificadas.length === 0) return
 
     setSaving(true)
+    const toastId = toast.loading(`Salvando ${modificadas.length} lojas...`)
+
     let successCount = 0
     let errorCount = 0
 
     for (const loja of modificadas) {
-      try {
-        await salvarLoja(loja)
+      const success = await salvarLojaInterno(loja)
+      if (success) {
         successCount++
-      } catch {
+      } else {
         errorCount++
       }
     }
 
     setSaving(false)
+    toast.dismiss(toastId)
 
-    if (errorCount > 0) {
-      toast.error(`${errorCount} lojas falharam ao salvar`)
+    if (errorCount > 0 && successCount > 0) {
+      toast.error(`${successCount} salvas, ${errorCount} falharam`)
+    } else if (errorCount > 0) {
+      toast.error(`Erro ao salvar ${errorCount} lojas`)
     } else {
       toast.success(`${successCount} lojas salvas!`)
     }
+  }
 
-    // Recarregar para atualizar stats
-    carregarDados()
+  // Helper para verificar se loja está configurada (tem algum serviço ativo)
+  const isLojaConfigurada = (loja: Loja) => {
+    return loja.config && (
+      loja.config.ZEISS_USA_CATALOGO === 'S' ||
+      loja.config.ZEISS_USA_SAO === 'S' ||
+      loja.config.ZEISS_USA_ZVC === 'S' ||
+      loja.config.ZEISS_USA_MARKETPLACE === 'S'
+    )
   }
 
   const lojasFiltradas = lojas.filter(loja => {
+    // Filtro por status
+    if (filtroStatus === 'configuradas' && !isLojaConfigurada(loja)) return false
+    if (filtroStatus === 'nao-configuradas' && isLojaConfigurada(loja)) return false
+
+    // Filtro por texto
     if (!filtro) return true
     const termo = filtro.toLowerCase()
     return (
@@ -343,16 +473,51 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
               </div>
             </div>
 
-            {/* Filtro */}
-            <div className="mt-4 relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Filtrar por nome ou ID..."
-                value={filtro}
-                onChange={e => setFiltro(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+            {/* Filtros */}
+            <div className="mt-4 flex gap-3 items-center">
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Filtrar por nome ou ID..."
+                  value={filtro}
+                  onChange={e => setFiltro(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              {/* Chips de filtro */}
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setFiltroStatus('todas')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                    filtroStatus === 'todas'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Todas ({stats.total})
+                </button>
+                <button
+                  onClick={() => setFiltroStatus('configuradas')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                    filtroStatus === 'configuradas'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Configuradas ({stats.configuradas})
+                </button>
+                <button
+                  onClick={() => setFiltroStatus('nao-configuradas')}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                    filtroStatus === 'nao-configuradas'
+                      ? 'bg-orange-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Não config. ({stats.total - stats.configuradas})
+                </button>
+              </div>
             </div>
 
             {/* Tabela de lojas */}
@@ -371,17 +536,41 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
                   <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                     <tr>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Loja</th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase" title="Catálogo de preços">
-                        <CubeIcon className="w-4 h-4 mx-auto" />
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        <ColumnHeader
+                          icon={CubeIcon}
+                          label="Catálogo"
+                          allSelected={allCatalogoSelected}
+                          onToggle={() => toggleColumnFlag('ZEISS_USA_CATALOGO')}
+                          onInvert={() => invertFlag('ZEISS_USA_CATALOGO')}
+                        />
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase" title="Pedidos SAO">
-                        <ShoppingCartIcon className="w-4 h-4 mx-auto" />
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        <ColumnHeader
+                          icon={ShoppingCartIcon}
+                          label="SAO"
+                          allSelected={allSaoSelected}
+                          onToggle={() => toggleColumnFlag('ZEISS_USA_SAO')}
+                          onInvert={() => invertFlag('ZEISS_USA_SAO')}
+                        />
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase" title="Compliance ZVC">
-                        <ChartBarIcon className="w-4 h-4 mx-auto" />
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        <ColumnHeader
+                          icon={ChartBarIcon}
+                          label="ZVC"
+                          allSelected={allZvcSelected}
+                          onToggle={() => toggleColumnFlag('ZEISS_USA_ZVC')}
+                          onInvert={() => invertFlag('ZEISS_USA_ZVC')}
+                        />
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase" title="Marketplace">
-                        <BuildingOfficeIcon className="w-4 h-4 mx-auto" />
+                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                        <ColumnHeader
+                          icon={BuildingOfficeIcon}
+                          label="Marketplace"
+                          allSelected={allMarketplaceSelected}
+                          onToggle={() => toggleColumnFlag('ZEISS_USA_MARKETPLACE')}
+                          onInvert={() => invertFlag('ZEISS_USA_MARKETPLACE')}
+                        />
                       </th>
                       <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Cód. Zeiss</th>
                       <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ações</th>
@@ -443,8 +632,7 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
                               onClick={() => toggleFlag(loja.id_empresa, 'ZEISS_USA_MARKETPLACE')}
                               icon={BuildingOfficeIcon}
                               label="Marketplace"
-                              disabled={loja.config?.ZEISS_USA_ZVC !== 'S'}
-                              tooltip="Marketplace (requer ZVC)"
+                              tooltip="Marketplace Zeiss"
                             />
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -508,7 +696,7 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
                 </div>
                 <div className="flex items-center gap-2">
                   <BuildingOfficeIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  <span><strong>Marketplace:</strong> Venda de armações no marketplace Zeiss (requer ZVC)</span>
+                  <span><strong>Marketplace:</strong> Venda de armacoes no marketplace Zeiss</span>
                 </div>
               </div>
             </div>
