@@ -6,7 +6,6 @@ export interface SyncConfig {
   tipo: string;
   cron_expression: string;
   habilitado: boolean;
-  descricao?: string;
   atualizado_em?: Date;
   atualizado_por?: string;
   proxima_execucao?: string;
@@ -64,7 +63,7 @@ export class SchedulesService {
   async getSyncConfigs(): Promise<SyncConfig[]> {
     try {
       const configs = await this.db.query<SyncConfig>(
-        `SELECT id, tipo, cron_expression, habilitado, descricao, atualizado_em, atualizado_por
+        `SELECT id, tipo, cron_expression, habilitado, atualizado_em, atualizado_por
          FROM zeiss_sync_config
          ORDER BY tipo`,
       );
@@ -91,7 +90,7 @@ export class SchedulesService {
    */
   async updateSyncConfig(
     tipo: string,
-    data: { cron_expression?: string; habilitado?: boolean; descricao?: string },
+    data: { cron_expression?: string; habilitado?: boolean },
     usuario: string,
   ): Promise<SyncConfig | null> {
     const updates: string[] = [];
@@ -104,10 +103,6 @@ export class SchedulesService {
     if (data.habilitado !== undefined) {
       updates.push('habilitado = ?');
       values.push(data.habilitado ? 1 : 0);
-    }
-    if (data.descricao !== undefined) {
-      updates.push('descricao = ?');
-      values.push(data.descricao);
     }
 
     if (updates.length === 0) return null;
@@ -131,12 +126,11 @@ export class SchedulesService {
   async createSyncConfigIfNotExists(
     tipo: string,
     cron_expression: string,
-    descricao: string,
   ): Promise<void> {
     await this.db.query(
-      `INSERT IGNORE INTO zeiss_sync_config (tipo, cron_expression, habilitado, descricao)
-       VALUES (?, ?, 1, ?)`,
-      [tipo, cron_expression, descricao],
+      `INSERT IGNORE INTO zeiss_sync_config (tipo, cron_expression, habilitado)
+       VALUES (?, ?, 1)`,
+      [tipo, cron_expression],
     );
   }
 
