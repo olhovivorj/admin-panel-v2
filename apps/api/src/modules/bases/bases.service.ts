@@ -409,39 +409,38 @@ export class BasesService {
   }
 
   /**
-   * Busca lojas (empresas) do MySQL para uma base
+   * Busca lojas (empresas) de ge_empresa para uma base
    */
   async getLojas(baseId: number) {
     const lojas = await this.db.query(
       `SELECT
-        id,
-        id_empresa,
-        nome_empresa,
-        cnpj,
-        ativo,
-        dt_cadastro,
-        dt_atualizacao
-      FROM base_config_empresas
-      WHERE id_base = ?
-      ORDER BY nome_empresa`,
+        e.ID_EMPRESA,
+        COALESCE(e.NOME_REDUZIDO, e.ABREV, p.RAZAO, '') as NOME,
+        COALESCE(p.RAZAO, e.NOME_REDUZIDO, '') as RAZAO_SOCIAL,
+        COALESCE(p.DATA_CADASTRO, e.DT_LUPD) as DATA_CADASTRO,
+        'S' as ATIVO
+      FROM ge_empresa e
+      LEFT JOIN ge_pessoa p ON e.ID_PESSOA = p.ID_PESSOA AND e.ID_BASE = p.ID_BASE
+      WHERE e.ID_BASE = ?
+      ORDER BY NOME`,
       [baseId]
     );
 
     this.logger.log(`Encontradas ${lojas.length} lojas na base ${baseId}`);
 
     return lojas.map((row: any) => ({
-      ID_EMPRESA: row.id_empresa,
-      id_empresa: row.id_empresa,
-      NOME_FANTASIA: row.nome_empresa || '',
-      nome_fantasia: row.nome_empresa || '',
-      RAZAO_SOCIAL: row.nome_empresa || '',
-      razao_social: row.nome_empresa || '',
-      CNPJ: row.cnpj || '',
-      cnpj: row.cnpj || '',
-      DATA_INICIO: row.dt_cadastro,
-      data_inicio: row.dt_cadastro,
-      ATIVO: row.ativo === 'S' ? 1 : 0,
-      ativo: row.ativo === 'S',
+      ID_EMPRESA: row.ID_EMPRESA,
+      id_empresa: row.ID_EMPRESA,
+      NOME_FANTASIA: row.NOME?.trim() || '',
+      nome_fantasia: row.NOME?.trim() || '',
+      RAZAO_SOCIAL: row.RAZAO_SOCIAL?.trim() || '',
+      razao_social: row.RAZAO_SOCIAL?.trim() || '',
+      CNPJ: '',
+      cnpj: '',
+      DATA_INICIO: row.DATA_CADASTRO,
+      data_inicio: row.DATA_CADASTRO,
+      ATIVO: row.ATIVO === 'S' ? 1 : 0,
+      ativo: row.ATIVO === 'S',
     }));
   }
 }
