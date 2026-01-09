@@ -443,4 +443,139 @@ export class BasesService {
       data_inicio: row.DATA_CADASTRO,
     }));
   }
+
+  /**
+   * Lista lojas com suas configurações de serviços Zeiss
+   */
+  async getLojasConfig(baseId: number) {
+    // Buscar lojas do ERP (ge_empresa)
+    const lojas = await this.db.query(
+      `SELECT
+        e.ID_EMPRESA,
+        COALESCE(e.NOME_REDUZIDO, e.ABREV, p.RAZAO, '') as NOME,
+        COALESCE(p.RAZAO, e.NOME_REDUZIDO, '') as RAZAO_SOCIAL
+      FROM ge_empresa e
+      LEFT JOIN ge_pessoa p ON e.ID_PESSOA = p.ID_PESSOA AND e.ID_BASE = p.ID_BASE
+      WHERE e.ID_BASE = ?
+        AND COALESCE(e.FG_ADM, 'N') <> 'S'
+        AND COALESCE(e.FG_LAB, 'N') <> 'S'
+      ORDER BY NOME`,
+      [baseId]
+    );
+
+    // Buscar configs existentes em base_config_empresas
+    const configs = await this.db.query(
+      `SELECT * FROM base_config_empresas WHERE id_base = ?`,
+      [baseId]
+    );
+
+    // Criar mapa de configs por id_empresa
+    const configMap = new Map();
+    for (const config of configs) {
+      configMap.set(config.id_empresa, config);
+    }
+
+    // Combinar lojas com configs
+    const result = lojas.map((loja: any) => {
+      const config = configMap.get(loja.ID_EMPRESA);
+      return {
+        id_empresa: loja.ID_EMPRESA,
+        nome: loja.NOME?.trim() || '',
+        razao_social: loja.RAZAO_SOCIAL?.trim() || '',
+        config: config ? {
+          id: config.id,
+          ZEISS_USA_CATALOGO: config.ZEISS_USA_CATALOGO || 'N',
+          ZEISS_USA_SAO: config.ZEISS_USA_SAO || 'N',
+          ZEISS_USA_ZVC: config.ZEISS_USA_ZVC || 'N',
+          ZEISS_USA_MARKETPLACE: config.ZEISS_USA_MARKETPLACE || 'N',
+          ZEISS_CODIGO_LOJA: config.ZEISS_CODIGO_LOJA || null,
+          ativo: config.ativo || 'S',
+        } : null,
+      };
+    });
+
+    // Estatísticas
+    const stats = {
+      total: result.length,
+      configuradas: result.filter(r => r.config !== null).length,
+      catalogo: configs.filter(c => c.ZEISS_USA_CATALOGO === 'S').length,
+      sao: configs.filter(c => c.ZEISS_USA_SAO === 'S').length,
+      zvc: configs.filter(c => c.ZEISS_USA_ZVC === 'S').length,
+      marketplace: configs.filter(c => c.ZEISS_USA_MARKETPLACE === 'S').length,
+    };
+
+    this.logger.log(`Lojas config base ${baseId}: ${stats.total} lojas, ${stats.configuradas} configuradas`);
+
+    return { lojas: result, stats };
+  }
+
+  /**
+   * Salva configuração de uma loja (base_config_empresas)
+   */
+  async saveLojaConfig(baseId: number, data: {
+    id_empresa: number;
+    nome_empresa: string;
+    cnpj?: string;
+    ZEISS_USA_CATALOGO: string;
+    ZEISS_USA_SAO: string;
+    ZEISS_USA_ZVC: string;
+    ZEISS_USA_MARKETPLACE: string;
+    ZEISS_CODIGO_LOJA?: string;
+    ativo?: string;
+  }) {
+    // Verificar se já existe config para esta loja
+    const existing = await this.db.queryOne(
+      'SELECT id FROM base_config_empresas WHERE id_base = ? AND id_empresa = ?',
+      [baseId, data.id_empresa]
+    );
+
+    const configData = {
+      id_base: baseId,
+      id_empresa: data.id_empresa,
+      nome_empresa: data.nome_empresa,
+      cnpj: data.cnpj || null,
+      ZEISS_USA_CATALOGO: data.ZEISS_USA_CATALOGO || 'N',
+      ZEISS_USA_SAO: data.ZEISS_USA_SAO || 'N',
+      ZEISS_USA_ZVC: data.ZEISS_USA_ZVC || 'N',
+      ZEISS_USA_MARKETPLACE: data.ZEISS_USA_MARKETPLACE || 'N',
+      ZEISS_CODIGO_LOJA: data.ZEISS_CODIGO_LOJA || null,
+      ativo: data.ativo || 'S',
+    };
+
+    if (existing) {
+      // Update
+      await this.db.update(
+        'base_config_empresas',
+        { ...configData, dt_atualizacao: new Date() },
+        'id = ?',
+        [existing.id]
+      );
+      this.logger.log(`Config loja ${data.id_empresa} atualizada na base ${baseId}`);
+    } else {
+      // Insert
+      await this.db.insert('base_config_empresas', {
+        ...configData,
+        dt_cadastro: new Date(),
+        dt_atualizacao: new Date(),
+      });
+      this.logger.log(`Config loja ${data.id_empresa} criada na base ${baseId}`);
+    }
+
+    // Retornar config atualizada
+    const updated = await this.db.queryOne(
+      'SELECT * FROM base_config_empresas WHERE id_base = ? AND id_empresa = ?',
+      [baseId, data.id_empresa]
+    );
+
+    return {
+      id: updated.id,
+      id_empresa: updated.id_empresa,
+      ZEISS_USA_CATALOGO: updated.ZEISS_USA_CATALOGO,
+      ZEISS_USA_SAO: updated.ZEISS_USA_SAO,
+      ZEISS_USA_ZVC: updated.ZEISS_USA_ZVC,
+      ZEISS_USA_MARKETPLACE: updated.ZEISS_USA_MARKETPLACE,
+      ZEISS_CODIGO_LOJA: updated.ZEISS_CODIGO_LOJA,
+      ativo: updated.ativo,
+    };
+  }
 }

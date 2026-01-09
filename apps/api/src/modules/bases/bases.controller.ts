@@ -99,8 +99,33 @@ export class BasesController {
   }
 
   @Get(':id/lojas')
-  @ApiOperation({ summary: 'Listar lojas (empresas) da base via Firebird' })
+  @ApiOperation({ summary: 'Listar lojas (empresas) da base' })
   async getLojas(@Param('id', ParseIntPipe) id: number) {
     return this.basesService.getLojas(id);
+  }
+
+  @Get(':id/lojas/config')
+  @ApiOperation({ summary: 'Listar lojas com configurações de serviços Zeiss' })
+  async getLojasConfig(@Param('id', ParseIntPipe) id: number) {
+    return this.basesService.getLojasConfig(id);
+  }
+
+  @Post(':id/lojas/config')
+  @ApiOperation({ summary: 'Salvar configuração de uma loja' })
+  async saveLojaConfig(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: {
+      id_empresa: number;
+      nome_empresa: string;
+      cnpj?: string;
+      ZEISS_USA_CATALOGO: string;
+      ZEISS_USA_SAO: string;
+      ZEISS_USA_ZVC: string;
+      ZEISS_USA_MARKETPLACE: string;
+      ZEISS_CODIGO_LOJA?: string;
+      ativo?: string;
+    },
+  ) {
+    return this.basesService.saveLojaConfig(id, data);
   }
 }

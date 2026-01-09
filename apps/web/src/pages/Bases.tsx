@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react'
 import {
   CircleStackIcon,
   CogIcon,
-  EyeIcon,
   CheckCircleIcon,
   XCircleIcon,
   ExclamationTriangleIcon,
@@ -10,7 +9,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { basesService, BaseWithStats } from '@/services/bases'
 import { FirebirdConfigModal } from '@/components/bases/FirebirdConfigModal'
-import { LojasModal } from '@/components/bases/LojasModal'
+import { LojasConfigModal } from '@/components/bases/LojasConfigModal'
 import { logger } from '@/utils/logger'
 
 export function Bases() {
@@ -258,8 +257,8 @@ export function Bases() {
                       }}
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800"
                     >
-                      <EyeIcon className="h-4 w-4 mr-1" />
-                      Ver Lojas
+                      <CogIcon className="h-4 w-4 mr-1" />
+                      Config Lojas
                     </button>
                   </td>
                 </tr>
@@ -284,7 +283,7 @@ export function Bases() {
       )}
 
       {showLojasModal && selectedBase && (
-        <LojasModal
+        <LojasConfigModal
           isOpen={showLojasModal}
           onClose={() => {
             setShowLojasModal(false)
