@@ -76,7 +76,7 @@ export function Login() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <img
-            src="/assets/invistto-logo.png"
+            src="/admin/assets/invistto-logo.png"
             alt="INVISTTO"
             className="mx-auto h-12 w-auto"
           />
@@ -151,7 +151,7 @@ export function Login() {
           </p>
 
           {/* Botão de desenvolvimento - remover em produção */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <button
               type="button"
               onClick={handleQuickLogin}

@@ -17,7 +17,7 @@ class PanelLogger {
   private localLogs: LogEntry[] = []
   private isProcessing = false
   private batchSize = 10
-  private flushInterval = 5000 // 5 segundos
+  private flushInterval = 30000 // 30 segundos
   private maxLocalLogs = 1000 // Máximo de logs locais
 
   constructor() {
@@ -37,14 +37,19 @@ class PanelLogger {
     // Só enviar em produção para não interferir no desenvolvimento
     if (import.meta.env.PROD) {
       try {
-        await api.post('/api/logger/batch', { logs })
-      } catch (error) {
+        await api.post('/logger/batch', { logs })
+      } catch (error: any) {
+        // Ignorar erros de abort (quando usuário navega para outra página)
+        if (error.code === 'ECONNABORTED' || error.message === 'Request aborted') {
+          return
+        }
         console.error('Erro ao enviar logs:', error)
       }
     }
   }
 
   private async flush() {
+    // Não enviar se não houver logs na fila
     if (this.queue.length === 0 || this.isProcessing) {
       return
     }
@@ -119,7 +124,7 @@ class PanelLogger {
   }
 
   debug(message: string, context: LogContext = 'PANEL', metadata?: any) {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       this.log('debug', message, context, metadata)
     }
   }

@@ -10,6 +10,7 @@ import { AppsModule } from './modules/apps/apps.module';
 import { PagesModule } from './modules/pages/pages.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
+import { LoggerModule } from './modules/logger/logger.module';
 
 /**
  * AppModule - Módulo principal do Admin Panel V2
@@ -43,6 +44,8 @@ import { SchedulesModule } from './modules/schedules/schedules.module';
     PagesModule,
     PlansModule,
     SchedulesModule,
+    // Módulo de logger para receber logs do frontend
+    LoggerModule,
   ],
 })
 export class AppModule {}

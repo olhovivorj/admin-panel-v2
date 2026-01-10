@@ -85,7 +85,7 @@ export function Sidebar() {
     >
       <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 relative">
         {!isCollapsed && (
-          <img src="/assets/invistto-logo.png" alt="INVISTTO" className="h-10" />
+          <img src="/admin/assets/invistto-logo.png" alt="INVISTTO" className="h-10" />
         )}
         {isCollapsed && (
           <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">I</span>

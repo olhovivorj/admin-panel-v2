@@ -17,19 +17,12 @@ const environments: Environment[] = [
     name: 'Produção',
     url: 'https://ierp.invistto.com',
     icon: CloudIcon,
-    description: 'Servidor de produção ari-nest'
-  },
-  {
-    id: 'local',
-    name: 'Local',
-    url: 'http://localhost:3000',
-    icon: ServerIcon,
-    description: 'Servidor local ari-nest'
+    description: 'Servidor de produção'
   }
 ]
 
 export function EnvironmentSelector() {
-  const [selectedEnv, setSelectedEnv] = useState<string>('local')
+  const [selectedEnv, setSelectedEnv] = useState<string>('production')
   const [isOpen, setIsOpen] = useState(false)
   const [checking, setChecking] = useState<string | null>(null)
   const [statuses, setStatuses] = useState<Record<string, 'online' | 'offline' | 'checking'>>({})
@@ -42,8 +35,10 @@ export function EnvironmentSelector() {
       updateApiBaseUrl(saved)
     }
     
-    // Verificar status dos ambientes
-    checkEnvironments()
+    // Verificar status dos ambientes apenas em desenvolvimento
+    if (import.meta.env.DEV) {
+      checkEnvironments()
+    }
   }, [])
 
   const updateApiBaseUrl = (envId: string) => {
@@ -86,8 +81,11 @@ export function EnvironmentSelector() {
     setChecking(envId)
     
     try {
-      // Verificar se o ambiente está disponível
-      await axios.get(`${env.url}/api/health`, { timeout: 5000 })
+      // Em produção, não verificar health check
+      if (import.meta.env.DEV) {
+        // Verificar se o ambiente está disponível apenas em dev
+        await axios.get(`${env.url}/api/health`, { timeout: 5000 })
+      }
       
       setSelectedEnv(envId)
       updateApiBaseUrl(envId)

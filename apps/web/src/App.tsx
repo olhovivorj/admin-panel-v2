@@ -33,7 +33,7 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
+          <BrowserRouter basename="/admin">
             <AuthProvider>
               <BaseProvider>
                 <SidebarProvider>

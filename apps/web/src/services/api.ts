@@ -27,8 +27,8 @@ function getBaseURL() {
   }
 
   // Fallback baseado no ambiente salvo
-  if (savedEnv === 'production') {
-    return 'https://ierp.invistto.com/api'
+  if (savedEnv === 'production' || window.location.hostname === 'ierp.invistto.com') {
+    return '/admin/api'
   }
 
   // Usar variável de ambiente ou fallback para backend próprio (3001)
@@ -211,7 +211,12 @@ api.interceptors.response.use(
     return response
   },
   (error: AxiosError) => {
-    // Log detalhado do erro
+    // Ignorar erros de abort (quando usuário navega para outra página)
+    if (error.code === 'ECONNABORTED' && error.message === 'Request aborted') {
+      return Promise.reject(error)
+    }
+
+    // Log detalhado do erro (exceto aborts)
     console.error('Axios error:', {
       message: error.message,
       code: error.code,
