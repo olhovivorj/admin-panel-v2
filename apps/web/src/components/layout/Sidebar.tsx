@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   HomeIcon,
@@ -10,33 +11,70 @@ import {
   DocumentTextIcon,
   CreditCardIcon,
   ClockIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/utils/cn'
 import { useSuperAdmin } from '@/hooks/useSuperAdmin'
 import { useSidebar } from '@/contexts/SidebarContext'
+import { useAuth } from '@/contexts/AuthContext'
 
-const navigationItems = [
+// Mapa de ícones por path
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  '/dashboard': HomeIcon,
+  '/users': UsersIcon,
+  '/bases': CircleStackIcon,
+  '/roles': ShieldCheckIcon,
+  '/apps': CubeIcon,
+  '/pages': DocumentTextIcon,
+  '/plans': CreditCardIcon,
+  '/schedules': ClockIcon,
+  '/config': Cog6ToothIcon,
+  '/reports': ChartBarIcon,
+}
+
+// Fallback: menu hardcoded para quando não há pages do plano
+const fallbackNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Usuários', href: '/users', icon: UsersIcon },
   { name: 'Apps', href: '/apps', icon: CubeIcon, adminOnly: true },
   { name: 'Páginas', href: '/pages', icon: DocumentTextIcon, adminOnly: true },
-  { name: 'Roles & Permissões', href: '/roles', icon: ShieldCheckIcon, adminOnly: true },
+  { name: 'Roles', href: '/roles', icon: ShieldCheckIcon, adminOnly: true },
   { name: 'Planos', href: '/plans', icon: CreditCardIcon, adminOnly: true },
   { name: 'Bases de Dados', href: '/bases', icon: CircleStackIcon, adminOnly: true },
   { name: 'Agendamentos', href: '/schedules', icon: ClockIcon, adminOnly: true },
 ]
 
 export function Sidebar() {
+  const { user } = useAuth()
   const { isAdmin } = useSuperAdmin()
   const { isCollapsed, toggleSidebar } = useSidebar()
 
-  // Filtrar navegação baseado em permissões
-  const navigation = navigationItems.filter(item => {
-    if (item.adminOnly && !isAdmin) {
-      return false
+  // Páginas do plano do usuário
+  const userPages = user?.pages || []
+
+  // Menu dinâmico: admin vê tudo, usuário comum vê pages do plano
+  const navigation = useMemo(() => {
+    // Admin sempre vê menu completo (hardcoded)
+    if (isAdmin) {
+      return fallbackNavigation
     }
-    return true
-  })
+
+    // Usuário comum: usar pages do plano se tiver
+    if (userPages.length > 0) {
+      return userPages
+        .filter(page => page.app?.name === 'admin-panel') // Só páginas do admin-panel
+        .map(page => ({
+          name: page.name,
+          href: page.path,
+          icon: iconMap[page.path] || FolderIcon,
+        }))
+    }
+
+    // Fallback: menu básico (sem adminOnly)
+    return fallbackNavigation.filter(item => !item.adminOnly)
+  }, [userPages, isAdmin])
 
   return (
     <nav
@@ -84,12 +122,6 @@ export function Sidebar() {
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
                 {!isCollapsed && <span>{item.name}</span>}
-                {'highlight' in item && item.highlight && (
-                  <span className="absolute top-1 right-1 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
-                )}
                 {isCollapsed && (
                   <span className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
                     {item.name}

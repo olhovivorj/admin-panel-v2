@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   ShieldCheckIcon,
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  CogIcon,
   UsersIcon,
 } from '@heroicons/react/24/outline'
 import { Role, rolesService } from '@/services/roles'
@@ -13,7 +11,6 @@ import { RoleFormModal } from '@/components/roles/RoleFormModal'
 import toast from 'react-hot-toast'
 
 export function Roles() {
-  const navigate = useNavigate()
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -78,10 +75,6 @@ export function Roles() {
     }
   }
 
-  const handleManagePermissions = (role: Role) => {
-    navigate(`/roles/${role.id}/permissions`)
-  }
-
   if (loading) {
     return (
       <div className="p-6">
@@ -119,10 +112,10 @@ export function Roles() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Roles & Permissões
+            Roles
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Gerencie os cargos do sistema e suas permissões de acesso
+            Gerencie os níveis de acesso do sistema (priority define direitos)
           </p>
         </div>
         <button
@@ -138,8 +131,7 @@ export function Roles() {
         {roles.map((role) => (
           <div
             key={role.id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-6 hover:shadow-md dark:hover:shadow-gray-900/70 transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700"
-            onClick={() => handleManagePermissions(role)}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-900/50 p-6 hover:shadow-md dark:hover:shadow-gray-900/70 transition-shadow border border-gray-200 dark:border-gray-700"
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-4">
@@ -164,11 +156,6 @@ export function Roles() {
                       <span className="inline-flex items-center text-xs text-gray-500 dark:text-gray-400">
                         <UsersIcon className="h-3 w-3 mr-1" />
                         {role.usersCount} usuários
-                      </span>
-                    )}
-                    {role.permissionsCount !== undefined && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {role.permissionsCount} permissões
                       </span>
                     )}
                   </div>
@@ -212,16 +199,6 @@ export function Roles() {
                     <TrashIcon className="w-5 h-5" />
                   </button>
                 )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleManagePermissions(role)
-                  }}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                >
-                  <CogIcon className="w-4 h-4 mr-1" />
-                  Permissões
-                </button>
               </div>
             </div>
           </div>

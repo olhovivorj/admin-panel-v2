@@ -12,7 +12,6 @@ import { Dashboard } from '@/pages/Dashboard'
 import { Users } from '@/pages/users/Users'
 import { Bases } from '@/pages/Bases'
 import { Roles } from '@/pages/Roles'
-import { RolePermissions } from '@/pages/RolePermissions'
 import { Apps } from '@/pages/Apps'
 import { Pages } from '@/pages/Pages'
 import { Plans } from '@/pages/Plans'
@@ -54,7 +53,6 @@ function App() {
                     <Route path="usuarios-api" element={<Navigate to="/users" replace />} />
                     <Route path="bases" element={<Bases />} />
                     <Route path="roles" element={<Roles />} />
-                    <Route path="roles/:roleId/permissions" element={<RolePermissions />} />
                     <Route path="apps" element={<Apps />} />
                     <Route path="pages" element={<Pages />} />
                     <Route path="plans" element={<Plans />} />

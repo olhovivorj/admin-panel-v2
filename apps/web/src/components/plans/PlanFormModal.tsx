@@ -188,11 +188,21 @@ export function PlanFormModal({
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.price || 0}
-                  onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                  value={formData.price === 0 ? '' : formData.price}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    handleInputChange('price', val === '' ? 0 : parseFloat(val))
+                  }}
+                  onBlur={(e) => {
+                    // Garantir valor numérico ao sair do campo
+                    if (e.target.value === '') {
+                      handleInputChange('price', 0)
+                    }
+                  }}
                   className={`mt-1 block w-full rounded-md border ${
                     errors.price ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
                   } px-3 py-2 text-gray-900 dark:text-white dark:bg-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                  placeholder="0.00"
                 />
                 {errors.price && (
                   <p className="mt-1 text-sm text-red-600">{errors.price}</p>

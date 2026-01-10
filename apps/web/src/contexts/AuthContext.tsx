@@ -8,7 +8,24 @@ interface User {
   id: number
   email: string
   name: string
-  role: 'admin' | 'user' | 'viewer'
+  role?: {
+    id: number
+    name: string
+    displayName: string
+    priority: number
+  } | null
+  pages?: Array<{
+    id: number
+    name: string
+    path: string
+    category?: string
+    app?: {
+      id: number
+      name: string
+      displayName: string
+      icon?: string
+    }
+  }>
   baseId: number
   base: string
   isMaster: boolean
@@ -16,7 +33,7 @@ interface User {
   permissions: string[]
   tipoUsuario?: string
   canChangeBase?: boolean
-  // Novos campos do sistema de roles
+  // Campos legados (compatibilidade)
   roleId?: number
   roleName?: string
   rolePriority?: number
@@ -111,7 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: userData.isMaster ? 'admin' : (userData.isSupervisor ? 'user' : 'viewer') as 'admin' | 'user' | 'viewer',
+        // Role com priority (novo sistema)
+        role: userData.role || null,
+        // Pages do plano (novo sistema)
+        pages: userData.pages || [],
         baseId: userData.baseId,
         base: userData.base,
         isMaster: userData.isMaster,
@@ -119,10 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         permissions: userData.permissions || [],
         tipoUsuario: userData.tipoUsuario || 'COMUM',
         canChangeBase: userData.canChangeBase ?? userData.isMaster ?? false,
-        // Novos campos do sistema de roles
-        roleId: userData.roleId,
-        roleName: userData.roleName,
-        rolePriority: userData.rolePriority,
+        // Campos legados (compatibilidade)
+        roleId: userData.role?.id || userData.roleId,
+        roleName: userData.role?.name || userData.roleName,
+        rolePriority: userData.role?.priority || userData.rolePriority,
       }
 
       // ✅ SEGURANÇA: Token em sessionStorage expira ao fechar navegador

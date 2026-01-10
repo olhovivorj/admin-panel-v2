@@ -8,9 +8,11 @@ import {
   XCircleIcon,
   UsersIcon,
   DocumentTextIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
 import { Plan, plansService } from '@/services/plans'
 import { PlanFormModal } from '@/components/plans/PlanFormModal'
+import { PlanPagesModal } from '@/components/plans/PlanPagesModal'
 import toast from 'react-hot-toast'
 
 export function Plans() {
@@ -21,6 +23,7 @@ export function Plans() {
 
   // Modal states
   const [showFormModal, setShowFormModal] = useState(false)
+  const [showPagesModal, setShowPagesModal] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
 
@@ -90,6 +93,11 @@ export function Plans() {
     } catch (err) {
       toast.error('Erro ao alterar status')
     }
+  }
+
+  const handleConfigurePages = (plan: Plan) => {
+    setSelectedPlan(plan)
+    setShowPagesModal(true)
   }
 
   const formatPrice = (price: number) => {
@@ -257,6 +265,13 @@ export function Plans() {
 
               <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex justify-end space-x-2">
                 <button
+                  onClick={() => handleConfigurePages(plan)}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800"
+                >
+                  <DocumentTextIcon className="h-4 w-4 mr-1" />
+                  Páginas
+                </button>
+                <button
                   onClick={() => handleEdit(plan)}
                   className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
                 >
@@ -293,7 +308,7 @@ export function Plans() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modals */}
       <PlanFormModal
         isOpen={showFormModal}
         onClose={() => {
@@ -303,6 +318,18 @@ export function Plans() {
         onSave={handleSave}
         plan={selectedPlan}
       />
+
+      {selectedPlan && (
+        <PlanPagesModal
+          isOpen={showPagesModal}
+          onClose={() => {
+            setShowPagesModal(false)
+            setSelectedPlan(null)
+          }}
+          plan={selectedPlan}
+          onSaved={loadPlans}
+        />
+      )}
     </div>
   )
 }

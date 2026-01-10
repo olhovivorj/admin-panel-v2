@@ -8,6 +8,8 @@ import {
   XCircleIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline'
 import { Page, pagesService } from '@/services/pages'
 import { App, appsService } from '@/services/apps'
@@ -27,6 +29,9 @@ export function Pages() {
   const [showFormModal, setShowFormModal] = useState(false)
   const [selectedPage, setSelectedPage] = useState<Page | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+
+  // Expandir/Contrair apps
+  const [expandedApps, setExpandedApps] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadData()
@@ -98,6 +103,26 @@ export function Pages() {
     } catch (err) {
       toast.error('Erro ao alterar status')
     }
+  }
+
+  const toggleAppExpansion = (appName: string) => {
+    setExpandedApps(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(appName)) {
+        newSet.delete(appName)
+      } else {
+        newSet.add(appName)
+      }
+      return newSet
+    })
+  }
+
+  const expandAll = () => {
+    setExpandedApps(new Set(Object.keys(groupedPages)))
+  }
+
+  const collapseAll = () => {
+    setExpandedApps(new Set())
   }
 
   // Filter pages
@@ -239,6 +264,22 @@ export function Pages() {
               Mostrar inativos
             </label>
           </div>
+
+          {/* Expand/Collapse All */}
+          <div className="flex gap-2">
+            <button
+              onClick={expandAll}
+              className="px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            >
+              Expandir Todos
+            </button>
+            <button
+              onClick={collapseAll}
+              className="px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            >
+              Contrair Todos
+            </button>
+          </div>
         </div>
       </div>
 
@@ -256,16 +297,29 @@ export function Pages() {
           </div>
         </div>
       ) : (
-        Object.entries(groupedPages).map(([appName, { pages: groupPages }]) => (
+        Object.entries(groupedPages).map(([appName, { pages: groupPages }]) => {
+          const isExpanded = expandedApps.has(appName)
+          return (
           <div key={appName} className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                {appName}
-                <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                  ({groupPages.length} {groupPages.length === 1 ? 'página' : 'páginas'})
-                </span>
-              </h2>
+            <div
+              className="bg-gray-50 dark:bg-gray-700 px-6 py-3 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+              onClick={() => toggleAppExpansion(appName)}
+            >
+              <div className="flex items-center gap-3">
+                {isExpanded ? (
+                  <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+                )}
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                  {appName}
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                    ({groupPages.length} {groupPages.length === 1 ? 'página' : 'páginas'})
+                  </span>
+                </h2>
+              </div>
             </div>
+            {isExpanded && (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
@@ -371,8 +425,9 @@ export function Pages() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
-        ))
+        )})
       )}
 
       {/* Modal */}

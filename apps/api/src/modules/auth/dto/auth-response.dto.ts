@@ -56,6 +56,23 @@ export class AppInfo {
 }
 
 /**
+ * Informações da role do usuário
+ */
+export class RoleInfo {
+  @ApiProperty({ example: 1 })
+  id: number;
+
+  @ApiProperty({ example: 'ADMIN' })
+  name: string;
+
+  @ApiProperty({ example: 'Administrador' })
+  displayName: string;
+
+  @ApiProperty({ example: 80, description: 'Prioridade da role (100=Master, 80=Admin, 60=Supervisor, etc)' })
+  priority: number;
+}
+
+/**
  * Informações da página
  */
 export class PageInfo {
@@ -109,6 +126,9 @@ export class UserResponseDto {
 
   @ApiProperty({ type: [PageInfo], required: false, description: 'Páginas disponíveis no plano' })
   pages?: PageInfo[];
+
+  @ApiProperty({ type: RoleInfo, required: false, description: 'Role do usuário com priority' })
+  role?: RoleInfo;
 
   @ApiProperty({ type: FirebirdCredentials, required: false })
   firebird?: FirebirdCredentials;

@@ -109,6 +109,20 @@ export class InvisttoAuthService {
     // Buscar plano e páginas do usuário
     const planData = await this.getUserPlanAndPages(ariUser.plan_id);
 
+    // Buscar role do usuário (se tiver role_id)
+    let roleData = null;
+    if (ariUser.role_id) {
+      roleData = await this.baseConfigService.queryOne<{
+        id: number;
+        name: string;
+        display_name: string;
+        priority: number;
+      }>(`
+        SELECT id, name, display_name, priority
+        FROM ari_roles WHERE id = ?
+      `, [ariUser.role_id]);
+    }
+
     const userResponse: UserResponseDto = {
       id: ariUser.id,
       email: ariUser.email,
@@ -120,6 +134,12 @@ export class InvisttoAuthService {
       permissions: planData.permissions, // Apps únicos do plano
       plan: planData.plan, // Dados do plano
       pages: planData.pages, // Páginas do plano
+      role: roleData ? {
+        id: roleData.id,
+        name: roleData.name,
+        displayName: roleData.display_name,
+        priority: roleData.priority,
+      } : null,
     };
 
     return userResponse;

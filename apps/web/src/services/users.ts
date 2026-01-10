@@ -35,6 +35,14 @@ export interface UsuarioResponseDto {
   permissoes_endpoints?: any
   api_key?: string
   api_secret?: string
+  // Campos do plano
+  plan_id?: number
+  plano_id?: number
+  plan?: {
+    id: number
+    name: string
+    displayName: string
+  } | null
 }
 
 // Alias para compatibilidade

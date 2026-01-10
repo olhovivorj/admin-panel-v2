@@ -1,3 +1,6 @@
+import { Role } from './role.types';
+import { Base } from './base.types';
+
 export interface User {
   id: number;
   email: string;
@@ -31,19 +34,6 @@ export interface UpdateUserDto {
   ativo?: boolean;
   roleIds?: number[];
   baseIds?: number[];
-}
-
-export interface Role {
-  id: number;
-  name: string;
-  description?: string;
-}
-
-export interface Base {
-  id: number;
-  nome: string;
-  cnpj?: string;
-  ativo: boolean;
 }
 
 export interface LoginCredentials {

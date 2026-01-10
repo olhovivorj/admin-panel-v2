@@ -30,8 +30,12 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />
   }
 
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />
+  // Verificar role do usuário (suporta role como objeto ou string legada)
+  if (roles) {
+    const userRoleName = typeof user.role === 'object' ? user.role?.name?.toLowerCase() : (user as any).roleName?.toLowerCase()
+    if (userRoleName && !roles.includes(userRoleName as any)) {
+      return <Navigate to="/dashboard" replace />
+    }
   }
 
   return <>{children}</>

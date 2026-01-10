@@ -178,14 +178,14 @@ export class PagesService {
       throw new ConflictException('Nome de página já existe');
     }
 
-    // Check if path already exists
+    // Check if path already exists within same app
     const pathExists = await this.db.queryOne(
-      'SELECT id FROM ari_pages WHERE path = ?',
-      [dto.path]
+      'SELECT id FROM ari_pages WHERE path = ? AND app_id = ?',
+      [dto.path, dto.appId || null]
     );
 
     if (pathExists) {
-      throw new ConflictException('Path já está em uso');
+      throw new ConflictException('Path já está em uso neste app');
     }
 
     const insertId = await this.db.insert('ari_pages', {
@@ -206,7 +206,7 @@ export class PagesService {
 
   async update(id: number, dto: UpdatePageDto) {
     const existing = await this.db.queryOne(
-      'SELECT id, name, path FROM ari_pages WHERE id = ?',
+      'SELECT id, name, path, app_id as appId FROM ari_pages WHERE id = ?',
       [id]
     );
 
@@ -226,15 +226,16 @@ export class PagesService {
       }
     }
 
-    // Check if new path conflicts
+    // Check if new path conflicts within same app
     if (dto.path && dto.path !== existing.path) {
+      const appId = dto.appId !== undefined ? dto.appId : existing.appId;
       const pathExists = await this.db.queryOne(
-        'SELECT id FROM ari_pages WHERE path = ? AND id != ?',
-        [dto.path, id]
+        'SELECT id FROM ari_pages WHERE path = ? AND app_id = ? AND id != ?',
+        [dto.path, appId, id]
       );
 
       if (pathExists) {
-        throw new ConflictException('Path já está em uso');
+        throw new ConflictException('Path já está em uso neste app');
       }
     }
 

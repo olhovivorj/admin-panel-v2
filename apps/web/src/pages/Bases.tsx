@@ -219,7 +219,7 @@ export function Bases() {
           </div>
 
           {/* Filtro por status */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
@@ -250,6 +250,19 @@ export function Bases() {
             >
               Inativas ({statusCounts.inactive})
             </button>
+
+            {/* Limpar filtros */}
+            {(searchTerm || statusFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('')
+                  setStatusFilter('all')
+                }}
+                className="ml-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
         </div>
       </div>
