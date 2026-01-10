@@ -18,11 +18,22 @@ const environments: Environment[] = [
     url: 'https://ierp.invistto.com',
     icon: CloudIcon,
     description: 'Servidor de produção'
-  }
+  },
+  // Ambiente local apenas em desenvolvimento
+  ...(import.meta.env.DEV ? [{
+    id: 'local',
+    name: 'Local',
+    url: 'http://localhost:3001',
+    icon: ServerIcon,
+    description: 'Servidor local'
+  }] : [])
 ]
 
 export function EnvironmentSelector() {
-  const [selectedEnv, setSelectedEnv] = useState<string>('production')
+  // Default: local em DEV, production em PROD
+  const [selectedEnv, setSelectedEnv] = useState<string>(
+    import.meta.env.DEV ? 'local' : 'production'
+  )
   const [isOpen, setIsOpen] = useState(false)
   const [checking, setChecking] = useState<string | null>(null)
   const [statuses, setStatuses] = useState<Record<string, 'online' | 'offline' | 'checking'>>({})
