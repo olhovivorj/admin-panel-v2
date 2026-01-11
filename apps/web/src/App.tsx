@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from 'react-hot-toast'
-import { AuthProvider } from '@/contexts/AuthContext'
+import toast from 'react-hot-toast'
+import { AuthProvider } from '@invistto/auth-react'
 import { BaseProvider } from '@/contexts/BaseContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { SidebarProvider } from '@/contexts/SidebarContext'
@@ -28,63 +29,99 @@ const queryClient = new QueryClient({
   },
 })
 
+// API URL do ambiente
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
+/**
+ * Componente interno que tem acesso ao useNavigate e queryClient
+ */
+function AppRoutes() {
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  return (
+    <AuthProvider
+      apiUrl={API_URL}
+      onLogin={(user) => {
+        // Salvar baseId para requisições
+        if (user.baseId) {
+          localStorage.setItem('@ari:selectedBaseId', user.baseId.toString())
+        }
+        if (user.base) {
+          localStorage.setItem('@ari:selectedBase', user.base)
+        }
+        toast.success('Login realizado com sucesso!')
+        navigate('/dashboard')
+      }}
+      onLogout={() => {
+        // Limpar dados locais
+        localStorage.clear()
+        // Limpar cache do React Query
+        qc.clear()
+        // Navegar para login
+        navigate('/login')
+      }}
+    >
+      <BaseProvider>
+        <SidebarProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<Users />} />
+              <Route path="usuarios-api" element={<Navigate to="/users" replace />} />
+              <Route path="bases" element={<Bases />} />
+              <Route path="roles" element={<Roles />} />
+              <Route path="apps" element={<Apps />} />
+              <Route path="pages" element={<Pages />} />
+              <Route path="plans" element={<Plans />} />
+              <Route path="schedules" element={<Schedules />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
+        </SidebarProvider>
+      </BaseProvider>
+    </AuthProvider>
+  )
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter basename="/admin">
-            <AuthProvider>
-              <BaseProvider>
-                <SidebarProvider>
-                  <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <Layout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="dashboard" element={<Dashboard />} />
-                    <Route path="users" element={<Users />} />
-                    <Route path="usuarios-api" element={<Navigate to="/users" replace />} />
-                    <Route path="bases" element={<Bases />} />
-                    <Route path="roles" element={<Roles />} />
-                    <Route path="apps" element={<Apps />} />
-                    <Route path="pages" element={<Pages />} />
-                    <Route path="plans" element={<Plans />} />
-                    <Route path="schedules" element={<Schedules />} />
-                  </Route>
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                  </Routes>
-                  <Toaster
-                    position="top-right"
-                    toastOptions={{
-                      duration: 4000,
-                      style: {
-                        background: '#363636',
-                        color: '#fff',
-                      },
-                      success: {
-                        iconTheme: {
-                          primary: '#10b981',
-                          secondary: '#fff',
-                        },
-                      },
-                      error: {
-                        iconTheme: {
-                          primary: '#ef4444',
-                          secondary: '#fff',
-                        },
-                      },
-                    }}
-                  />
-                </SidebarProvider>
-              </BaseProvider>
-            </AuthProvider>
+            <AppRoutes />
           </BrowserRouter>
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>

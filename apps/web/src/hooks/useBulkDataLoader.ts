@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import api from '../services/api'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 import { isAdmin as checkIsAdmin } from '@/utils/roleHelpers'
 
 interface BulkLoadOptions {

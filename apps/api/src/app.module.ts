@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { InvisttoAuthModule } from '@invistto/auth';
 import { ConfigServiceModule } from './config';
-import { InvisttoAuthModule } from './modules/auth';
+import { AuthUserRepository } from './modules/auth/auth-user.repository';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { BasesModule } from './modules/bases/bases.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -24,7 +25,7 @@ import { LoggerModule } from './modules/logger/logger.module';
  * - ari_plans: Planos de assinatura
  * - ari_pages: Páginas/permissões
  *
- * Auth baseado em: zeiss-api-client/invistto-auth
+ * Auth: @invistto/auth (pacote compartilhado)
  */
 @Module({
   imports: [
@@ -33,8 +34,32 @@ import { LoggerModule } from './modules/logger/logger.module';
     }),
     // Módulo global de configuração (BaseConfigService, FirebirdConnectionManager)
     ConfigServiceModule,
-    // Módulo de autenticação (usa MySQL ariusers via BaseConfigService)
-    InvisttoAuthModule,
+    // Módulo de autenticação (@invistto/auth - pacote compartilhado)
+    InvisttoAuthModule.forRootAsync({
+      imports: [ConfigServiceModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        jwt: {
+          secret: configService.get<string>('JWT_SECRET', 'default-secret-change-in-production'),
+          expiration: configService.get<string>('JWT_EXPIRATION', '8h'),
+        },
+        mysql: {
+          host: configService.get<string>('DATABASE_HOST', 'localhost'),
+          port: configService.get<number>('DATABASE_PORT', 3306),
+          user: configService.get<string>('DATABASE_USER', 'root'),
+          password: configService.get<string>('DATABASE_PASSWORD', ''),
+          database: configService.get<string>('DATABASE_NAME', 'ariusers'),
+        },
+        firebird: {
+          enabled: true,
+          encryptionKey: configService.get<string>('FIREBIRD_ENCRYPTION_KEY', 'default-key'),
+        },
+        permissions: {
+          source: 'plan' as const,
+        },
+      }),
+      userRepository: AuthUserRepository,
+    }),
     // Módulos CRUD (todos usam BaseConfigService + tabelas MySQL existentes)
     UsuariosModule,
     BasesModule,

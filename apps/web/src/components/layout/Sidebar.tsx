@@ -18,7 +18,7 @@ import {
 import { cn } from '@/utils/cn'
 import { useSuperAdmin } from '@/hooks/useSuperAdmin'
 import { useSidebar } from '@/contexts/SidebarContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 
 // Mapa de ícones por path
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
