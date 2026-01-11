@@ -34,7 +34,8 @@ import { LoggerModule } from './modules/logger/logger.module';
     }),
     // Módulo global de configuração (BaseConfigService, FirebirdConnectionManager)
     ConfigServiceModule,
-    // Módulo de autenticação (@invistto/auth - pacote compartilhado)
+    // Modulo de autenticacao (@invistto/auth - pacote compartilhado)
+    // NOTA: Auth agora e limpo (sem Firebird). ERP e tratado pelo ErpModule local.
     InvisttoAuthModule.forRootAsync({
       imports: [ConfigServiceModule],
       inject: [ConfigService],
@@ -42,20 +43,6 @@ import { LoggerModule } from './modules/logger/logger.module';
         jwt: {
           secret: configService.get<string>('JWT_SECRET', 'default-secret-change-in-production'),
           expiration: configService.get<string>('JWT_EXPIRATION', '8h'),
-        },
-        mysql: {
-          host: configService.get<string>('DATABASE_HOST', 'localhost'),
-          port: configService.get<number>('DATABASE_PORT', 3306),
-          user: configService.get<string>('DATABASE_USER', 'root'),
-          password: configService.get<string>('DATABASE_PASSWORD', ''),
-          database: configService.get<string>('DATABASE_NAME', 'ariusers'),
-        },
-        firebird: {
-          enabled: true,
-          encryptionKey: configService.get<string>('FIREBIRD_ENCRYPTION_KEY', 'default-key'),
-        },
-        permissions: {
-          source: 'plan' as const,
         },
       }),
       userRepository: AuthUserRepository,

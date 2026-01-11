@@ -5,13 +5,14 @@ import {
   AuthPlanData,
   AuthPageData,
   AuthRoleData,
-  AuthFirebirdData,
 } from '@invistto/auth';
 import { BaseConfigService } from '../../config/base-config.service';
 
 /**
  * Implementacao do repositorio de usuarios para o admin-panel-v2
  * Conecta o pacote @invistto/auth com o banco de dados MySQL do projeto
+ *
+ * NOTA: Firebird/ERP foi separado - admin-panel tem seu proprio ErpModule
  */
 @Injectable()
 export class AuthUserRepository implements IAuthUserRepository {
@@ -101,26 +102,6 @@ export class AuthUserRepository implements IAuthUserRepository {
       displayName: role.display_name,
       priority: role.priority,
     };
-  }
-
-  /**
-   * Busca credenciais Firebird da base
-   */
-  async getFirebirdCredentials(baseId: number): Promise<AuthFirebirdData | null> {
-    try {
-      const config = await this.baseConfigService.getConfig(baseId);
-
-      return {
-        active: config.FIREBIRD_ACTIVE === 1 || config.FIREBIRD_ACTIVE === true,
-        host: config.FIREBIRD_HOST,
-        port: config.FIREBIRD_PORT,
-        database: config.FIREBIRD_DATABASE,
-        user: config.FIREBIRD_USER,
-        password: config.FIREBIRD_PASSWORD,
-      };
-    } catch {
-      return null;
-    }
   }
 
   /**
