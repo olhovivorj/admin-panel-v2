@@ -587,7 +587,7 @@ export class BasesService {
     const config = await this.db.queryOne(
       `SELECT
         COALESCE(ZEISS_PRECO_POR_CNPJ, 'S') as precoPorCnpj,
-        COALESCE(FIREBIRD_ACTIVE, 0) as ativo
+        COALESCE(ZEISS_CONFIG_ATIVA, 0) as ativo
       FROM base_config
       WHERE ID_BASE = ?`,
       [baseId]
@@ -625,7 +625,7 @@ export class BasesService {
       updateData.ZEISS_PRECO_POR_CNPJ = data.precoPorCnpj;
     }
     if (data.ativo !== undefined) {
-      updateData.FIREBIRD_ACTIVE = data.ativo ? 1 : 0;
+      updateData.ZEISS_CONFIG_ATIVA = data.ativo ? 1 : 0;
     }
 
     if (Object.keys(updateData).length === 0) {
