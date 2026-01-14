@@ -68,6 +68,7 @@ export class BasesService {
         bc.FIREBIRD_PORT as fbPort,
         bc.FIREBIRD_DATABASE as fbDatabase,
         bc.FIREBIRD_ACTIVE as fbActive,
+        bc.ZEISS_CONFIG_ATIVA as zeissAtivo,
         bc.CREATED_AT as createdAt,
         bc.UPDATED_AT as updatedAt,
         (SELECT COUNT(*) FROM ariusers WHERE ID_BASE = b.ID_BASE) as usuariosCount
@@ -104,6 +105,7 @@ export class BasesService {
         firebird_host: base.fbHost,
         firebird_port: base.fbPort,
         firebird_database: base.fbDatabase,
+        zeiss_ativo: base.zeissAtivo === 1,
         usuariosCount: base.usuariosCount || 0,
         createdAt: base.createdAt,
         updatedAt: base.updatedAt,
@@ -332,6 +334,7 @@ export class BasesService {
     if (dto.user) configData.FIREBIRD_USER = dto.user;
     if (dto.password) configData.FIREBIRD_PASSWORD = dto.password;
     if (dto.role !== undefined) configData.FIREBIRD_ROLE = dto.role || null;
+    if (dto.charset !== undefined) configData.FIREBIRD_CHARSET = dto.charset || null;
     if (dto.active !== undefined) configData.FIREBIRD_ACTIVE = dto.active ? 1 : 0;
 
     if (configExists) {

@@ -77,10 +77,16 @@ export function FirebirdConfigModal({
   }
 
   const handleSave = async () => {
+    console.log('🔧 handleSave chamado')
+    console.log('🔧 initialConfig.passwordConfigured:', initialConfig?.passwordConfigured)
+    console.log('🔧 config:', config)
+
     if (!validateForm()) {
+      console.log('❌ Validação falhou')
       return
     }
 
+    console.log('✅ Validação passou')
     setIsLoading(true)
     try {
       // Remove campos vazios/undefined
@@ -88,10 +94,15 @@ export function FirebirdConfigModal({
         Object.entries(config).filter(([_, value]) => value !== '' && value !== undefined),
       ) as FirebirdConfig
 
+      console.log('📤 Enviando:', configToSave)
       await onSave(configToSave)
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar configuração:', error)
+      // Exibir detalhes do erro
+      const errorMsg = error?.response?.data?.message || error?.message || 'Erro desconhecido'
+      console.error('📛 Mensagem do erro:', errorMsg)
+      toast.error(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg)
     } finally {
       setIsLoading(false)
     }

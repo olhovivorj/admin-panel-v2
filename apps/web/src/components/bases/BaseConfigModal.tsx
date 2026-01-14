@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { api } from '@/services/api'
 import toast from 'react-hot-toast'
@@ -17,6 +18,7 @@ interface ZeissConfig {
 }
 
 export function BaseConfigModal({ isOpen, onClose, onSave, baseId, baseName }: BaseConfigModalProps) {
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [config, setConfig] = useState<ZeissConfig>({
@@ -47,6 +49,8 @@ export function BaseConfigModal({ isOpen, onClose, onSave, baseId, baseName }: B
     try {
       setSaving(true)
       await api.put(`/bases/${baseId}/zeiss-config`, config)
+      // Invalidar cache para atualizar lista de bases
+      queryClient.invalidateQueries({ queryKey: ['bases'] })
       toast.success('Configuracoes salvas')
       onSave?.()
       onClose()
