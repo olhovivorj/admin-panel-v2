@@ -10,7 +10,7 @@ set -e
 
 BACKUP_DIR="$HOME/backups/admin-panel"
 WEB_DIR="/var/www/admin-panel"
-DEPLOY_DIR="$HOME/dev/admin-panel"
+DEPLOY_DIR="$HOME/projetos/admin-panel-v2"
 PM2_APP_NAME="admin-panel-api"
 
 # Cores

@@ -12,7 +12,7 @@ module.exports = {
   apps: [{
     name: 'admin-panel-api',
     script: 'dist/main.js',
-    cwd: path.join(homeDir, 'dev/admin-panel/apps/api'),
+    cwd: path.join(homeDir, 'projetos/admin-panel-v2/apps/api'),
 
     // Ambiente
     env: {

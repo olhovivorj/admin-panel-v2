@@ -27,7 +27,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
           script: |
-            cd ~/dev/admin-panel
+            cd ~/projetos/admin-panel-v2
             chmod +x scripts/ci-deploy.sh
             ./scripts/ci-deploy.sh
 

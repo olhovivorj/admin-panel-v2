@@ -9,7 +9,7 @@
 set -e  # Parar em caso de erro
 
 # Configurações
-DEPLOY_DIR="$HOME/dev/admin-panel"
+DEPLOY_DIR="$HOME/projetos/admin-panel-v2"
 WEB_DIR="/var/www/admin-panel"
 BACKUP_DIR="$HOME/backups/admin-panel"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
