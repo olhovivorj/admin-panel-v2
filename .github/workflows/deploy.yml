@@ -43,7 +43,7 @@ jobs:
           echo "Aguardando deploy finalizar..."
           sleep 15
           echo "Verificando frontend..."
-          curl -f -s -o /dev/null -w "%{http_code}" https://admin.ierp.invistto.com/admin/ | grep -q "200" || exit 1
+          curl -f -s -o /dev/null -w "%{http_code}" https://ierp.invistto.com/admin/ | grep -q "200" || exit 1
           echo "Frontend OK!"
 
       - name: Health Check - Backend API
