@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { XMarkIcon, CheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import toast from 'react-hot-toast'
 import { FirebirdConfig } from '@/services/bases'
 
 interface FirebirdConfigModalProps {
