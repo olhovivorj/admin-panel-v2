@@ -42,12 +42,11 @@ pnpm build
 log_info "invistto-auth atualizado!"
 
 # -----------------------------------------------------------------------------
-# 2. ATUALIZAR CODIGO
+# 2. GARANTIR QUE ESTAMOS NO DIRETÓRIO CORRETO
 # -----------------------------------------------------------------------------
-log_info "Atualizando codigo do repositorio..."
+log_info "Entrando no diretorio do projeto..."
 cd $DEPLOY_DIR
-git fetch origin main
-git reset --hard origin/main
+# Nota: git pull já foi feito pelo workflow antes de chamar este script
 
 # -----------------------------------------------------------------------------
 # 3. INSTALAR DEPENDENCIAS
