@@ -26,8 +26,15 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
+          command_timeout: 20m
           script: |
             cd ~/projetos/admin-panel-v2
+
+            # Primeiro atualiza o código para pegar o script
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Agora executa o script
             chmod +x scripts/ci-deploy.sh
             ./scripts/ci-deploy.sh
 
