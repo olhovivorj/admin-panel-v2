@@ -31,7 +31,18 @@ echo "  Timestamp: $TIMESTAMP"
 echo "=============================================="
 
 # -----------------------------------------------------------------------------
-# 1. ATUALIZAR CODIGO
+# 1. ATUALIZAR INVISTTO-AUTH (dependencia)
+# -----------------------------------------------------------------------------
+log_info "Atualizando invistto-auth..."
+cd $HOME/projetos/invistto-auth
+git fetch origin main
+git reset --hard origin/main
+pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+pnpm build
+log_info "invistto-auth atualizado!"
+
+# -----------------------------------------------------------------------------
+# 2. ATUALIZAR CODIGO
 # -----------------------------------------------------------------------------
 log_info "Atualizando codigo do repositorio..."
 cd $DEPLOY_DIR
@@ -39,7 +50,7 @@ git fetch origin main
 git reset --hard origin/main
 
 # -----------------------------------------------------------------------------
-# 2. INSTALAR DEPENDENCIAS
+# 3. INSTALAR DEPENDENCIAS
 # -----------------------------------------------------------------------------
 log_info "Instalando dependencias..."
 
@@ -51,7 +62,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 3. CONFIGURAR AMBIENTE DE PRODUCAO
+# 4. CONFIGURAR AMBIENTE DE PRODUCAO
 # -----------------------------------------------------------------------------
 log_info "Configurando ambiente de producao..."
 
@@ -67,7 +78,7 @@ if [ ! -f "apps/api/.env" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# 4. BUILD
+# 5. BUILD
 # -----------------------------------------------------------------------------
 log_info "Fazendo build de producao..."
 
@@ -79,7 +90,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 5. BACKUP DA VERSAO ATUAL
+# 6. BACKUP DA VERSAO ATUAL
 # -----------------------------------------------------------------------------
 log_info "Criando backup da versao atual..."
 mkdir -p $BACKUP_DIR
@@ -91,7 +102,7 @@ if [ -d "$WEB_DIR" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-# 6. DEPLOY DO FRONTEND
+# 7. DEPLOY DO FRONTEND
 # -----------------------------------------------------------------------------
 log_info "Deploying frontend para $WEB_DIR..."
 sudo mkdir -p $WEB_DIR
@@ -100,7 +111,7 @@ sudo chown -R www-data:www-data $WEB_DIR
 log_info "Frontend deployed!"
 
 # -----------------------------------------------------------------------------
-# 7. DEPLOY DO BACKEND (PM2)
+# 8. DEPLOY DO BACKEND (PM2)
 # -----------------------------------------------------------------------------
 log_info "Deploying backend API..."
 
@@ -128,14 +139,14 @@ pm2 save
 log_info "Backend deployed!"
 
 # -----------------------------------------------------------------------------
-# 8. LIMPEZA DE BACKUPS ANTIGOS
+# 9. LIMPEZA DE BACKUPS ANTIGOS
 # -----------------------------------------------------------------------------
 log_info "Limpando backups antigos (mantendo ultimos 5)..."
 cd $BACKUP_DIR
 ls -dt frontend_* 2>/dev/null | tail -n +6 | xargs -r rm -rf
 
 # -----------------------------------------------------------------------------
-# 9. VERIFICACAO FINAL
+# 10. VERIFICACAO FINAL
 # -----------------------------------------------------------------------------
 log_info "Verificando status dos servicos..."
 
