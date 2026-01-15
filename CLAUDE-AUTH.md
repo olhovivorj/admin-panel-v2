@@ -1,402 +1,440 @@
-# Plano: Centralização de Autenticação (@invistto/auth)
+# Plano: Implementar @invistto/auth (Pacote Compartilhado)
 
-## Problema Identificado
+## Referencia
 
-### Duplicação Massiva de Código
-
-| Projeto | Arquivos Auth | Linhas | Duplicação |
-|---------|---------------|--------|------------|
-| **admin-panel-v2** | 14 arquivos | ~1000 | Base |
-| **zeiss-api-client** | 14 arquivos | 988 | **90-100% idêntico** |
-| **courier-v3** | 24 arquivos | ~1500 | 70% similar |
-
-### O Que Está Duplicado (100% idêntico entre admin-panel e zeiss):
-
-```
-├── guards/
-│   ├── jwt-auth.guard.ts         ← 100% idêntico
-│   └── roles.guard.ts            ← 99% idêntico
-├── decorators/
-│   ├── public.decorator.ts       ← 100% idêntico
-│   ├── current-user.decorator.ts ← 100% idêntico
-│   └── roles.decorator.ts        ← 100% idêntico
-├── strategies/
-│   └── jwt.strategy.ts           ← 100% idêntico
-├── dto/
-│   ├── login.dto.ts              ← 100% idêntico
-│   ├── auth-response.dto.ts      ← 100% idêntico
-│   └── jwt-payload.dto.ts        ← 100% idêntico
-└── invistto-auth.module.ts       ← 100% idêntico
-```
-
-### Consequências:
-1. Bug fix em um projeto não propaga para outros
-2. Manutenção triplicada
-3. Risco de divergência e inconsistências
-4. Correções de segurança podem não ser aplicadas uniformemente
+Documentacao existente:
+- `admin-panel-v2/CLAUDE-AUTH.md` - Este arquivo
+- `admin-panel-v2/CLAUDE-DESACOPLAR.md` - Contexto de desacoplamento
 
 ---
 
-## Decisões Tomadas
+## Decisao Atualizada: INCLUIR UI
 
-1. **Onde criar o pacote?** → Pasta `/codigo-fonte/invistto-auth/`
-2. **Como distribuir?** → Link local (`file:../invistto-auth`)
-3. **Dev mode?** → Sim, com `bypassPermissions` para ver páginas em desenvolvimento
+### Analise Pragmatica dos Logins
+
+| Projeto | Linhas | Core identico? |
+|---------|--------|----------------|
+| admin-panel | 166 | SIM |
+| courier | 211 | SIM |
+| zeiss | 128 | SIM |
+| **Total** | **505** | 95% identico |
+
+### O que realmente difere (parametrizavel):
+- Titulo/subtitulo → `title`, `subtitle` props
+- Logo → `logo` prop (URL)
+- Quick login → `showQuickLogin`, `quickCredentials` props
+- Remember me → `showRememberMe` prop
+- Forgot password → `showForgotPassword` prop
+- Redirect → `onSuccess` callback
+
+### Conclusao
+Com ~15 props configuraveis, UM componente substitui 505 linhas duplicadas.
 
 ---
 
-## Estrutura Proposta do Pacote (Monorepo Profissional)
+## Decisoes Finais
+
+| Decisao | Valor |
+|---------|-------|
+| Onde criar? | `/codigo-fonte/invistto-auth/` |
+| Como distribuir? | Link local (`file:../invistto-auth`) |
+| Dev mode? | Sim, com `bypassPermissions` |
+| Frontend no pacote? | **SIM** - LoginPage, AuthProvider, ProtectedRoute, hooks |
+| Backend no pacote? | SIM - 100% identico entre projetos |
+
+---
+
+## Estrutura Aprovada
 
 ```
 /codigo-fonte/invistto-auth/
-│
 ├── packages/
-│   │
-│   ├── core/                             # @invistto/auth (Backend NestJS)
+│   ├── core/                        # @invistto/auth (Backend NestJS)
 │   │   ├── src/
-│   │   │   ├── index.ts                  # Exports públicos
-│   │   │   ├── invistto-auth.module.ts   # Módulo principal (forRoot)
-│   │   │   ├── invistto-auth.service.ts  # Lógica de login
-│   │   │   │
+│   │   │   ├── index.ts
+│   │   │   ├── invistto-auth.module.ts
+│   │   │   ├── invistto-auth.service.ts
+│   │   │   ├── config/
+│   │   │   ├── guards/
+│   │   │   ├── decorators/
+│   │   │   ├── strategies/
+│   │   │   ├── dto/
+│   │   │   ├── interfaces/
+│   │   │   └── utils/
+│   │   ├── __tests__/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── react/                       # @invistto/auth-react (Frontend React)
+│       ├── src/
+│       │   ├── index.ts
+│       │   ├── components/
+│       │   │   ├── LoginPage.tsx       # Componente de login parametrizavel
+│       │   │   ├── ProtectedRoute.tsx  # Guard de rotas
+│       │   │   └── index.ts
+│       │   ├── contexts/
+│       │   │   ├── AuthContext.tsx     # Provider de autenticacao
+│       │   │   └── index.ts
+│       │   ├── hooks/
+│       │   │   ├── useAuth.ts          # Hook principal
+│       │   │   ├── usePermissions.ts   # Hook de permissoes
+│       │   │   └── index.ts
+│       │   ├── services/
+│       │   │   ├── auth.service.ts     # Chamadas API
+│       │   │   └── index.ts
+│       │   └── types/
+│       │       ├── auth.types.ts
+│       │       └── index.ts
+│       ├── package.json
+│       └── tsconfig.json
+├── package.json
+├── pnpm-workspace.yaml
+└── README.md
+```
+
+---
+
+## Configuracao por Projeto
+
+### Backend (NestJS)
+
+```typescript
+// Admin-Panel e Zeiss
+InvisttoAuthModule.forRoot({
+  jwt: { secret: process.env.JWT_SECRET },
+  mysql: { ... },
+  firebird: { enabled: true, encryptionKey: process.env.FIREBIRD_KEY },
+  permissions: { source: 'plan' },
+})
+
+// Courier
+InvisttoAuthModule.forRoot({
+  jwt: { secret: process.env.JWT_SECRET },
+  mysql: { ... },
+  firebird: { enabled: false },
+  apiKey: { enabled: true },
+  permissions: { source: 'role', appId: 2 },
+})
+```
+
+### Frontend (React)
+
+```tsx
+// Admin-Panel
+<AuthProvider apiUrl={import.meta.env.VITE_API_URL}>
+  <LoginPage
+    title="Admin Panel"
+    subtitle="Sistema administrativo"
+    logo="/logo.png"
+    showRememberMe={true}
+    showForgotPassword={false}
+    onSuccess={() => navigate('/dashboard')}
+  />
+</AuthProvider>
+
+// Courier (com quick login em dev)
+<LoginPage
+  title="Courier"
+  subtitle="Sistema de entregas"
+  showQuickLogin={import.meta.env.DEV}
+  quickCredentials={{ email: 'admin@test.com', password: 'admin123' }}
+  onSuccess={() => navigate('/dashboard')}
+/>
+
+// Zeiss (minimalista)
+<LoginPage
+  title="Zeiss API"
+  onSuccess={() => navigate('/dashboard')}
+/>
+```
+
+### Props do LoginPage
+
+| Prop | Tipo | Default | Descricao |
+|------|------|---------|-----------|
+| `title` | string | "Login" | Titulo principal |
+| `subtitle` | string | "" | Subtitulo opcional |
+| `logo` | string | undefined | URL do logo |
+| `showRememberMe` | boolean | false | Mostrar checkbox "Lembrar" |
+| `showForgotPassword` | boolean | false | Mostrar link "Esqueci senha" |
+| `showQuickLogin` | boolean | false | Botao de login rapido (dev) |
+| `quickCredentials` | object | undefined | Credenciais pre-definidas |
+| `onSuccess` | function | required | Callback apos login |
+| `onError` | function | undefined | Callback em caso de erro |
+| `className` | string | undefined | Classes CSS customizadas |
+| `theme` | 'light'/'dark'/'auto' | 'auto' | Tema do formulario |
+
+---
+
+## Passos de Implementacao
+
+### Fase 1: Criar Projeto Base
+1. [ ] Criar pasta `/codigo-fonte/invistto-auth/`
+2. [ ] Configurar package.json raiz com workspaces
+3. [ ] Configurar pnpm-workspace.yaml
+4. [ ] Configurar tsconfig.base.json (strict: true)
+5. [ ] Estruturar packages/core/ e packages/react/
+
+### Fase 2: Extrair Backend do admin-panel-v2
+Copiar de `apps/api/src/modules/auth/`:
+1. [ ] invistto-auth.module.ts
+2. [ ] invistto-auth.service.ts
+3. [ ] invistto-auth.controller.ts
+4. [ ] strategies/jwt.strategy.ts
+5. [ ] guards/jwt-auth.guard.ts
+6. [ ] guards/roles.guard.ts
+7. [ ] decorators/ (todos)
+8. [ ] dto/ (todos)
+
+### Fase 3: Extrair Frontend do admin-panel-v2
+Copiar de `apps/web/src/`:
+1. [ ] contexts/AuthContext.tsx → adaptar para configuravel
+2. [ ] pages/Login.tsx → transformar em LoginPage component
+3. [ ] components/ProtectedRoute.tsx
+4. [ ] hooks/useAuth.ts (extrair do context)
+5. [ ] services/api.ts (parte de auth)
+6. [ ] types relacionados
+
+### Fase 4: Tornar Configuravel
+Backend:
+1. [ ] Criar InvisttoAuthConfig interface
+2. [ ] Implementar forRoot() com DI
+3. [ ] Flag `firebird.enabled` para opcional
+4. [ ] Flag `apiKey.enabled` para courier
+5. [ ] Flag `development.bypassPermissions`
+
+Frontend:
+1. [ ] LoginPageProps interface com todas as props
+2. [ ] AuthProviderConfig interface
+3. [ ] Suporte a temas (light/dark/auto)
+4. [ ] Injecao de API URL via prop
+
+### Fase 5: Adicionar Testes
+Backend:
+1. [ ] auth.service.spec.ts
+2. [ ] jwt.strategy.spec.ts
+3. [ ] guards.spec.ts
+4. [ ] encryption.spec.ts
+
+Frontend:
+1. [ ] LoginPage.test.tsx
+2. [ ] AuthContext.test.tsx
+3. [ ] useAuth.test.ts
+
+### Fase 6: Integrar no admin-panel-v2
+```bash
+pnpm add @invistto/auth@file:../../invistto-auth/packages/core
+pnpm add @invistto/auth-react@file:../../invistto-auth/packages/react
+```
+1. [ ] Substituir modulo auth local pelo pacote (backend)
+2. [ ] Substituir Login page pelo LoginPage component (frontend)
+3. [ ] Substituir AuthContext pelo do pacote
+4. [ ] Testar login, logout, permissoes
+5. [ ] Remover codigo duplicado
+
+### Fase 7: Integrar nos demais
+1. [ ] zeiss-api-client (backend + frontend)
+2. [ ] courier-v3 (backend + frontend)
+
+---
+
+## Arquivos a Criar
+
+```
+invistto-auth/
+├── package.json
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── README.md
+├── packages/
+│   ├── core/                              # @invistto/auth
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── invistto-auth.module.ts
+│   │   │   ├── invistto-auth.service.ts
+│   │   │   ├── invistto-auth.controller.ts
 │   │   │   ├── config/
 │   │   │   │   ├── auth-config.interface.ts
 │   │   │   │   └── auth-config.service.ts
-│   │   │   │
 │   │   │   ├── guards/
 │   │   │   │   ├── jwt-auth.guard.ts
 │   │   │   │   ├── roles.guard.ts
 │   │   │   │   ├── api-key.guard.ts
 │   │   │   │   └── index.ts
-│   │   │   │
 │   │   │   ├── decorators/
 │   │   │   │   ├── public.decorator.ts
 │   │   │   │   ├── current-user.decorator.ts
 │   │   │   │   ├── roles.decorator.ts
 │   │   │   │   ├── base-id.decorator.ts
 │   │   │   │   └── index.ts
-│   │   │   │
 │   │   │   ├── strategies/
 │   │   │   │   ├── jwt.strategy.ts
 │   │   │   │   ├── api-key.strategy.ts
 │   │   │   │   └── index.ts
-│   │   │   │
 │   │   │   ├── dto/
 │   │   │   │   ├── login.dto.ts
 │   │   │   │   ├── auth-response.dto.ts
 │   │   │   │   ├── jwt-payload.dto.ts
 │   │   │   │   └── index.ts
-│   │   │   │
 │   │   │   ├── interfaces/
 │   │   │   │   ├── auth-user.interface.ts
 │   │   │   │   ├── firebird-credentials.interface.ts
 │   │   │   │   └── index.ts
-│   │   │   │
 │   │   │   └── utils/
 │   │   │       ├── encryption.util.ts
 │   │   │       └── password.util.ts
-│   │   │
-│   │   ├── __tests__/                    # TESTES OBRIGATÓRIOS
-│   │   │   ├── auth.service.spec.ts      # Login, validação senha
-│   │   │   ├── jwt.strategy.spec.ts      # Geração/validação JWT
-│   │   │   ├── guards.spec.ts            # JwtGuard, RolesGuard
-│   │   │   ├── encryption.spec.ts        # Criptografia Firebird
-│   │   │   └── password.spec.ts          # bcrypt helpers
-│   │   │
-│   │   ├── package.json
-│   │   ├── tsconfig.json                 # strict: true
-│   │   ├── tsconfig.build.json
-│   │   └── jest.config.js
+│   │   └── __tests__/
+│   │       ├── auth.service.spec.ts
+│   │       ├── jwt.strategy.spec.ts
+│   │       └── guards.spec.ts
 │   │
-│   └── ui/                               # @invistto/auth-ui (Frontend React)
-│       ├── src/
-│       │   ├── index.ts                  # Exports públicos
-│       │   ├── LoginModal.tsx            # Modal completo
-│       │   ├── LoginForm.tsx             # Form isolado
-│       │   ├── hooks/
-│       │   │   └── useAuth.ts            # Hook de autenticação
-│       │   ├── components/
-│       │   │   ├── EmailInput.tsx
-│       │   │   ├── PasswordInput.tsx
-│       │   │   └── ErrorMessage.tsx
-│       │   └── types/
-│       │       └── index.ts
-│       │
-│       ├── __tests__/                    # TESTES OBRIGATÓRIOS
-│       │   ├── LoginModal.spec.tsx       # Renderiza, submete
-│       │   ├── LoginForm.spec.tsx        # Validação, erros
-│       │   └── useAuth.spec.ts           # Hook behavior
-│       │
+│   └── react/                             # @invistto/auth-react
 │       ├── package.json
-│       ├── tsconfig.json                 # strict: true
-│       └── jest.config.js
-│
-├── package.json                          # Workspaces config
-├── jest.config.base.js                   # Config compartilhada
-├── tsconfig.base.json                    # Config compartilhada
-└── README.md
+│       ├── tsconfig.json
+│       ├── vite.config.ts                 # Build config (lib mode)
+│       ├── src/
+│       │   ├── index.ts                   # Export publico
+│       │   ├── components/
+│       │   │   ├── LoginPage.tsx          # Formulario de login
+│       │   │   ├── ProtectedRoute.tsx     # Guard de rotas
+│       │   │   └── index.ts
+│       │   ├── contexts/
+│       │   │   ├── AuthContext.tsx        # Provider principal
+│       │   │   └── index.ts
+│       │   ├── hooks/
+│       │   │   ├── useAuth.ts             # Estado de autenticacao
+│       │   │   ├── usePermissions.ts      # Verificacao de permissoes
+│       │   │   ├── useCurrentUser.ts      # Dados do usuario
+│       │   │   └── index.ts
+│       │   ├── services/
+│       │   │   ├── auth.service.ts        # Chamadas API
+│       │   │   ├── storage.service.ts     # localStorage helper
+│       │   │   └── index.ts
+│       │   └── types/
+│       │       ├── auth.types.ts          # User, Token, etc
+│       │       ├── config.types.ts        # Props e configs
+│       │       └── index.ts
+│       └── __tests__/
+│           ├── LoginPage.test.tsx
+│           ├── AuthContext.test.tsx
+│           └── useAuth.test.ts
 ```
 
 ---
 
-## Regras de Qualidade (Não Negociáveis)
+## Codigo Duplicado Atual
 
-### TypeScript Strict
+### Backend (NestJS)
+
+| Arquivo | admin-panel | zeiss | courier |
+|---------|-------------|-------|---------|
+| jwt-auth.guard.ts | 100% | 100% | 95% |
+| roles.guard.ts | 100% | 99% | 90% |
+| public.decorator.ts | 100% | 100% | 100% |
+| current-user.decorator.ts | 100% | 100% | 100% |
+| roles.decorator.ts | 100% | 100% | 100% |
+| jwt.strategy.ts | 100% | 100% | 95% |
+| login.dto.ts | 100% | 100% | 100% |
+| auth-response.dto.ts | 100% | 100% | 90% |
+
+**~1000 linhas backend duplicadas por projeto**
+
+### Frontend (React)
+
+| Arquivo | admin-panel | zeiss | courier |
+|---------|-------------|-------|---------|
+| Login.tsx | 166 linhas | 128 linhas | 211 linhas |
+| AuthContext.tsx | 100% | 100% | 95% |
+| ProtectedRoute.tsx | 100% | 100% | 100% |
+| useAuth hook | 100% | 100% | 100% |
+| api.ts (auth part) | 100% | 100% | 95% |
+
+**~500 linhas frontend duplicadas por projeto**
+
+### Total: ~1500 linhas duplicadas por projeto (4500 total)
+
+---
+
+## Verificacao
+
+### Backend
+1. Login endpoint retorna JWT
+2. JWT valida corretamente
+3. Guards bloqueiam rotas protegidas
+4. Decorators extraem user/baseId
+5. Firebird funciona onde habilitado
+6. API Key funciona no courier
+7. bypassPermissions funciona em dev
+
+### Frontend
+1. LoginPage renderiza com props customizadas
+2. Login submete e recebe token
+3. AuthContext armazena e disponibiliza user
+4. ProtectedRoute bloqueia rotas sem token
+5. useAuth retorna estado correto
+6. Quick login funciona em dev
+7. Temas light/dark aplicados corretamente
+
+### Integracao
+1. admin-panel-v2: login completo com permissoes por plano
+2. zeiss-api-client: login com Firebird
+3. courier-v3: login + API Key + quick login
+
+---
+
+## Proximos Passos Imediatos
+
+1. Criar pasta `invistto-auth` em `/codigo-fonte/`
+2. Configurar monorepo (package.json + pnpm-workspace.yaml)
+3. Copiar backend do admin-panel-v2
+4. Copiar frontend do admin-panel-v2
+5. Parametrizar LoginPage com props
+6. Testar isoladamente
+7. Integrar no admin-panel-v2 primeiro
+
+---
+
+## Estimativa
+
+| Fase | Complexidade |
+|------|--------------|
+| Criar projeto base | Baixa |
+| Extrair backend | Media |
+| Extrair frontend | Media |
+| Tornar configuravel | Alta |
+| Testes | Media |
+| Integrar admin-panel | Media |
+| Integrar zeiss + courier | Media |
+
+---
+
+## Dependencias do Pacote React
+
 ```json
-// tsconfig.json em cada pacote
 {
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
-  }
-}
-```
-
-### Cobertura Mínima de Testes
-```javascript
-// jest.config.js
-module.exports = {
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    }
-  }
-}
-```
-
-### Testes Obrigatórios por Área
-
-| Pacote | Área | Testes Mínimos |
-|--------|------|----------------|
-| **core** | Service | login(), validatePassword(), generateToken() |
-| **core** | Guards | canActivate() com/sem token, com/sem roles |
-| **core** | Strategy | validate() com payload válido/inválido |
-| **core** | Utils | encrypt(), decrypt(), hashPassword(), comparePassword() |
-| **ui** | LoginModal | renderiza, submete form, mostra loading |
-| **ui** | LoginForm | validação email, validação senha, erro de API |
-| **ui** | useAuth | login success, login error, logout |
-
----
-
-## Configuração Flexível
-
-```typescript
-// Interface de configuração
-interface InvisttoAuthConfig {
-  // JWT
-  jwt: {
-    secret: string;
-    expiration?: string;  // default: '8h'
-  };
-
-  // MySQL (obrigatório)
-  mysql: {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    database: string;
-  };
-
-  // Firebird (opcional - admin-panel e zeiss usam, courier não)
-  firebird?: {
-    enabled: boolean;
-    encryptionKey?: string;
-    fallback?: {
-      host: string;
-      port: number;
-      database: string;
-      user: string;
-      password: string;
-    };
-  };
-
-  // API Key (opcional - courier usa)
-  apiKey?: {
-    enabled: boolean;
-    headerName?: string;  // default: 'X-API-Key'
-    secretHeaderName?: string;  // default: 'X-API-Secret'
-  };
-
-  // Permissões
-  permissions?: {
-    source: 'plan' | 'role' | 'both';  // admin usa plan, courier usa role
-    appId?: number;  // para filtrar páginas por app
-  };
-
-  // Desenvolvimento
-  development?: {
-    enabled: boolean;  // process.env.NODE_ENV === 'development'
-    bypassPermissions?: boolean;  // Ignora verificação de páginas
-    masterEmails?: string[];  // Emails com acesso total
-  };
-}
-```
-
----
-
-## Uso em Cada Projeto
-
-### Admin-Panel-V2
-```typescript
-InvisttoAuthModule.forRoot({
-  jwt: { secret: process.env.JWT_SECRET },
-  mysql: { ... },
-  firebird: { enabled: true, encryptionKey: process.env.FIREBIRD_KEY },
-  permissions: { source: 'plan' },
-  development: {
-    enabled: process.env.NODE_ENV === 'development',
-    bypassPermissions: true,
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0"
   },
-})
-```
-
-### Zeiss-API-Client
-```typescript
-InvisttoAuthModule.forRoot({
-  jwt: { secret: process.env.JWT_SECRET },
-  mysql: { ... },
-  firebird: { enabled: true, encryptionKey: process.env.FIREBIRD_KEY },
-  permissions: { source: 'plan' },
-})
-```
-
-### Courier-V3
-```typescript
-InvisttoAuthModule.forRoot({
-  jwt: { secret: process.env.JWT_SECRET },
-  mysql: { ... },
-  firebird: { enabled: false },  // Courier não usa Firebird
-  apiKey: { enabled: true },     // Courier suporta API Key
-  permissions: { source: 'role', appId: 2 },
-})
-```
-
----
-
-## Estratégia de Migração Segura (Não Quebrar Produção)
-
-### Princípio: Migração Paralela
-
-```
-FASE 1 - PREPARAÇÃO (sem risco)
-├── Criar pacote @invistto/auth
-├── Testar isoladamente
-└── Código antigo continua funcionando
-
-FASE 2 - INSTALAÇÃO PARALELA (baixo risco)
-├── Instalar pacote no projeto
-├── Criar endpoint alternativo: POST /auth/login-new
-├── Endpoint antigo continua funcionando
-└── Testar novo endpoint
-
-FASE 3 - TROCA GRADUAL (risco controlado)
-├── Em STAGING: trocar para novo endpoint
-├── Testar exaustivamente
-├── Se OK: trocar em PRODUÇÃO
-└── Manter código antigo comentado por 1 semana
-
-FASE 4 - LIMPEZA (sem risco)
-├── Remover código antigo
-├── Remover endpoint alternativo
-└── Documentar migração
-```
-
-### Rollback Rápido
-
-Se algo quebrar em produção:
-```typescript
-// Em 30 segundos: descomentar código antigo
-// Ou: reverter commit no Git
-// Ou: apontar para endpoint antigo no frontend
-```
-
----
-
-## Escopo do Pacote
-
-### O Que ENTRA no @invistto/auth (Backend)
-- Módulo NestJS (InvisttoAuthModule)
-- Service de login/validação
-- Guards (JWT, Roles, ApiKey)
-- Decorators (@Public, @CurrentUser, @Roles, @GetBaseId)
-- Strategies (JWT, ApiKey)
-- DTOs
-- Utils (criptografia, bcrypt)
-
-### O Que NÃO ENTRA (Frontend fica em cada projeto)
-- Modal de login
-- Ícones
-- Estilos CSS
-- Componentes React
-
-**Motivo:** Cada projeto tem identidade visual própria. O backend é idêntico, o frontend varia.
-
----
-
-## Ordem de Implementação
-
-### Passo 1: Criar Pacote Base
-1. Criar `/codigo-fonte/invistto-auth/`
-2. Extrair código do admin-panel como base
-3. Adicionar config flexível (Firebird opcional)
-4. Adicionar dev mode (bypassPermissions)
-5. Testar isoladamente
-
-### Passo 2: Integrar Admin-Panel (Primeiro Piloto)
-1. `npm install file:../invistto-auth`
-2. Criar endpoint `/auth/login-new` usando pacote
-3. Testar em paralelo com endpoint antigo
-4. Se OK, trocar endpoint principal
-5. Remover módulo auth local
-
-### Passo 3: Integrar Zeiss
-1. Mesmo processo do admin-panel
-2. Config: `firebird: { enabled: true }`
-
-### Passo 4: Integrar Courier
-1. Mesmo processo
-2. Config: `firebird: { enabled: false }, apiKey: { enabled: true }`
-
----
-
-## Configurações por Projeto
-
-| Projeto | Firebird | API Key | Permissões |
-|---------|----------|---------|------------|
-| admin-panel-v2 | ✅ enabled | ❌ | plan-based |
-| zeiss-api-client | ✅ enabled | ❌ | plan-based |
-| courier-v3 | ❌ disabled | ✅ enabled | role-based |
-
----
-
-## Problema das Permissões em Desenvolvimento
-
-### Situação Atual
-- Ao fazer login, permissões são carregadas do banco
-- Página nova não está cadastrada = não aparece no menu
-- Desenvolvedor não consegue ver a página em desenvolvimento
-
-### Solução no Pacote
-
-```typescript
-// No service de permissões
-async getUserPlanAndPages(planId: number) {
-  // Se está em dev E bypass ativo → retorna tudo
-  if (this.isDevelopment && this.config.development?.bypassPermissions) {
-    return this.getAllActivePages();
+  "dependencies": {
+    "axios": "^1.6.0",
+    "react-hook-form": "^7.0.0",
+    "zod": "^3.0.0",
+    "@hookform/resolvers": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
   }
-
-  // Produção → só páginas do plano
-  return this.getPlanPages(planId);
 }
 ```
 
+**Nota:** TailwindCSS fica como peerDependency opcional - componentes usam classes Tailwind mas projeto consumidor pode sobrescrever via `className` prop.
+
 ---
 
-**Última atualização:** 2025-01-09
+**Ultima atualizacao:** 2026-01-11

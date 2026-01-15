@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { basesService, BaseWithStats } from '@/services/bases'
 import { appConfig } from '@/config/app.config'
 import toast from 'react-hot-toast'
-import { useAuth } from './AuthContext'
+import { useAuth } from '@invistto/auth-react'
 import { logger } from '@/utils/logger'
 import { isAdmin as checkIsAdmin, canChangeBase as checkCanChangeBase } from '@/utils/roleHelpers'
 

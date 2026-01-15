@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { InvisttoAuthModule } from '@invistto/auth';
 import { ConfigServiceModule } from './config';
-import { InvisttoAuthModule } from './modules/auth';
+import { AuthUserRepository } from './modules/auth/auth-user.repository';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { BasesModule } from './modules/bases/bases.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -24,7 +25,7 @@ import { LoggerModule } from './modules/logger/logger.module';
  * - ari_plans: Planos de assinatura
  * - ari_pages: Páginas/permissões
  *
- * Auth baseado em: zeiss-api-client/invistto-auth
+ * Auth: @invistto/auth (pacote compartilhado)
  */
 @Module({
   imports: [
@@ -33,8 +34,19 @@ import { LoggerModule } from './modules/logger/logger.module';
     }),
     // Módulo global de configuração (BaseConfigService, FirebirdConnectionManager)
     ConfigServiceModule,
-    // Módulo de autenticação (usa MySQL ariusers via BaseConfigService)
-    InvisttoAuthModule,
+    // Modulo de autenticacao (@invistto/auth - pacote compartilhado)
+    // NOTA: Auth agora e limpo (sem Firebird). ERP e tratado pelo ErpModule local.
+    InvisttoAuthModule.forRootAsync({
+      imports: [ConfigServiceModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        jwt: {
+          secret: configService.get<string>('JWT_SECRET', 'default-secret-change-in-production'),
+          expiration: configService.get<string>('JWT_EXPIRATION', '8h'),
+        },
+      }),
+      userRepository: AuthUserRepository,
+    }),
     // Módulos CRUD (todos usam BaseConfigService + tabelas MySQL existentes)
     UsuariosModule,
     BasesModule,

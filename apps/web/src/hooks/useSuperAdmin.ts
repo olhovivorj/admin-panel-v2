@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 
 /**
  * Hook para verificar permissões do usuário

@@ -70,8 +70,14 @@ export class FirebirdConnectionManager {
     const config = await this.baseConfigService.getConfig(ID_BASE);
     this.logger.log(`Configuração obtida de: ${config._source}`);
 
-    if (!config || !config.FIREBIRD_ACTIVE) {
-      throw new Error(`Base ${ID_BASE} não está configurada para Firebird`);
+    if (!config) {
+      throw new Error(`Configuração não encontrada para base ${ID_BASE}`);
+    }
+
+    // FIREBIRD_ACTIVE controla apenas serviços automáticos (sync, agendamento)
+    // Conexões manuais (ConfigModal, consultas) devem funcionar sempre
+    if (!config.FIREBIRD_HOST || !config.FIREBIRD_DATABASE) {
+      throw new Error(`Credenciais Firebird incompletas para base ${ID_BASE}. Configure host e database.`);
     }
 
     // Log de debug das credenciais

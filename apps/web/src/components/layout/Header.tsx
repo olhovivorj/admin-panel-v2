@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 import { BaseSelector } from '@/components/BaseSelector'
 import { EnvironmentSelector } from '@/components/EnvironmentSelector'
 import { SimpleThemeToggle } from '@/components/ui/ThemeToggle'

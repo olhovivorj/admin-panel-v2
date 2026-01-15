@@ -6,7 +6,7 @@ import { UserFilters } from '@/components/users/UserFilters'
 import { UserStats } from '@/components/users/UserStats'
 import { UserFilters as IUserFilters } from '@/types'
 import { useBase } from '@/contexts/BaseContext'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 import { isAdmin as checkIsAdmin } from '@/utils/roleHelpers'
 
 export function Users() {

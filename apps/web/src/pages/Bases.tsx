@@ -24,6 +24,7 @@ export function Bases() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name'>('name')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [zeissFilter, setZeissFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   useEffect(() => {
     carregarBases()
@@ -95,7 +96,7 @@ export function Bases() {
   const filteredBases = useMemo(() => {
     let filtered = bases
 
-    // Filtro por status (ativo/inativo)
+    // Filtro por status Firebird (ativo/inativo)
     if (statusFilter === 'active') {
       filtered = filtered.filter(base =>
         base.firebird_status === 'CONFIGURED' && base.firebird_active
@@ -104,6 +105,13 @@ export function Bases() {
       filtered = filtered.filter(base =>
         base.firebird_status !== 'CONFIGURED' || !base.firebird_active
       )
+    }
+
+    // Filtro por status Zeiss (ativo/inativo)
+    if (zeissFilter === 'active') {
+      filtered = filtered.filter(base => base.zeiss_ativo === true)
+    } else if (zeissFilter === 'inactive') {
+      filtered = filtered.filter(base => base.zeiss_ativo !== true)
     }
 
     // Filtro por busca
@@ -123,15 +131,18 @@ export function Bases() {
     })
 
     return filtered
-  }, [bases, searchTerm, sortBy, statusFilter])
+  }, [bases, searchTerm, sortBy, statusFilter, zeissFilter])
 
   // Contagem por status
   const statusCounts = useMemo(() => {
-    const active = bases.filter(b => b.firebird_status === 'CONFIGURED' && b.firebird_active).length
+    const fbActive = bases.filter(b => b.firebird_status === 'CONFIGURED' && b.firebird_active).length
+    const zeissActive = bases.filter(b => b.zeiss_ativo === true).length
     return {
       all: bases.length,
-      active,
-      inactive: bases.length - active,
+      fbActive,
+      fbInactive: bases.length - fbActive,
+      zeissActive,
+      zeissInactive: bases.length - zeissActive,
     }
   }, [bases])
 
@@ -218,8 +229,9 @@ export function Bases() {
             )}
           </div>
 
-          {/* Filtro por status */}
-          <div className="flex gap-2 items-center">
+          {/* Filtro por status Firebird */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-1">Firebird:</span>
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
@@ -238,7 +250,7 @@ export function Bases() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
-              Ativas ({statusCounts.active})
+              Ativas ({statusCounts.fbActive})
             </button>
             <button
               onClick={() => setStatusFilter('inactive')}
@@ -248,15 +260,51 @@ export function Bases() {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
               }`}
             >
-              Inativas ({statusCounts.inactive})
+              Inativas ({statusCounts.fbInactive})
+            </button>
+          </div>
+
+          {/* Filtro por status Zeiss */}
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mr-1">Zeiss:</span>
+            <button
+              onClick={() => setZeissFilter('all')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                zeissFilter === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              Todas ({statusCounts.all})
+            </button>
+            <button
+              onClick={() => setZeissFilter('active')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                zeissFilter === 'active'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              Ativas ({statusCounts.zeissActive})
+            </button>
+            <button
+              onClick={() => setZeissFilter('inactive')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                zeissFilter === 'inactive'
+                  ? 'bg-gray-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+              }`}
+            >
+              Inativas ({statusCounts.zeissInactive})
             </button>
 
             {/* Limpar filtros */}
-            {(searchTerm || statusFilter !== 'all') && (
+            {(searchTerm || statusFilter !== 'all' || zeissFilter !== 'all') && (
               <button
                 onClick={() => {
                   setSearchTerm('')
                   setStatusFilter('all')
+                  setZeissFilter('all')
                 }}
                 className="ml-2 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
               >
@@ -381,6 +429,7 @@ export function Bases() {
             setShowBaseConfigModal(false)
             setSelectedBase(null)
           }}
+          onSave={carregarBases}
           baseId={selectedBase.ID_BASE || selectedBase.baseId}
           baseName={selectedBase.NOME}
         />

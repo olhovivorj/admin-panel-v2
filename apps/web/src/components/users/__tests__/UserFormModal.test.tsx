@@ -17,7 +17,7 @@ jest.mock('@/contexts/BaseContext', () => ({
   })
 }))
 
-jest.mock('@/contexts/AuthContext', () => ({
+jest.mock('@invistto/auth-react', () => ({
   useAuth: () => ({
     user: { id: 1, email: 'admin@invistto.com.br', role: 'admin' }
   })

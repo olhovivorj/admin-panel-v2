@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SchedulesService, WatchdogConfig, ZvcConfig } from './schedules.service';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { CurrentUser } from '@invistto/auth';
 
 @ApiTags('schedules')
 @ApiBearerAuth()

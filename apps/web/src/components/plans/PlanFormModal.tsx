@@ -52,9 +52,10 @@ export function PlanFormModal({
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name?.trim()) {
+    const trimmedName = formData.name?.trim() || ''
+    if (!trimmedName) {
       newErrors.name = 'Nome (slug) é obrigatório'
-    } else if (!/^[a-z0-9-_]+$/.test(formData.name)) {
+    } else if (!/^[a-z0-9-_]+$/.test(trimmedName)) {
       newErrors.name = 'Nome deve conter apenas letras minúsculas, números, hífens e underscores'
     }
 
@@ -77,7 +78,15 @@ export function PlanFormModal({
 
     setIsLoading(true)
     try {
-      await onSave(formData)
+      // Enviar dados limpos (trimmed) com price como número
+      const cleanedData = {
+        ...formData,
+        name: formData.name?.trim(),
+        displayName: formData.displayName?.trim(),
+        description: formData.description?.trim() || '',
+        price: Number(formData.price) || 0,
+      }
+      await onSave(cleanedData)
       onClose()
     } catch (error: any) {
       if (error.response?.data?.message) {
@@ -168,7 +177,7 @@ export function PlanFormModal({
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value.toLowerCase())}
+                  onChange={(e) => handleInputChange('name', e.target.value.toLowerCase().replace(/\s/g, ''))}
                   className={`mt-1 block w-full rounded-md border ${
                     errors.name ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
                   } px-3 py-2 text-gray-900 dark:text-white dark:bg-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
@@ -185,24 +194,27 @@ export function PlanFormModal({
                   Preço Mensal (R$)
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price === 0 ? '' : formData.price}
+                  type="text"
+                  inputMode="decimal"
+                  value={formData.price === 0 ? '' : formData.price.toString().replace('.', ',')}
                   onChange={(e) => {
-                    const val = e.target.value
-                    handleInputChange('price', val === '' ? 0 : parseFloat(val))
+                    // Aceita apenas números, vírgula e ponto
+                    const val = e.target.value.replace(/[^0-9,\.]/g, '')
+                    // Converte vírgula para ponto para o valor numérico
+                    const numericVal = val.replace(',', '.')
+                    const parsed = parseFloat(numericVal)
+                    handleInputChange('price', isNaN(parsed) ? 0 : parsed)
                   }}
-                  onBlur={(e) => {
+                  onBlur={() => {
                     // Garantir valor numérico ao sair do campo
-                    if (e.target.value === '') {
+                    if (isNaN(formData.price)) {
                       handleInputChange('price', 0)
                     }
                   }}
                   className={`mt-1 block w-full rounded-md border ${
                     errors.price ? 'border-red-300' : 'border-gray-300 dark:border-gray-600'
                   } px-3 py-2 text-gray-900 dark:text-white dark:bg-gray-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                  placeholder="0.00"
+                  placeholder="0,00"
                 />
                 {errors.price && (
                   <p className="mt-1 text-sm text-red-600">{errors.price}</p>

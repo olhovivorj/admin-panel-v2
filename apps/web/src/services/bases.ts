@@ -17,6 +17,8 @@ export interface BaseWithStats extends Base {
   firebird_active?: boolean
   firebird_status?: 'CONFIGURED' | 'PENDING_CONFIG'
   passwordConfigured?: boolean
+  // Integração Zeiss
+  zeiss_ativo?: boolean
 }
 
 export interface FirebirdConfig {

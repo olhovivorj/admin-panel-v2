@@ -1,5 +1,5 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { Public } from '../auth/decorators/public.decorator';
+import { Public } from '@invistto/auth';
 
 @Controller('logger')
 export class LoggerController {

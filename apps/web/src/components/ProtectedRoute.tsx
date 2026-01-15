@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
 interface ProtectedRouteProps {
@@ -8,11 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
-
-  // Verificação adicional de segurança - token deve existir
-  // ✅ SEGURANÇA: Token em sessionStorage (expira ao fechar navegador)
-  const token = sessionStorage.getItem('@ari:token')
+  const { user, loading, isAuthenticated } = useAuth()
 
   if (loading) {
     return (
@@ -22,11 +18,8 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     )
   }
 
-  // SEGURANÇA RIGOROSA: Deve ter user E token válido
-  if (!user || !token) {
-    // Limpa qualquer vestígio antes de redirecionar
-    localStorage.clear()
-    sessionStorage.clear()
+  // Verifica autenticação via hook (o pacote gerencia o storage internamente)
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />
   }
 

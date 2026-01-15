@@ -1,0 +1,54 @@
+name: Deploy Admin Panel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+
+  # Permite trigger manual
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            cd ~/projetos/admin-panel-v2
+            chmod +x scripts/ci-deploy.sh
+            ./scripts/ci-deploy.sh
+
+      - name: Health Check - Frontend
+        run: |
+          echo "Aguardando deploy finalizar..."
+          sleep 15
+          echo "Verificando frontend..."
+          curl -f -s -o /dev/null -w "%{http_code}" https://admin.ierp.invistto.com/admin/ | grep -q "200" || exit 1
+          echo "Frontend OK!"
+
+      - name: Health Check - Backend API
+        run: |
+          echo "Verificando backend API..."
+          curl -f -s -o /dev/null -w "%{http_code}" https://ierp.invistto.com/api/health 2>/dev/null || echo "API health endpoint opcional"
+          echo "Deploy concluido!"
+
+      - name: Notify Success
+        if: success()
+        run: echo "Deploy realizado com sucesso!"
+
+      - name: Notify Failure
+        if: failure()
+        run: echo "Deploy falhou! Verifique os logs."

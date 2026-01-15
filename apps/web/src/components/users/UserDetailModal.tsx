@@ -5,7 +5,7 @@ import { UsuarioResponseDto } from '@/services/users'
 import { basesService } from '@/services/bases'
 import { Button } from '@/components/common/Button'
 import { LojasSelector } from './LojasSelector'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@invistto/auth-react'
 import { LojaAccessTest } from './LojaAccessTest'
 import { isAdmin as checkIsAdmin } from '@/utils/roleHelpers'
 

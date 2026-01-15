@@ -36,6 +36,11 @@ export class FirebirdConfigDto {
   @IsString()
   role?: string;
 
+  @ApiPropertyOptional({ example: 'UTF8' })
+  @IsOptional()
+  @IsString()
+  charset?: string;
+
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()

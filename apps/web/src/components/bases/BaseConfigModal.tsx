@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { api } from '@/services/api'
 import toast from 'react-hot-toast'
@@ -17,6 +18,7 @@ interface ZeissConfig {
 }
 
 export function BaseConfigModal({ isOpen, onClose, onSave, baseId, baseName }: BaseConfigModalProps) {
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [config, setConfig] = useState<ZeissConfig>({
@@ -47,6 +49,8 @@ export function BaseConfigModal({ isOpen, onClose, onSave, baseId, baseName }: B
     try {
       setSaving(true)
       await api.put(`/bases/${baseId}/zeiss-config`, config)
+      // Invalidar cache para atualizar lista de bases
+      queryClient.invalidateQueries({ queryKey: ['bases'] })
       toast.success('Configuracoes salvas')
       onSave?.()
       onClose()
@@ -90,16 +94,16 @@ export function BaseConfigModal({ isOpen, onClose, onSave, baseId, baseName }: B
               </div>
             ) : (
               <>
-                {/* Base Ativa */}
+                {/* Integração Zeiss Ativa */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Status da Base
+                    Integracao Zeiss
                   </label>
                   <label className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">Base Ativa</div>
+                      <div className="font-medium text-gray-900 dark:text-white">Integracao Zeiss Ativa</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Permite conexoes e sincronizacoes com esta base
+                        Habilita sincronizacao de lentes e precos Zeiss
                       </div>
                     </div>
                     <button
