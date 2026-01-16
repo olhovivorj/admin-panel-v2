@@ -12,6 +12,10 @@ on:
   # Permite trigger manual
   workflow_dispatch:
 
+  # Trigger quando @invistto/auth-react for atualizado
+  repository_dispatch:
+    types: [auth-updated]
+
 jobs:
   deploy:
     name: Deploy to Production
