@@ -14,8 +14,15 @@ export default defineConfig({
     port: 5173,
     open: false,
     proxy: {
-      '/api': {
+      // Auth - Auth API Standalone (porta 3001)
+      '/auth': {
         target: 'http://localhost:3001',
+        changeOrigin: true,
+        // Sem rewrite - Auth API usa /auth diretamente
+      },
+      // API do admin-panel (porta 3002)
+      '/api': {
+        target: 'http://localhost:3002',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }

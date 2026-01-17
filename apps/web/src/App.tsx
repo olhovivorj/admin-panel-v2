@@ -29,9 +29,6 @@ const queryClient = new QueryClient({
   },
 })
 
-// API URL do ambiente
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-
 /**
  * Componente interno que tem acesso ao useNavigate e queryClient
  */
@@ -41,7 +38,15 @@ function AppRoutes() {
 
   return (
     <AuthProvider
-      apiUrl={API_URL}
+      apiUrl=""
+      tokenKey="@ari:token"
+      userKey="@ari:user"
+      useSessionStorage={false}
+      validateOnLoad={true}
+      loginEndpoint="/auth/login"
+      refreshEndpoint="/auth/refresh"
+      validateEndpoint="/auth/validate"
+      logoutEndpoint="/auth/logout"
       onLogin={(user) => {
         // Salvar baseId para requisições
         if (user.baseId) {
