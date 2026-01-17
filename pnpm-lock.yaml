@@ -560,9 +560,9 @@ packages:
   '@invistto/auth-react@file:../invistto-auth/packages/react':
     resolution: {directory: ../invistto-auth/packages/react, type: directory}
     peerDependencies:
-      react: ^18.0.0
-      react-dom: ^18.0.0
-      react-router-dom: ^6.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+      react-router-dom: ^6.0.0 || ^7.0.0
 
   '@invistto/auth@file:../invistto-auth/packages/core':
     resolution: {directory: ../invistto-auth/packages/core, type: directory}
