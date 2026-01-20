@@ -43,6 +43,7 @@ interface Loja {
   id_empresa: number
   nome: string
   razao_social: string
+  cnpj?: string | null
   config: LojaConfig | null
   modificada?: boolean
 }
@@ -288,6 +289,7 @@ export function LojasConfigModal({ isOpen, onClose, baseId, baseName }: LojasCon
       const response = await api.post(`/bases/${baseId}/lojas/config`, {
         id_empresa: loja.id_empresa,
         nome_empresa: loja.nome,
+        cnpj: loja.cnpj || null,
         ZEISS_USA_CATALOGO: loja.config.ZEISS_USA_CATALOGO,
         ZEISS_USA_SAO: loja.config.ZEISS_USA_SAO,
         ZEISS_USA_ZVC: loja.config.ZEISS_USA_ZVC,

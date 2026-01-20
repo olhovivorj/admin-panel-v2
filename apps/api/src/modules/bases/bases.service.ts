@@ -421,9 +421,11 @@ export class BasesService {
         e.ID_EMPRESA,
         COALESCE(e.NOME_REDUZIDO, e.ABREV, p.RAZAO, '') as NOME,
         COALESCE(p.RAZAO, e.NOME_REDUZIDO, '') as RAZAO_SOCIAL,
-        COALESCE(p.DATA_CADASTRO, e.DT_LUPD) as DATA_CADASTRO
+        COALESCE(p.DATA_CADASTRO, e.DT_LUPD) as DATA_CADASTRO,
+        pj.CNPJ
       FROM ge_empresa e
       LEFT JOIN ge_pessoa p ON e.ID_PESSOA = p.ID_PESSOA AND e.ID_BASE = p.ID_BASE
+      LEFT JOIN ge_pessoa_juridica pj ON p.ID_PESSOA = pj.ID_PESSOA AND p.ID_BASE = pj.ID_BASE
       WHERE e.ID_BASE = ?
         AND COALESCE(e.FG_ADM, 'N') <> 'S'
         AND COALESCE(e.FG_LAB, 'N') <> 'S'
@@ -433,32 +435,37 @@ export class BasesService {
 
     this.logger.log(`Encontradas ${lojas.length} lojas na base ${baseId}`);
 
-    return lojas.map((row: any) => ({
-      ID_EMPRESA: row.ID_EMPRESA,
-      id_empresa: row.ID_EMPRESA,
-      NOME_FANTASIA: row.NOME?.trim() || '',
-      nome_fantasia: row.NOME?.trim() || '',
-      RAZAO_SOCIAL: row.RAZAO_SOCIAL?.trim() || '',
-      razao_social: row.RAZAO_SOCIAL?.trim() || '',
-      CNPJ: '',
-      cnpj: '',
-      DATA_INICIO: row.DATA_CADASTRO,
-      data_inicio: row.DATA_CADASTRO,
-    }));
+    return lojas.map((row: any) => {
+      const cnpjLimpo = row.CNPJ ? row.CNPJ.replace(/[^\d]/g, '') : '';
+      return {
+        ID_EMPRESA: row.ID_EMPRESA,
+        id_empresa: row.ID_EMPRESA,
+        NOME_FANTASIA: row.NOME?.trim() || '',
+        nome_fantasia: row.NOME?.trim() || '',
+        RAZAO_SOCIAL: row.RAZAO_SOCIAL?.trim() || '',
+        razao_social: row.RAZAO_SOCIAL?.trim() || '',
+        CNPJ: cnpjLimpo,
+        cnpj: cnpjLimpo,
+        DATA_INICIO: row.DATA_CADASTRO,
+        data_inicio: row.DATA_CADASTRO,
+      };
+    });
   }
 
   /**
    * Lista lojas com suas configurações de serviços Zeiss
    */
   async getLojasConfig(baseId: number) {
-    // Buscar lojas do ERP (ge_empresa)
+    // Buscar lojas do ERP (ge_empresa) com CNPJ
     const lojas = await this.db.query(
       `SELECT
         e.ID_EMPRESA,
         COALESCE(e.NOME_REDUZIDO, e.ABREV, p.RAZAO, '') as NOME,
-        COALESCE(p.RAZAO, e.NOME_REDUZIDO, '') as RAZAO_SOCIAL
+        COALESCE(p.RAZAO, e.NOME_REDUZIDO, '') as RAZAO_SOCIAL,
+        pj.CNPJ
       FROM ge_empresa e
       LEFT JOIN ge_pessoa p ON e.ID_PESSOA = p.ID_PESSOA AND e.ID_BASE = p.ID_BASE
+      LEFT JOIN ge_pessoa_juridica pj ON p.ID_PESSOA = pj.ID_PESSOA AND p.ID_BASE = pj.ID_BASE
       WHERE e.ID_BASE = ?
         AND COALESCE(e.FG_ADM, 'N') <> 'S'
         AND COALESCE(e.FG_LAB, 'N') <> 'S'
@@ -481,12 +488,15 @@ export class BasesService {
     // Combinar lojas com configs
     const result = lojas.map((loja: any) => {
       const config = configMap.get(loja.ID_EMPRESA);
+      const cnpjFirebird = loja.CNPJ ? loja.CNPJ.replace(/[^\d]/g, '') : null;
       return {
         id_empresa: loja.ID_EMPRESA,
         nome: loja.NOME?.trim() || '',
         razao_social: loja.RAZAO_SOCIAL?.trim() || '',
+        cnpj: cnpjFirebird,
         config: config ? {
           id: config.id,
+          cnpj: config.cnpj || null,
           ZEISS_USA_CATALOGO: config.ZEISS_USA_CATALOGO || 'N',
           ZEISS_USA_SAO: config.ZEISS_USA_SAO || 'N',
           ZEISS_USA_ZVC: config.ZEISS_USA_ZVC || 'N',
@@ -573,6 +583,7 @@ export class BasesService {
     return {
       id: updated.id,
       id_empresa: updated.id_empresa,
+      cnpj: updated.cnpj || null,
       ZEISS_USA_CATALOGO: updated.ZEISS_USA_CATALOGO,
       ZEISS_USA_SAO: updated.ZEISS_USA_SAO,
       ZEISS_USA_ZVC: updated.ZEISS_USA_ZVC,
