@@ -20,37 +20,45 @@ export function FirebirdConfigModal({
   baseName,
   initialConfig,
 }: FirebirdConfigModalProps) {
-  const [config, setConfig] = useState<FirebirdConfig>({
-    host: 'localhost',
-    port: 3050,
-    database: '',
-    user: 'SYSDBA',
+  const [config, setConfig] = useState<FirebirdConfig>(() => ({
+    host: initialConfig?.host || 'localhost',
+    port: initialConfig?.port || 3050,
+    database: initialConfig?.database || '',
+    user: initialConfig?.user || 'SYSDBA',
     password: '',
-    role: 'RDB$ADMIN',
-    charset: 'UTF8',
-    active: true,
-  })
+    role: initialConfig?.role || 'RDB$ADMIN',
+    charset: initialConfig?.charset || 'UTF8',
+    active: initialConfig?.active === true,
+  }))
 
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (initialConfig) {
-      setConfig({
-        host: initialConfig.host || 'localhost',
-        port: initialConfig.port || 3050,
-        database: initialConfig.database || '',
-        user: initialConfig.user || 'SYSDBA',
-        password: '', // Sempre vazio por segurança
-        role: initialConfig.role || 'RDB$ADMIN',
-        charset: initialConfig.charset || 'UTF8',
-        active: initialConfig.active !== false,
-      })
-    }
-  }, [initialConfig])
+    // Sempre resetar o config quando a prop initialConfig mudar
+    // Isso garante que cada base tenha seu próprio estado
+    setConfig({
+      host: initialConfig?.host || 'localhost',
+      port: initialConfig?.port || 3050,
+      database: initialConfig?.database || '',
+      user: initialConfig?.user || 'SYSDBA',
+      password: '', // Sempre vazio por segurança
+      role: initialConfig?.role || 'RDB$ADMIN',
+      charset: initialConfig?.charset || 'UTF8',
+      active: initialConfig?.active === true, // Explicitamente verificar se é true
+    })
+    // Limpar erros ao trocar de base
+    setErrors({})
+  }, [initialConfig, baseId])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
+
+    // Se está desativando o Firebird, não precisa validar os outros campos
+    if (config.active === false) {
+      setErrors(newErrors)
+      return true
+    }
 
     if (!config.host?.trim()) {
       newErrors.host = 'Host é obrigatório'
@@ -276,7 +284,7 @@ export function FirebirdConfigModal({
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={config.active !== false}
+                  checked={config.active === true}
                   onChange={(e) => handleInputChange('active', e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />

@@ -398,6 +398,7 @@ export function Bases() {
 
       {showFirebirdModal && selectedBase && (
         <FirebirdConfigModal
+          key={`firebird-modal-${selectedBase.ID_BASE || selectedBase.baseId}`}
           isOpen={showFirebirdModal}
           onClose={() => {
             setShowFirebirdModal(false)
