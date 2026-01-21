@@ -98,10 +98,18 @@ export function FirebirdConfigModal({
     console.log('✅ Validação passou')
     setIsLoading(true)
     try {
-      // Remove campos vazios/undefined
-      const configToSave = Object.fromEntries(
-        Object.entries(config).filter(([_, value]) => value !== '' && value !== undefined),
-      ) as FirebirdConfig
+      let configToSave: FirebirdConfig
+
+      // Se está apenas desativando, enviar somente o campo active
+      // para preservar os dados existentes
+      if (config.active === false) {
+        configToSave = { active: false }
+      } else {
+        // Remove campos vazios/undefined
+        configToSave = Object.fromEntries(
+          Object.entries(config).filter(([_, value]) => value !== '' && value !== undefined),
+        ) as FirebirdConfig
+      }
 
       console.log('📤 Enviando:', configToSave)
       await onSave(configToSave)
