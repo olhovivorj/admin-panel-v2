@@ -17,7 +17,7 @@ module.exports = {
     // Ambiente
     env: {
       NODE_ENV: 'production',
-      PORT: 3001,
+      PORT: 3002,
       HOST: '0.0.0.0'
     },
 

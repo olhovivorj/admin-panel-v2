@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { InvisttoAuthModule } from '@invistto/auth';
+import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { StandaloneJwtGuard } from '@invistto/auth';
 import { ConfigServiceModule } from './config';
-import { AuthUserRepository } from './modules/auth/auth-user.repository';
+// Auth removido - usa API Auth centralizada (porta 3001) via proxy
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 import { BasesModule } from './modules/bases/bases.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -25,7 +26,7 @@ import { LoggerModule } from './modules/logger/logger.module';
  * - ari_plans: Planos de assinatura
  * - ari_pages: Páginas/permissões
  *
- * Auth: @invistto/auth (pacote compartilhado)
+ * Auth: API Auth centralizada (porta 3001) + StandaloneJwtGuard
  */
 @Module({
   imports: [
@@ -34,19 +35,8 @@ import { LoggerModule } from './modules/logger/logger.module';
     }),
     // Módulo global de configuração (BaseConfigService, FirebirdConnectionManager)
     ConfigServiceModule,
-    // Modulo de autenticacao (@invistto/auth - pacote compartilhado)
-    // NOTA: Auth agora e limpo (sem Firebird). ERP e tratado pelo ErpModule local.
-    InvisttoAuthModule.forRootAsync({
-      imports: [ConfigServiceModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        jwt: {
-          secret: configService.get<string>('JWT_SECRET', 'default-secret-change-in-production'),
-          expiration: configService.get<string>('JWT_EXPIRATION', '8h'),
-        },
-      }),
-      userRepository: AuthUserRepository,
-    }),
+    // Auth: Usa API Auth centralizada (porta 3001) via proxy
+    // Guard: StandaloneJwtGuard valida tokens JWT sem módulo
     // Módulos CRUD (todos usam BaseConfigService + tabelas MySQL existentes)
     UsuariosModule,
     BasesModule,
@@ -58,6 +48,13 @@ import { LoggerModule } from './modules/logger/logger.module';
     SchedulesModule,
     // Módulo de logger para receber logs do frontend
     LoggerModule,
+  ],
+  providers: [
+    // Guard global - valida tokens JWT gerados pela API Auth centralizada (porta 3001)
+    {
+      provide: APP_GUARD,
+      useClass: StandaloneJwtGuard,
+    },
   ],
 })
 export class AppModule {}

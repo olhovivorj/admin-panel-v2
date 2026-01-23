@@ -6,7 +6,7 @@ module.exports = {
     cwd: '/home/robson/Documentos/projetos/codigo-fonte/admin-panel',
     env: {
       NODE_ENV: 'development',
-      PORT: 3001,
+      PORT: 3002,
       HOST: '0.0.0.0'
     },
     watch: false,
