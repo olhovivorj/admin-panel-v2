@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import { StandaloneJwtGuard } from '@invistto/auth';
 import { ConfigServiceModule } from './config';
 // Auth removido - usa API Auth centralizada (porta 3001) via proxy
@@ -51,9 +51,11 @@ import { LoggerModule } from './modules/logger/logger.module';
   ],
   providers: [
     // Guard global - valida tokens JWT gerados pela API Auth centralizada (porta 3001)
+    // Usa factory provider para injetar Reflector explicitamente
     {
       provide: APP_GUARD,
-      useClass: StandaloneJwtGuard,
+      useFactory: (reflector: Reflector) => new StandaloneJwtGuard(reflector),
+      inject: [Reflector],
     },
   ],
 })
