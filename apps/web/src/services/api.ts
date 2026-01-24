@@ -16,34 +16,22 @@ const auditLogger = {
   },
 }
 
-// Função para obter a URL base do ambiente selecionado
+// Função para obter a URL base do ambiente
 function getBaseURL() {
-  const savedUrl = localStorage.getItem('@ari:apiUrl')
-  const savedEnv = localStorage.getItem('@ari:environment')
-
-  if (savedUrl) {
-    // Se savedUrl já tem /api, usar como está
-    return savedUrl.includes('/api') ? savedUrl : `${savedUrl}/api`
-  }
-
-  // Fallback baseado no ambiente salvo
-  if (savedEnv === 'production' || window.location.hostname === 'ierp.invistto.com') {
+  // Produção: usar /admin/api (proxy do nginx)
+  if (window.location.hostname === 'ierp.invistto.com') {
     return '/admin/api'
   }
 
-  // Usar variável de ambiente ou fallback para backend próprio (3001)
-  const envUrl = import.meta.env.VITE_API_URL
-  if (envUrl) {
-    return envUrl
-  }
-
-  // Default para backend próprio do admin-panel-v2 (SEM /api)
-  return 'http://localhost:3001'
+  // Desenvolvimento: usar proxy /api do Vite
+  // O Vite encaminha para localhost:3002
+  return '/api'
 }
 
 export const api = axios.create({
   baseURL: getBaseURL(),
   timeout: 600000, // 10 minutos para volumes muito grandes (120k+ registros)
+  withCredentials: true, // Enviar cookies httpOnly automaticamente
   headers: {
     'Content-Type': 'application/json',
   },
@@ -59,15 +47,22 @@ api.interceptors.request.use(
     const hasApiCredentials = config.headers['X-API-Key'] && config.headers['X-API-Secret']
 
     // Token de autenticação - NÃO adicionar se tem credenciais API
-    // ✅ SEGURANÇA: Token em sessionStorage expira ao fechar navegador
+    // ✅ Modo cookies: token enviado automaticamente via httpOnly cookie
+    // ✅ Modo storage: token em sessionStorage (fallback legado)
     if (!hasApiCredentials) {
+      // CSRF token para proteção contra CSRF (Double Submit Cookie)
+      const csrfToken = sessionStorage.getItem('@invistto:csrf')
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken
+      }
+
+      // Fallback: Bearer token para compatibilidade com modo storage
       const token = sessionStorage.getItem('@ari:token')
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
         console.log('🔐 [API] Token presente no request:', token.substring(0, 20) + '...')
-      } else {
-        console.warn('⚠️ [API] Nenhum token encontrado no sessionStorage')
       }
+      // Nota: Se não tem token no storage, o cookie httpOnly será enviado automaticamente
     } else {
       console.log('🔑 [API] Usando credenciais API (X-API-Key/Secret), ignorando JWT')
     }
@@ -263,9 +258,9 @@ api.interceptors.response.use(
 
       toast.error(errorMessage)
 
-      // Forçar redirecionamento para login
+      // Forçar redirecionamento para login (usar /admin/ pois é o basename)
       setTimeout(() => {
-        window.location.href = '/login'
+        window.location.href = '/admin/login'
       }, 100)
 
       return Promise.reject(error)

@@ -5,6 +5,7 @@ import {
   UsersIcon,
   CircleStackIcon,
 } from '@heroicons/react/24/outline'
+import { SystemHealthCard } from '@/components/system/SystemHealthCard'
 
 export function Dashboard() {
   // Buscar estatísticas
@@ -84,6 +85,11 @@ export function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Status do Sistema */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SystemHealthCard />
       </div>
 
     </div>

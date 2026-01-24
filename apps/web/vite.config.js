@@ -18,12 +18,13 @@ export default defineConfig({
       '/auth': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-        // Sem rewrite - Auth API usa /auth diretamente
+        secure: false,
       },
       // API do admin-panel (porta 3002)
       '/api': {
         target: 'http://localhost:3002',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import { StandaloneJwtGuard } from '@invistto/auth';
+import { StandaloneJwtGuard, CsrfGuard } from '@invistto/auth';
 import { ConfigServiceModule } from './config';
 // Auth removido - usa API Auth centralizada (porta 3001) via proxy
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
@@ -13,6 +13,7 @@ import { PagesModule } from './modules/pages/pages.module';
 import { PlansModule } from './modules/plans/plans.module';
 import { SchedulesModule } from './modules/schedules/schedules.module';
 import { LoggerModule } from './modules/logger/logger.module';
+import { SystemModule } from './modules/system/system.module';
 
 /**
  * AppModule - Módulo principal do Admin Panel V2
@@ -48,6 +49,8 @@ import { LoggerModule } from './modules/logger/logger.module';
     SchedulesModule,
     // Módulo de logger para receber logs do frontend
     LoggerModule,
+    // Módulo de health check do sistema
+    SystemModule,
   ],
   providers: [
     // Guard global - valida tokens JWT gerados pela API Auth centralizada (porta 3001)
@@ -56,6 +59,11 @@ import { LoggerModule } from './modules/logger/logger.module';
       provide: APP_GUARD,
       useFactory: (reflector: Reflector) => new StandaloneJwtGuard(reflector),
       inject: [Reflector],
+    },
+    // CsrfGuard - valida X-CSRF-Token em requisições com cookies
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
     },
   ],
 })

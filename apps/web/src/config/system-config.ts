@@ -72,9 +72,8 @@ class AdminPanelConfig {
         title: 'INVISTTO Admin Panel',
       },
       api: {
-        baseUrl: env === 'production'
-          ? import.meta.env.VITE_API_URL || 'https://ierp.invistto.com'
-          : import.meta.env.VITE_API_URL || 'http://localhost:3000',
+        // Em dev usa proxy /api, em prod usa /admin/api
+        baseUrl: env === 'production' ? '/admin/api' : '/api',
         timeout: 30000,
         retries: 3,
       },

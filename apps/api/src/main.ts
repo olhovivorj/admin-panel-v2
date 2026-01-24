@@ -10,6 +10,19 @@ async function bootstrap() {
   // Cookie parser para suporte a httpOnly cookies
   app.use(cookieParser());
 
+  // Debug: log de cookies em desenvolvimento
+  if (process.env.NODE_ENV !== 'production') {
+    app.use((req: any, res: any, next: any) => {
+      console.log('🍪 [DEBUG] Cookies recebidos:', Object.keys(req.cookies || {}));
+      console.log('🔑 [DEBUG] Headers relevantes:', {
+        'x-csrf-token': req.headers['x-csrf-token'],
+        'authorization': req.headers['authorization']?.substring(0, 30) + '...',
+        'cookie': req.headers['cookie']?.substring(0, 50) + '...',
+      });
+      next();
+    });
+  }
+
   // Enable CORS - múltiplas portas para desenvolvimento
   app.enableCors({
     origin: [

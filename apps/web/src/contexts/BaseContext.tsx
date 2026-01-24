@@ -79,6 +79,8 @@ export function BaseProvider({ children }: { children: ReactNode }) {
   // Estados para controle manual
   const [isLoadingFromAPI, setIsLoadingFromAPI] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [loadAttempts, setLoadAttempts] = useState(0)
+  const MAX_LOAD_ATTEMPTS = 3
 
   // Função para carregar bases da API APENAS quando necessário
   const loadBasesFromAPI = async () => {
@@ -87,17 +89,25 @@ export function BaseProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // Proteção contra loop infinito
+    if (loadAttempts >= MAX_LOAD_ATTEMPTS) {
+      logger.warn('🛑 [BaseContext] Máximo de tentativas atingido, parando carregamento')
+      return
+    }
+
     setIsLoadingFromAPI(true)
     setApiError(null)
+    setLoadAttempts(prev => prev + 1)
 
     try {
-      logger.info('🌐 [BaseContext] Carregando bases SIMPLES da API (primeira vez) - SEM estatísticas')
+      logger.info(`🌐 [BaseContext] Carregando bases SIMPLES da API (tentativa ${loadAttempts + 1}/${MAX_LOAD_ATTEMPTS})`)
       const data = await basesService.getBasesSimples()
 
       // Salvar no cache
       localStorage.setItem('@ari:cachedBases', JSON.stringify(data))
       setBasesFromCache(data)
       setHasBasesInCache(true)
+      setLoadAttempts(0) // Reset attempts on success
 
       logger.info('✅ [BaseContext] Bases SIMPLES carregadas e salvas no cache:', data?.length, 'bases')
     } catch (error: any) {
@@ -109,13 +119,13 @@ export function BaseProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Carregar bases APENAS se user existe E não tem cache
+  // Carregar bases APENAS se user existe E não tem cache E não atingiu limite de tentativas
   useEffect(() => {
-    if (user && !hasBasesInCache && !isLoadingFromAPI) {
+    if (user && !hasBasesInCache && !isLoadingFromAPI && loadAttempts < MAX_LOAD_ATTEMPTS) {
       logger.info('🔄 [BaseContext] User carregado, verificando necessidade de carregar bases')
       loadBasesFromAPI()
     }
-  }, [user, hasBasesInCache, isLoadingFromAPI])
+  }, [user, hasBasesInCache, isLoadingFromAPI, loadAttempts])
 
   // Função para refresh manual (limpa cache e recarrega)
   const refreshBases = async () => {
@@ -123,6 +133,7 @@ export function BaseProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('@ari:cachedBases')
     setHasBasesInCache(false)
     setBasesFromCache([])
+    setLoadAttempts(0) // Reset attempts for manual refresh
     await loadBasesFromAPI()
   }
 

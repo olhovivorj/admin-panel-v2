@@ -42,6 +42,7 @@ function AppRoutes() {
       tokenKey="@ari:token"
       userKey="@ari:user"
       useSessionStorage={false}
+      useCookies={true}
       validateOnLoad={true}
       loginEndpoint="/auth/login"
       refreshEndpoint="/auth/refresh"

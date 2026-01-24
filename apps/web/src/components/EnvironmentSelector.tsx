@@ -19,13 +19,13 @@ const environments: Environment[] = [
     icon: CloudIcon,
     description: 'Servidor de produção'
   },
-  // Ambiente local apenas em desenvolvimento
+  // Ambiente local apenas em desenvolvimento (usa proxy do Vite)
   ...(import.meta.env.DEV ? [{
     id: 'local',
     name: 'Local',
-    url: 'http://localhost:3001',
+    url: '', // Usa proxy do Vite (/api e /auth)
     icon: ServerIcon,
-    description: 'Servidor local'
+    description: 'Servidor local (via proxy)'
   }] : [])
 ]
 
@@ -53,31 +53,28 @@ export function EnvironmentSelector() {
   }, [])
 
   const updateApiBaseUrl = (envId: string) => {
-    const env = environments.find(e => e.id === envId)
-    if (env) {
-      // Atualizar a URL base do axios
-      localStorage.setItem('@ari:environment', envId)
-      localStorage.setItem('@ari:apiUrl', env.url)
-      
-      // Recarregar a página para aplicar a nova configuração
-      // Nota: Em produção, você pode querer usar um contexto ou store para evitar recarregar
-    }
+    // Salvar apenas o ambiente selecionado (a URL é determinada automaticamente pelo api.ts)
+    localStorage.setItem('@ari:environment', envId)
+    // Remover apiUrl obsoleto se existir
+    localStorage.removeItem('@ari:apiUrl')
   }
 
   const checkEnvironments = async () => {
     for (const env of environments) {
       setStatuses(prev => ({ ...prev, [env.id]: 'checking' }))
-      
+
       try {
         // Tentar fazer uma requisição de health check
-        const response = await axios.get(`${env.url}/api/health`, {
+        // Se url vazia (local), usar proxy do Vite (/api/health)
+        const healthUrl = env.url ? `${env.url}/api/health` : '/api/health'
+        const response = await axios.get(healthUrl, {
           timeout: 5000,
           validateStatus: () => true // Aceitar qualquer status
         })
-        
-        setStatuses(prev => ({ 
-          ...prev, 
-          [env.id]: response.status < 500 ? 'online' : 'offline' 
+
+        setStatuses(prev => ({
+          ...prev,
+          [env.id]: response.status < 500 ? 'online' : 'offline'
         }))
       } catch (error) {
         setStatuses(prev => ({ ...prev, [env.id]: 'offline' }))
@@ -90,12 +87,14 @@ export function EnvironmentSelector() {
     if (!env) return
 
     setChecking(envId)
-    
+
     try {
       // Em produção, não verificar health check
       if (import.meta.env.DEV) {
         // Verificar se o ambiente está disponível apenas em dev
-        await axios.get(`${env.url}/api/health`, { timeout: 5000 })
+        // Se url vazia (local), usar proxy do Vite (/api/health)
+        const healthUrl = env.url ? `${env.url}/api/health` : '/api/health'
+        await axios.get(healthUrl, { timeout: 5000 })
       }
       
       setSelectedEnv(envId)
