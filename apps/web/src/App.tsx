@@ -17,6 +17,7 @@ import { Apps } from '@/pages/Apps'
 import { Pages } from '@/pages/Pages'
 import { Plans } from '@/pages/Plans'
 import { Schedules } from '@/pages/Schedules'
+import { AiBilling } from '@/pages/AiBilling'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -91,6 +92,7 @@ function AppRoutes() {
               <Route path="pages" element={<Pages />} />
               <Route path="plans" element={<Plans />} />
               <Route path="schedules" element={<Schedules />} />
+              <Route path="ai-billing" element={<AiBilling />} />
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

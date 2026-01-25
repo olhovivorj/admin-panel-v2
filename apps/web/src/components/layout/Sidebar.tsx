@@ -14,6 +14,7 @@ import {
   Cog6ToothIcon,
   ChartBarIcon,
   FolderIcon,
+  CpuChipIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/utils/cn'
 import { useSuperAdmin } from '@/hooks/useSuperAdmin'
@@ -32,6 +33,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   '/schedules': ClockIcon,
   '/config': Cog6ToothIcon,
   '/reports': ChartBarIcon,
+  '/ai-billing': CpuChipIcon,
 }
 
 // Fallback: menu hardcoded para quando não há pages do plano
@@ -44,6 +46,7 @@ const fallbackNavigation = [
   { name: 'Planos', href: '/plans', icon: CreditCardIcon, adminOnly: true },
   { name: 'Bases de Dados', href: '/bases', icon: CircleStackIcon, adminOnly: true },
   { name: 'Agendamentos', href: '/schedules', icon: ClockIcon, adminOnly: true },
+  { name: 'Uso de IA', href: '/ai-billing', icon: CpuChipIcon, adminOnly: true },
 ]
 
 export function Sidebar() {
