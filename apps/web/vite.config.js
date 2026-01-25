@@ -20,6 +20,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // AI Billing - ARI API (porta 3010)
+      '/api/ai': {
+        target: 'http://localhost:3010',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api/v1')
+      },
       // API do admin-panel (porta 3002)
       '/api': {
         target: 'http://localhost:3002',
