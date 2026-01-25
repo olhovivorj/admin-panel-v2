@@ -20,9 +20,8 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
 
   // Verifica autenticação via hook (o pacote gerencia o storage internamente)
   if (!isAuthenticated || !user) {
-    // Usar path absoluto pois Navigate pode não respeitar basename em alguns casos
-    window.location.href = '/admin/login'
-    return null
+    // Redirecionar para login usando Navigate (sem reload de página)
+    return <Navigate to="/login" replace />
   }
 
   // Verificar role do usuário (suporta role como objeto ou string legada)
