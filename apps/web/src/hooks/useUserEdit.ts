@@ -24,7 +24,7 @@ export function useUserEdit() {
       if (error.response?.status === 401) {
         toast.error('Sessão expirada. Faça login novamente.')
         setTimeout(() => {
-          window.location.href = '/login'
+          window.location.href = '/admin/login'
         }, 1000)
       } else {
         toast.error('Erro ao buscar usuário')
