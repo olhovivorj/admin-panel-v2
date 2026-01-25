@@ -39,7 +39,7 @@ function AppRoutes() {
 
   return (
     <AuthProvider
-      apiUrl="/admin/api"
+      apiUrl=""
       tokenKey="@ari:token"
       userKey="@ari:user"
       useSessionStorage={false}
@@ -61,13 +61,10 @@ function AppRoutes() {
         navigate('/dashboard')
       }}
       onLogout={() => {
-        // Limpar dados locais
-        localStorage.clear()
-        // Limpar cache do React Query
+        // Limpar cache do React Query (não storage! O AuthProvider cuida disso)
         qc.clear()
         // Redirecionar para login (fallback quando não veio do Hub)
         // O AuthProvider já redireciona para o Hub se veio de lá (logout_redirect)
-        // Usa window.location para garantir reload completo e limpar estado
         window.location.href = `${import.meta.env.BASE_URL}login`
       }}
     >

@@ -241,27 +241,15 @@ api.interceptors.response.use(
         hasToken: !!sessionStorage.getItem('@ari:token'),
       })
 
-      // SEGURANÇA: Limpar todos dados de autenticação
-      sessionStorage.clear()
-      // Preservar apenas cache de bases no localStorage
-      const cachedBases = localStorage.getItem('@ari:cachedBases')
-      localStorage.clear()
-      if (cachedBases) {
-        localStorage.setItem('@ari:cachedBases', cachedBases)
-      }
+      // Dispara evento que o AuthProvider escuta
+      // O AuthProvider vai lidar com limpeza e redirect de forma controlada
+      window.dispatchEvent(new CustomEvent('auth:session-expired'))
 
-      // Mensagem simples, não objeto
-      const responseData = error.response?.data as any
-      const errorMessage = typeof responseData?.message === 'string'
-        ? responseData.message
-        : 'Sessão expirada. Faça login novamente.'
-
-      toast.error(errorMessage)
-
-      // Forçar redirecionamento para login (usar /admin/ pois é o basename)
-      setTimeout(() => {
+      // Redirecionar para login (se não estiver já na página de login)
+      const currentPath = window.location.pathname
+      if (!currentPath.includes('/login')) {
         window.location.href = '/admin/login'
-      }, 100)
+      }
 
       return Promise.reject(error)
     }
