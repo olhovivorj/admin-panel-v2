@@ -65,9 +65,10 @@ function AppRoutes() {
         localStorage.clear()
         // Limpar cache do React Query
         qc.clear()
-        // Navegar para login (fallback quando não veio do Hub)
+        // Redirecionar para login (fallback quando não veio do Hub)
         // O AuthProvider já redireciona para o Hub se veio de lá (logout_redirect)
-        navigate('/login')
+        // Usa window.location para garantir reload completo e limpar estado
+        window.location.href = `${import.meta.env.BASE_URL}login`
       }}
     >
       <BaseProvider>
