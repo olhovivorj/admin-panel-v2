@@ -1,0 +1,691 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecossistema Invistto - Mapa de Arquitetura</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        .card { transition: all 0.3s ease; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .mermaid { background: #f8fafc; border-radius: 8px; padding: 20px; }
+        details summary { cursor: pointer; }
+        details summary::-webkit-details-marker { display: none; }
+        .port-badge { font-family: monospace; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">🏗️ Ecossistema Invistto</h1>
+            <p class="text-gray-600">Mapa completo de arquitetura - Gerado em 2026-01-24T21:36:08</p>
+            <div class="flex justify-center gap-4 mt-4">
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    28 Projetos
+                </span>
+                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    15 Ativos
+                </span>
+                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                    3 Bancos de Dados
+                </span>
+                <span class="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                    ~100 Tabelas
+                </span>
+            </div>
+        </header>
+
+        <!-- Diagrama Principal -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📊 Diagrama de Arquitetura</h2>
+            <div class="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
+                <div class="mermaid">
+flowchart TB
+    subgraph HUB["🏠 INVISTTO HUB (SSO Gateway)"]
+        HUB_WEB["Web :5173"]
+        HUB_DESK["Desktop (Tauri)"]
+        HUB_MOB["Mobile (Capacitor)"]
+    end
+
+    subgraph AUTH["🔐 AUTH API :3001"]
+        AUTH_JWT["JWT + Cookies"]
+        AUTH_SSO["SSO (30s codes)"]
+    end
+
+    subgraph FRONTENDS["🖥️ APLICAÇÕES FRONTEND"]
+        ADMIN["Admin Panel\n:5173 → /admin/"]
+        COURIER["Courier Analytics\n:3008 → /courier/"]
+        BI["Invistto BI\n:3007 → /bi/"]
+        ZEISS_F["Zeiss Client\n:3006 → /zeiss/"]
+        LENS_F["OlhoVivo Lens\n:3009 → /lentes/"]
+    end
+
+    subgraph BACKENDS["⚙️ APIS BACKEND"]
+        ADMIN_API["Admin API\n:3002"]
+        COURIER_API["Courier API\n:3333"]
+        ARI["ARI Analytics\n:3010"]
+        ZEISS_B["Zeiss API\n:3005"]
+        LENS_B["Lens API\n:3015"]
+        SALES["Sales API\n:3011"]
+    end
+
+    subgraph SERVICES["🔧 SERVIÇOS AUXILIARES"]
+        AI["AI Service\n:3003"]
+        AI_BILL["AI Billing\n:3004"]
+        WA["WhatsApp\n:3007"]
+        MCP["ServerMCP\n:3002"]
+    end
+
+    subgraph DATA["💾 DADOS"]
+        MYSQL[("MySQL\npainel.invistto.com:3305")]
+        FB[("Firebird\nERPs Legados")]
+        REDIS[("Redis\nlocalhost:6379")]
+    end
+
+    HUB --> AUTH
+    FRONTENDS --> AUTH
+
+    ADMIN --> ADMIN_API
+    COURIER --> COURIER_API
+    BI --> ARI
+    ZEISS_F --> ZEISS_B
+    LENS_F --> LENS_B
+
+    BACKENDS --> MYSQL
+    BACKENDS --> FB
+
+    AI --> AI_BILL
+    MCP --> ARI
+    WA --> REDIS
+
+    classDef hub fill:#3b82f6,stroke:#1d4ed8,color:#fff
+    classDef auth fill:#ef4444,stroke:#dc2626,color:#fff
+    classDef frontend fill:#10b981,stroke:#059669,color:#fff
+    classDef backend fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    classDef service fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef data fill:#6366f1,stroke:#4f46e5,color:#fff
+
+    class HUB_WEB,HUB_DESK,HUB_MOB hub
+    class AUTH_JWT,AUTH_SSO auth
+    class ADMIN,COURIER,BI,ZEISS_F,LENS_F frontend
+    class ADMIN_API,COURIER_API,ARI,ZEISS_B,LENS_B,SALES backend
+    class AI,AI_BILL,WA,MCP service
+    class MYSQL,FB,REDIS data
+                </div>
+            </div>
+        </section>
+
+        <!-- Frontends -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🖥️ Aplicações Frontend</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Invistto Hub</h3>
+                <span class="port-badge bg-green-100 text-green-800 px-2 py-1 rounded text-sm">:5173</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Central Hub - SSO Gateway para todos os apps</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>React:</strong> 19.2.0</p>
+                <p><strong>State:</strong> TanStack Query v5.90.18</p>
+                <p><strong>Path:</strong> /hub/</p>
+                <p><strong>Plataformas:</strong> Web, Desktop (Tauri 2), Mobile (Capacitor 6)</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Admin Panel</h3>
+                <span class="port-badge bg-green-100 text-green-800 px-2 py-1 rounded text-sm">:5173</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Painel administrativo - Gestão de usuários, bases, roles</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>React:</strong> 18.3.1</p>
+                <p><strong>State:</strong> TanStack Query v5.90.12</p>
+                <p><strong>Path:</strong> /admin/</p>
+                <p><strong>Plataformas:</strong> Web</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Courier Analytics</h3>
+                <span class="port-badge bg-green-100 text-green-800 px-2 py-1 rounded text-sm">:3008</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Dashboard WhatsApp - ROI campanhas, análise produtos</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>React:</strong> 19.2.3</p>
+                <p><strong>State:</strong> TanStack Query v5.90.20</p>
+                <p><strong>Path:</strong> /courier/</p>
+                <p><strong>Plataformas:</strong> Web</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Invistto BI</h3>
+                <span class="port-badge bg-green-100 text-green-800 px-2 py-1 rounded text-sm">:3007</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Business Intelligence - Vendas, financeiro, estoque</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>React:</strong> 19.1.0</p>
+                <p><strong>State:</strong> TanStack Query v5.84.1</p>
+                <p><strong>Path:</strong> /bi/</p>
+                <p><strong>Plataformas:</strong> Web, Mobile (Capacitor 6)</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Zeiss Lab Client</h3>
+                <span class="port-badge bg-green-100 text-green-800 px-2 py-1 rounded text-sm">:3006</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Integração Carl Zeiss Vision - Catálogo, pedidos, preços</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>React:</strong> 19.1.0</p>
+                <p><strong>State:</strong> TanStack Query v5.84.1</p>
+                <p><strong>Path:</strong> /zeiss/</p>
+                <p><strong>Plataformas:</strong> Web</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">OlhoVivo Lentes</h3>
+                <span class="port-badge bg-green-100 text-green-800 px-2 py-1 rounded text-sm">:3009</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Hub multi-laboratório - Zeiss, Rodenstock, HOYA, Essilor</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>React:</strong> 19.1.0</p>
+                <p><strong>State:</strong> TanStack Query v5.84.1</p>
+                <p><strong>Path:</strong> /lentes/</p>
+                <p><strong>Plataformas:</strong> Web, Mobile (Capacitor 6)</p>
+            </div>
+        </div>
+        
+            </div>
+        </section>
+
+        <!-- Backends -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">⚙️ APIs Backend</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Auth API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3001</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Autenticação centralizada - JWT, SSO, password reset</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 10.x</p>
+                <p><strong>ORM:</strong> MySQL2 (raw queries)</p>
+                <p><strong>DB:</strong> MySQL (painel.invistto.com:3305/invistto...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Admin Panel API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3002</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Backend do painel administrativo</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 10.x</p>
+                <p><strong>ORM:</strong> Prisma</p>
+                <p><strong>DB:</strong> MySQL (painel.invistto.com:3305/invistto...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Courier V2 API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3333</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Backend analytics WhatsApp - 29 endpoints</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 10.x</p>
+                <p><strong>ORM:</strong> Prisma + Firebird</p>
+                <p><strong>DB:</strong> MySQL + Firebird (multi-tenant)...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">ARI - Analytics REST Invistto</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3010</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">API de BI - 11 domínios analytics</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 11.x</p>
+                <p><strong>ORM:</strong> Knex.js</p>
+                <p><strong>DB:</strong> MySQL (painel.invistto.com:3305/invistto...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Zeiss Lab API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3005</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Backend integração Zeiss Vision</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 10.x</p>
+                <p><strong>ORM:</strong> MySQL2 + Firebird</p>
+                <p><strong>DB:</strong> MySQL (zeiss_*) + Firebird (ERP)...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">OlhoVivo Lens API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3015</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Backend multi-laboratório</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 10.3.0</p>
+                <p><strong>ORM:</strong> Prisma + Firebird</p>
+                <p><strong>DB:</strong> MySQL (lens_*) + Firebird...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">API Invistto (Pontomarket)</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3000</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">CRM multi-tenant - Integração Pontomarket</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 10.x</p>
+                <p><strong>ORM:</strong> MySQL2 (raw)</p>
+                <p><strong>DB:</strong> MySQL + Redis + RabbitMQ...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Sales API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3011</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Gestão vendas óticas</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 11.x</p>
+                <p><strong>ORM:</strong> Firebird + MySQL2</p>
+                <p><strong>DB:</strong> Firebird (ERP) + MySQL (auth)...</p>
+            </div>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="flex justify-between items-start mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Dashboard API</h3>
+                <span class="port-badge bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">:3333</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">Métricas e indicadores</p>
+            <div class="space-y-1 text-xs text-gray-500">
+                <p><strong>Framework:</strong> NestJS 11.x</p>
+                <p><strong>ORM:</strong> Prisma + Firebird</p>
+                <p><strong>DB:</strong> MySQL + Firebird...</p>
+            </div>
+        </div>
+        
+            </div>
+        </section>
+
+        <!-- Serviços -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🔧 Serviços Auxiliares</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-orange-500">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800">AI Service</h3>
+                <span class="port-badge bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">:3003</span>
+            </div>
+            <p class="text-gray-600 text-xs">NLP e processamento de consultas naturais</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-orange-500">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800">AI Billing Service</h3>
+                <span class="port-badge bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">:3004</span>
+            </div>
+            <p class="text-gray-600 text-xs">Tracking de uso de AI (tokens, custos)</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-orange-500">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800">WhatsApp Service</h3>
+                <span class="port-badge bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">:3007</span>
+            </div>
+            <p class="text-gray-600 text-xs">Envio de mensagens WhatsApp via Web.js</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-orange-500">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-800">ServerMCP</h3>
+                <span class="port-badge bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">:3002</span>
+            </div>
+            <p class="text-gray-600 text-xs">Gateway MCP para Claude Desktop</p>
+        </div>
+        
+            </div>
+        </section>
+
+        <!-- Bancos de Dados -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">💾 Bancos de Dados</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
+            <h3 class="font-bold text-lg text-gray-800 mb-2">MySQL Principal</h3>
+            <p class="text-gray-600 text-sm mb-3">painel.invistto.com:3305</p>
+            <p class="text-xs text-gray-500"><strong>Usado por:</strong> invistto-auth, admin-panel-v2, courier-v3, ari</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-amber-500">
+            <h3 class="font-bold text-lg text-gray-800 mb-2">Firebird ERP</h3>
+            <p class="text-gray-600 text-sm mb-3">inv04.invistto.com (e outros):3307</p>
+            <p class="text-xs text-gray-500"><strong>Usado por:</strong> courier-v3, zeiss-api-client, olhovivo-lens, sales-api</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-6 border-l-4 border-rose-500">
+            <h3 class="font-bold text-lg text-gray-800 mb-2">Redis</h3>
+            <p class="text-gray-600 text-sm mb-3">localhost:6379</p>
+            <p class="text-xs text-gray-500"><strong>Usado por:</strong> servermcp, ari-whatsapp-service, api-invistto, zeiss-api-client</p>
+        </div>
+        
+            </div>
+        </section>
+
+        <!-- Pacotes Compartilhados -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">📦 Pacotes Compartilhados</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-cyan-500">
+            <h3 class="font-bold text-gray-800 text-sm mb-1">@invistto/auth-react</h3>
+            <p class="text-gray-600 text-xs mb-2">Autenticação React centralizada</p>
+            <p class="text-xs text-gray-400">Exports: AuthProvider, useAuth, usePermissions</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-cyan-500">
+            <h3 class="font-bold text-gray-800 text-sm mb-1">@invistto/auth</h3>
+            <p class="text-gray-600 text-xs mb-2">Guards e decorators NestJS</p>
+            <p class="text-xs text-gray-400">Exports: JwtAuthGuard, RolesGuard, @CurrentUser</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-cyan-500">
+            <h3 class="font-bold text-gray-800 text-sm mb-1">@invistto/shared-system-config</h3>
+            <p class="text-gray-600 text-xs mb-2">Configurações centralizadas</p>
+            <p class="text-xs text-gray-400">Exports: InvisttoSystemConfig, systemConfig</p>
+        </div>
+        
+
+        <div class="card bg-white rounded-xl shadow-lg p-4 border-l-4 border-cyan-500">
+            <h3 class="font-bold text-gray-800 text-sm mb-1">@invistto/database-schema</h3>
+            <p class="text-gray-600 text-xs mb-2">Prisma schema compartilhado</p>
+            <p class="text-xs text-gray-400">Exports: PrismaClient, types</p>
+        </div>
+        
+            </div>
+        </section>
+
+        <!-- Mapa de Portas -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">🔌 Mapa de Portas</h2>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3000</div>
+            <div class="text-xs truncate">api-invistto (Pontom</div>
+        </div>
+        
+
+        <div class="bg-red-100 text-red-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3001</div>
+            <div class="text-xs truncate">invistto-auth (Auth </div>
+        </div>
+        
+
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3002</div>
+            <div class="text-xs truncate">admin-panel-api / se</div>
+        </div>
+        
+
+        <div class="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3003</div>
+            <div class="text-xs truncate">ai-service</div>
+        </div>
+        
+
+        <div class="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3004</div>
+            <div class="text-xs truncate">ai-billing-service</div>
+        </div>
+        
+
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3005</div>
+            <div class="text-xs truncate">zeiss-backend</div>
+        </div>
+        
+
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3006</div>
+            <div class="text-xs truncate">zeiss-frontend</div>
+        </div>
+        
+
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3007</div>
+            <div class="text-xs truncate">invistto-bi / ari-wh</div>
+        </div>
+        
+
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3008</div>
+            <div class="text-xs truncate">courier-frontend</div>
+        </div>
+        
+
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3009</div>
+            <div class="text-xs truncate">olhovivo-lens-fronte</div>
+        </div>
+        
+
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3010</div>
+            <div class="text-xs truncate">ari (Analytics API)</div>
+        </div>
+        
+
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3011</div>
+            <div class="text-xs truncate">sales-api</div>
+        </div>
+        
+
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3015</div>
+            <div class="text-xs truncate">olhovivo-lens-backen</div>
+        </div>
+        
+
+        <div class="bg-purple-100 text-purple-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:3333</div>
+            <div class="text-xs truncate">courier-api / dash-i</div>
+        </div>
+        
+
+        <div class="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-center">
+            <div class="font-mono font-bold">:5173</div>
+            <div class="text-xs truncate">admin-panel-frontend</div>
+        </div>
+        
+                </div>
+            </div>
+        </section>
+
+        <!-- Problemas de Padronização -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">⚠️ Problemas de Padronização</h2>
+
+            <div class="space-y-4">
+                <details class="bg-red-50 rounded-xl p-4 border border-red-200">
+                    <summary class="font-bold text-red-800 flex items-center gap-2">
+                        🔴 Críticos (3)
+                    </summary>
+                    <div class="mt-4 space-y-3">
+                        
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">Versões React inconsistentes</p>
+            <p class="text-sm text-gray-600 mt-1">18.3.1 (admin-panel) vs 19.1.0 (bi, zeiss, olhovivo) vs 19.2.0+ (hub, courier)</p>
+            <p class="text-sm text-green-700 mt-1">💡 Padronizar para React 19.1.0 (LTS estável)</p>
+        </div>
+        
+
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">ORMs diferentes</p>
+            <p class="text-sm text-gray-600 mt-1">Prisma vs Knex.js vs MySQL2 raw vs TypeORM</p>
+            <p class="text-sm text-green-700 mt-1">💡 Consolidar em Prisma para novos projetos</p>
+        </div>
+        
+
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">Portas conflitantes</p>
+            <p class="text-sm text-gray-600 mt-1">ARI e olhovivo-lens usam porta 3010</p>
+            <p class="text-sm text-green-700 mt-1">💡 olhovivo-lens já migrado para 3015</p>
+        </div>
+        
+                    </div>
+                </details>
+
+                <details class="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                    <summary class="font-bold text-yellow-800 flex items-center gap-2">
+                        🟡 Avisos (3)
+                    </summary>
+                    <div class="mt-4 space-y-3">
+                        
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">Storage keys inconsistentes</p>
+            <p class="text-sm text-gray-600 mt-1">@ari:token vs @courier:token vs @invistto-bi:token</p>
+            <p class="text-sm text-green-700 mt-1">💡 Padronizar para @invistto:{app}:token</p>
+        </div>
+        
+
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">NestJS versions diferentes</p>
+            <p class="text-sm text-gray-600 mt-1">10.x vs 11.x</p>
+            <p class="text-sm text-green-700 mt-1">💡 Migrar todos para NestJS 11.x</p>
+        </div>
+        
+
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">Projetos legados sem manutenção</p>
+            <p class="text-sm text-gray-600 mt-1">projeto-invistto, superV, superpdv, whoamii</p>
+            <p class="text-sm text-green-700 mt-1">💡 Arquivar ou depreciar oficialmente</p>
+        </div>
+        
+                    </div>
+                </details>
+
+                <details class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <summary class="font-bold text-blue-800 flex items-center gap-2">
+                        🔵 Melhorias (2)
+                    </summary>
+                    <div class="mt-4 space-y-3">
+                        
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">Monorepo inconsistente</p>
+            <p class="text-sm text-gray-600 mt-1">admin-panel e courier são monorepo, outros são single</p>
+            <p class="text-sm text-green-700 mt-1">💡 Considerar turborepo/nx para todos</p>
+        </div>
+        
+
+        <div class="bg-white rounded-lg p-3">
+            <p class="font-semibold text-gray-800">Validação SQL</p>
+            <p class="text-sm text-gray-600 mt-1">Apenas courier tem SqlSafeValidator</p>
+            <p class="text-sm text-green-700 mt-1">💡 Implementar em todos os backends</p>
+        </div>
+        
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- Stack Padrão -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">✅ Stack Padrão Recomendada</h2>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-bold text-lg mb-3 text-green-700">Frontend</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>✓ <strong>React 19.1.0</strong> (LTS estável)</li>
+                            <li>✓ <strong>TypeScript 5.x</strong></li>
+                            <li>✓ <strong>Vite</strong> (build tool)</li>
+                            <li>✓ <strong>TanStack Query v5</strong> (state/cache)</li>
+                            <li>✓ <strong>TailwindCSS</strong> (styling)</li>
+                            <li>✓ <strong>Axios</strong> (HTTP client)</li>
+                            <li>✓ <strong>@invistto/auth-react</strong> (auth)</li>
+                            <li>✓ <strong>Recharts</strong> (charts)</li>
+                            <li>✓ <strong>Capacitor 6</strong> (mobile)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-3 text-purple-700">Backend</h3>
+                        <ul class="space-y-2 text-gray-700">
+                            <li>✓ <strong>NestJS 11.x</strong></li>
+                            <li>✓ <strong>TypeScript 5.x</strong></li>
+                            <li>✓ <strong>Prisma</strong> (ORM MySQL)</li>
+                            <li>✓ <strong>@invistto/auth</strong> (guards)</li>
+                            <li>✓ <strong>class-validator</strong> (DTOs)</li>
+                            <li>✓ <strong>Swagger</strong> (docs)</li>
+                            <li>✓ <strong>Redis</strong> (cache)</li>
+                            <li>✓ <strong>Bull</strong> (queues)</li>
+                            <li>✓ <strong>node-firebird</strong> (legacy)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 py-8 border-t">
+            <p>Gerado automaticamente por Claude Code</p>
+            <p class="text-sm mt-1">Última atualização: 2026-01-24T21:36:08</p>
+        </footer>
+    </div>
+
+    <script>
+        mermaid.initialize({{ startOnLoad: true, theme: 'default' }});
+    </script>
+</body>
+</html>

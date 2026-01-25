@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecossistema Invistto - Índice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        .card {
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="text-white p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">🏗️ Ecossistema Invistto</h1>
+            <p class="text-slate-400">Documentação visual completa do sistema</p>
+            <p class="text-slate-500 text-sm mt-2">Gerado em: 2026-01-24</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Página 1: Dashboard Completo -->
+            <a href="ECOSSISTEMA-INVISTTO.html" class="card block bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-blue-500">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">📊</div>
+                    <div>
+                        <h2 class="text-xl font-bold">Dashboard Completo</h2>
+                        <p class="text-slate-400 text-sm">ECOSSISTEMA-INVISTTO.html</p>
+                    </div>
+                </div>
+                <p class="text-slate-300 text-sm mb-4">
+                    Visão geral com diagrama Mermaid, cards de todos os projetos,
+                    problemas de padronização e stack recomendada.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Mermaid</span>
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">28 projetos</span>
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Padronização</span>
+                </div>
+            </a>
+
+            <!-- Página 2: Diagrama Interativo -->
+            <a href="DIAGRAMA-ECOSSISTEMA-INTERATIVO.html" class="card block bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-green-500">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl">🔗</div>
+                    <div>
+                        <h2 class="text-xl font-bold">Diagrama Interativo</h2>
+                        <p class="text-slate-400 text-sm">DIAGRAMA-ECOSSISTEMA-INTERATIVO.html</p>
+                    </div>
+                </div>
+                <p class="text-slate-300 text-sm mb-4">
+                    Grafo de força D3.js. Arraste os nós para reorganizar,
+                    veja conexões e tooltips com detalhes.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">D3.js</span>
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Interativo</span>
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Drag & Drop</span>
+                </div>
+            </a>
+
+            <!-- Página 3: Hierarquia -->
+            <a href="DIAGRAMA-HIERARQUIA.html" class="card block bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-amber-500">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center text-2xl">🌳</div>
+                    <div>
+                        <h2 class="text-xl font-bold">Visão Hierárquica</h2>
+                        <p class="text-slate-400 text-sm">DIAGRAMA-HIERARQUIA.html</p>
+                    </div>
+                </div>
+                <p class="text-slate-300 text-sm mb-4">
+                    Árvore mostrando: Bancos de dados → Backends → Frontends.
+                    Inclui os múltiplos Firebirds e tabelas MySQL.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Tree View</span>
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Firebird Multi-tenant</span>
+                    <span class="bg-slate-700 px-2 py-1 rounded text-xs">Tabelas</span>
+                </div>
+            </a>
+
+            <!-- Documentação Markdown -->
+            <div class="card bg-slate-800 rounded-xl p-6 border border-slate-700">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-2xl">📄</div>
+                    <div>
+                        <h2 class="text-xl font-bold">Documentação</h2>
+                        <p class="text-slate-400 text-sm">Arquivos Markdown</p>
+                    </div>
+                </div>
+                <ul class="text-slate-300 text-sm space-y-2">
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-400">→</span>
+                        <code class="bg-slate-900 px-2 py-1 rounded text-xs">PROJETOS-ATIVOS.md</code>
+                        <span class="text-slate-500">12 projetos ativos</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-400">→</span>
+                        <code class="bg-slate-900 px-2 py-1 rounded text-xs">ECOSSISTEMA-INVISTTO-RESUMO.md</code>
+                        <span class="text-slate-500">Resumo executivo</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="text-green-400">→</span>
+                        <code class="bg-slate-900 px-2 py-1 rounded text-xs">ECOSSISTEMA-INVISTTO.json</code>
+                        <span class="text-slate-500">Dados JSON</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Resumo Rápido -->
+        <div class="mt-12 bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+            <h3 class="text-lg font-bold mb-4">📌 Resumo Rápido</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="bg-slate-900 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-blue-400">12</div>
+                    <div class="text-xs text-slate-400">Projetos Ativos</div>
+                </div>
+                <div class="bg-slate-900 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-green-400">6</div>
+                    <div class="text-xs text-slate-400">Frontends</div>
+                </div>
+                <div class="bg-slate-900 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-purple-400">8</div>
+                    <div class="text-xs text-slate-400">Backends</div>
+                </div>
+                <div class="bg-slate-900 rounded-lg p-4">
+                    <div class="text-3xl font-bold text-amber-400">3</div>
+                    <div class="text-xs text-slate-400">Bancos (MySQL, Firebird, Redis)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portas -->
+        <div class="mt-8 bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+            <h3 class="text-lg font-bold mb-4">🔌 Mapa de Portas</h3>
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-2 font-mono text-xs">
+                <div class="bg-red-900/50 p-2 rounded text-center">:3001<br><span class="text-red-300">Auth</span></div>
+                <div class="bg-purple-900/50 p-2 rounded text-center">:3002<br><span class="text-purple-300">Admin API</span></div>
+                <div class="bg-purple-900/50 p-2 rounded text-center">:3005<br><span class="text-purple-300">Zeiss API</span></div>
+                <div class="bg-green-900/50 p-2 rounded text-center">:3006<br><span class="text-green-300">Zeiss FE</span></div>
+                <div class="bg-green-900/50 p-2 rounded text-center">:3007<br><span class="text-green-300">BI</span></div>
+                <div class="bg-green-900/50 p-2 rounded text-center">:3008<br><span class="text-green-300">Courier FE</span></div>
+                <div class="bg-green-900/50 p-2 rounded text-center">:3009<br><span class="text-green-300">Lens FE</span></div>
+                <div class="bg-purple-900/50 p-2 rounded text-center">:3010<br><span class="text-purple-300">ARI</span></div>
+                <div class="bg-purple-900/50 p-2 rounded text-center">:3011<br><span class="text-purple-300">Sales</span></div>
+                <div class="bg-purple-900/50 p-2 rounded text-center">:3015<br><span class="text-purple-300">Lens API</span></div>
+                <div class="bg-purple-900/50 p-2 rounded text-center">:3333<br><span class="text-purple-300">Courier API</span></div>
+                <div class="bg-blue-900/50 p-2 rounded text-center">:5173<br><span class="text-blue-300">Hub/Admin</span></div>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-slate-500 text-sm">
+            <p>Gerado automaticamente por Claude Code</p>
+        </footer>
+    </div>
+</body>
+</html>

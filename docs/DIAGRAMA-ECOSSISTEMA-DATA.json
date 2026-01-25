@@ -1,0 +1,281 @@
+{
+  "invistto-hub": {
+    "nome": "Invistto Hub",
+    "tipo": "frontend",
+    "porta": 5173,
+    "path_prod": "/hub/",
+    "descricao": "SSO Gateway Central",
+    "stack": "React 19.2.0 + Vite",
+    "status": "ativo",
+    "plataformas": [
+      "Web",
+      "Desktop (Tauri)",
+      "Mobile"
+    ],
+    "conecta": [
+      "invistto-auth"
+    ],
+    "cor": "#3b82f6"
+  },
+  "invistto-auth": {
+    "nome": "Auth API",
+    "tipo": "backend",
+    "porta": 3001,
+    "descricao": "Autenticação Centralizada",
+    "stack": "NestJS 10 + MySQL",
+    "status": "ativo",
+    "features": [
+      "JWT",
+      "SSO",
+      "httpOnly Cookies"
+    ],
+    "conecta": [
+      "mysql-main"
+    ],
+    "cor": "#ef4444"
+  },
+  "admin-panel-frontend": {
+    "nome": "Admin Panel",
+    "tipo": "frontend",
+    "porta": 5173,
+    "path_prod": "/admin/",
+    "descricao": "Painel Administrativo",
+    "stack": "React 18.3.1 + Vite",
+    "status": "ativo",
+    "conecta": [
+      "invistto-auth",
+      "admin-panel-api"
+    ],
+    "cor": "#10b981"
+  },
+  "admin-panel-api": {
+    "nome": "Admin API",
+    "tipo": "backend",
+    "porta": 3002,
+    "descricao": "Backend Admin",
+    "stack": "NestJS 10 + Prisma",
+    "status": "ativo",
+    "conecta": [
+      "mysql-main"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "courier-frontend": {
+    "nome": "Courier Analytics",
+    "tipo": "frontend",
+    "porta": 3008,
+    "path_prod": "/courier/",
+    "descricao": "Dashboard WhatsApp",
+    "stack": "React 19.2.3 + TanStack Query",
+    "status": "ativo",
+    "conecta": [
+      "invistto-auth",
+      "courier-api"
+    ],
+    "cor": "#10b981"
+  },
+  "courier-api": {
+    "nome": "Courier API",
+    "tipo": "backend",
+    "porta": 3333,
+    "descricao": "29 Endpoints Analytics",
+    "stack": "NestJS 10 + Prisma + Firebird",
+    "status": "ativo",
+    "conecta": [
+      "mysql-main",
+      "firebird"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "invistto-bi": {
+    "nome": "Invistto BI",
+    "tipo": "frontend",
+    "porta": 3007,
+    "path_prod": "/bi/",
+    "descricao": "Business Intelligence",
+    "stack": "React 19.1.0 + Recharts",
+    "status": "ativo",
+    "plataformas": [
+      "Web",
+      "Mobile"
+    ],
+    "conecta": [
+      "invistto-auth",
+      "ari"
+    ],
+    "cor": "#10b981"
+  },
+  "ari": {
+    "nome": "ARI Analytics",
+    "tipo": "backend",
+    "porta": 3010,
+    "descricao": "API de BI (11 módulos)",
+    "stack": "NestJS 11 + Knex.js",
+    "status": "ativo",
+    "modulos": [
+      "Vendas",
+      "Financeiro",
+      "Clientes",
+      "Produtos",
+      "Insights"
+    ],
+    "conecta": [
+      "mysql-main",
+      "servermcp"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "zeiss-frontend": {
+    "nome": "Zeiss Client",
+    "tipo": "frontend",
+    "porta": 3006,
+    "path_prod": "/zeiss/",
+    "descricao": "Integração Carl Zeiss",
+    "stack": "React 19.1.0 + MUI",
+    "status": "ativo",
+    "conecta": [
+      "invistto-auth",
+      "zeiss-api"
+    ],
+    "cor": "#10b981"
+  },
+  "zeiss-api": {
+    "nome": "Zeiss API",
+    "tipo": "backend",
+    "porta": 3005,
+    "descricao": "Catálogo e Pedidos Zeiss",
+    "stack": "NestJS 10 + MySQL + Firebird",
+    "status": "ativo",
+    "features": [
+      "BullMQ",
+      "Redis",
+      "WebSocket"
+    ],
+    "conecta": [
+      "mysql-main",
+      "firebird",
+      "redis",
+      "zeiss-sao-api"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "lens-frontend": {
+    "nome": "OlhoVivo Lens",
+    "tipo": "frontend",
+    "porta": 3009,
+    "path_prod": "/lentes/",
+    "descricao": "Hub Multi-Laboratório",
+    "stack": "React 19.1.0 + TanStack Query",
+    "status": "ativo",
+    "plataformas": [
+      "Web",
+      "Mobile"
+    ],
+    "conecta": [
+      "invistto-auth",
+      "lens-api"
+    ],
+    "cor": "#10b981"
+  },
+  "lens-api": {
+    "nome": "Lens API",
+    "tipo": "backend",
+    "porta": 3015,
+    "descricao": "Consolidação de Catálogos",
+    "stack": "NestJS 10 + Prisma + Firebird",
+    "status": "ativo",
+    "labs": [
+      "Zeiss",
+      "Rodenstock",
+      "HOYA",
+      "Essilor"
+    ],
+    "conecta": [
+      "mysql-main",
+      "firebird"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "api-invistto": {
+    "nome": "API Invistto",
+    "tipo": "backend",
+    "porta": 3000,
+    "descricao": "CRM Pontomarket",
+    "stack": "NestJS 10 + MySQL",
+    "status": "ativo",
+    "features": [
+      "Rate Limiting",
+      "AI Integration"
+    ],
+    "conecta": [
+      "mysql-main",
+      "redis"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "servermcp": {
+    "nome": "ServerMCP",
+    "tipo": "service",
+    "porta": 3002,
+    "descricao": "Gateway Claude Desktop",
+    "stack": "Express.js + Redis",
+    "status": "ativo",
+    "features": [
+      "Basic→JWT",
+      "Circuit Breaker"
+    ],
+    "conecta": [
+      "ari",
+      "redis"
+    ],
+    "cor": "#f59e0b"
+  },
+  "sales-api": {
+    "nome": "Sales API",
+    "tipo": "backend",
+    "porta": 3011,
+    "descricao": "Vendas Óticas",
+    "stack": "NestJS 11 + Firebird",
+    "status": "ativo",
+    "conecta": [
+      "firebird",
+      "mysql-main"
+    ],
+    "cor": "#8b5cf6"
+  },
+  "mysql-main": {
+    "nome": "MySQL Principal",
+    "tipo": "database",
+    "porta": 3305,
+    "host": "painel.invistto.com",
+    "descricao": "Banco centralizado",
+    "tabelas": "80+ tabelas",
+    "conecta": [],
+    "cor": "#6366f1"
+  },
+  "firebird": {
+    "nome": "Firebird ERPs",
+    "tipo": "database",
+    "porta": 3307,
+    "host": "Múltiplos (1 por cliente)",
+    "descricao": "Bancos legados ERP",
+    "conecta": [],
+    "cor": "#6366f1"
+  },
+  "redis": {
+    "nome": "Redis Cache",
+    "tipo": "database",
+    "porta": 6379,
+    "host": "localhost",
+    "descricao": "Cache e Filas",
+    "conecta": [],
+    "cor": "#6366f1"
+  },
+  "zeiss-sao-api": {
+    "nome": "Zeiss SAO API",
+    "tipo": "external",
+    "descricao": "API Externa Carl Zeiss",
+    "conecta": [],
+    "cor": "#94a3b8"
+  }
+}

@@ -1,0 +1,485 @@
+{
+  "meta": {
+    "generated_at": "2026-01-24T21:36:08.098327",
+    "total_projects": 28,
+    "active_projects": 15,
+    "databases": 3,
+    "total_tables": 100
+  },
+  "frontends": {
+    "invistto-hub": {
+      "name": "Invistto Hub",
+      "description": "Central Hub - SSO Gateway para todos os apps",
+      "port": 5173,
+      "production_path": "/hub/",
+      "react_version": "19.2.0",
+      "state_management": "TanStack Query v5.90.18",
+      "ui_framework": "TailwindCSS + Heroicons + Lucide",
+      "http_client": "axios 1.13.2",
+      "auth": "@invistto/auth-react",
+      "auth_config": {
+        "tokenKey": "@invistto-hub:token",
+        "userKey": "@invistto-hub:user",
+        "useCookies": "!isTauri",
+        "validateOnLoad": true
+      },
+      "platforms": [
+        "Web",
+        "Desktop (Tauri 2)",
+        "Mobile (Capacitor 6)"
+      ],
+      "special": "SSO com código seguro (30s)"
+    },
+    "admin-panel-v2": {
+      "name": "Admin Panel",
+      "description": "Painel administrativo - Gestão de usuários, bases, roles",
+      "port": 5173,
+      "production_path": "/admin/",
+      "react_version": "18.3.1",
+      "state_management": "TanStack Query v5.90.12",
+      "ui_framework": "TailwindCSS",
+      "http_client": "axios",
+      "auth": "@invistto/auth-react",
+      "auth_config": {
+        "tokenKey": "@ari:token",
+        "userKey": "@ari:user",
+        "useCookies": true,
+        "validateOnLoad": true
+      },
+      "backend_port": 3002,
+      "type": "monorepo"
+    },
+    "courier-v3": {
+      "name": "Courier Analytics",
+      "description": "Dashboard WhatsApp - ROI campanhas, análise produtos",
+      "port": 3008,
+      "production_path": "/courier/",
+      "react_version": "19.2.3",
+      "state_management": "TanStack Query v5.90.20",
+      "ui_framework": "TailwindCSS + Lucide + Recharts",
+      "http_client": "axios",
+      "auth": "@invistto/auth-react",
+      "auth_config": {
+        "tokenKey": "@courier:token",
+        "userKey": "@courier:user",
+        "useCookies": true,
+        "validateOnLoad": true
+      },
+      "backend_port": 3333,
+      "type": "monorepo"
+    },
+    "invistto-bi": {
+      "name": "Invistto BI",
+      "description": "Business Intelligence - Vendas, financeiro, estoque",
+      "port": 3007,
+      "production_path": "/bi/",
+      "react_version": "19.1.0",
+      "state_management": "TanStack Query v5.84.1",
+      "ui_framework": "TailwindCSS + Heroicons + Radix UI + Recharts",
+      "http_client": "axios 1.4.0",
+      "auth": "@invistto/auth-react",
+      "auth_config": {
+        "tokenKey": "@invistto-bi:token",
+        "userKey": "@invistto-bi:user",
+        "useCookies": true,
+        "validateOnLoad": true
+      },
+      "backend": "ARI (porta 3010)",
+      "platforms": [
+        "Web",
+        "Mobile (Capacitor 6)"
+      ]
+    },
+    "zeiss-api-client": {
+      "name": "Zeiss Lab Client",
+      "description": "Integração Carl Zeiss Vision - Catálogo, pedidos, preços",
+      "port": 3006,
+      "production_path": "/zeiss/",
+      "react_version": "19.1.0",
+      "state_management": "TanStack Query v5.84.1",
+      "ui_framework": "Material UI 7.3.1 + TailwindCSS + Recharts",
+      "http_client": "axios 1.4.0",
+      "auth": "@invistto/auth-react",
+      "backend_port": 3005,
+      "special": "Integração Zeiss SAO API + Firebird multi-tenant"
+    },
+    "olhovivo-lens": {
+      "name": "OlhoVivo Lentes",
+      "description": "Hub multi-laboratório - Zeiss, Rodenstock, HOYA, Essilor",
+      "port": 3009,
+      "production_path": "/lentes/",
+      "react_version": "19.1.0",
+      "state_management": "TanStack Query v5.84.1",
+      "ui_framework": "TailwindCSS + Heroicons + Recharts",
+      "http_client": "axios 1.4.0",
+      "auth": "@invistto/auth-react",
+      "backend_port": 3015,
+      "platforms": [
+        "Web",
+        "Mobile (Capacitor 6)"
+      ]
+    }
+  },
+  "backends": {
+    "invistto-auth": {
+      "name": "Auth API",
+      "description": "Autenticação centralizada - JWT, SSO, password reset",
+      "port": 3001,
+      "framework": "NestJS 10.x",
+      "orm": "MySQL2 (raw queries)",
+      "database": "MySQL (painel.invistto.com:3305/invistto)",
+      "endpoints": [
+        "POST /auth/login",
+        "GET /auth/validate",
+        "POST /auth/refresh",
+        "POST /auth/logout",
+        "GET /auth/profile",
+        "POST /auth/forgot-password",
+        "POST /auth/reset-password",
+        "POST /auth/sso/init",
+        "POST /auth/sso/exchange",
+        "POST /auth/sso/validate-token"
+      ],
+      "features": [
+        "JWT 24h",
+        "httpOnly cookies",
+        "CSRF protection",
+        "SSO código 30s"
+      ]
+    },
+    "admin-panel-api": {
+      "name": "Admin Panel API",
+      "description": "Backend do painel administrativo",
+      "port": 3002,
+      "framework": "NestJS 10.x",
+      "orm": "Prisma",
+      "database": "MySQL (painel.invistto.com:3305/invistto)",
+      "models": [
+        "User",
+        "Role",
+        "Permission",
+        "Base",
+        "UserRole",
+        "UserBase",
+        "RolePermission"
+      ]
+    },
+    "courier-api": {
+      "name": "Courier V2 API",
+      "description": "Backend analytics WhatsApp - 29 endpoints",
+      "port": 3333,
+      "framework": "NestJS 10.x",
+      "orm": "Prisma + Firebird",
+      "database": "MySQL + Firebird (multi-tenant)",
+      "endpoints_count": 29,
+      "features": [
+        "DTOs validados",
+        "SqlSafeValidator",
+        "Cache Redis"
+      ]
+    },
+    "ari": {
+      "name": "ARI - Analytics REST Invistto",
+      "description": "API de BI - 11 domínios analytics",
+      "port": 3010,
+      "framework": "NestJS 11.x",
+      "orm": "Knex.js",
+      "database": "MySQL (painel.invistto.com:3305/invistto)",
+      "modules": [
+        "VendasModule",
+        "FinanceiroModule",
+        "VendedoresModule",
+        "ClientesModule",
+        "LojasModule",
+        "ProdutosModule",
+        "EstoqueModule",
+        "MedicosModule",
+        "ComprasModule",
+        "OticaModule",
+        "InsightsModule"
+      ],
+      "features": [
+        "MCP Claude integration",
+        "AI billing tracking"
+      ]
+    },
+    "zeiss-backend": {
+      "name": "Zeiss Lab API",
+      "description": "Backend integração Zeiss Vision",
+      "port": 3005,
+      "framework": "NestJS 10.x",
+      "orm": "MySQL2 + Firebird",
+      "database": "MySQL (zeiss_*) + Firebird (ERP)",
+      "features": [
+        "BullMQ jobs",
+        "Redis cache",
+        "WebSocket",
+        "Zeiss SAO API"
+      ]
+    },
+    "olhovivo-backend": {
+      "name": "OlhoVivo Lens API",
+      "description": "Backend multi-laboratório",
+      "port": 3015,
+      "framework": "NestJS 10.3.0",
+      "orm": "Prisma + Firebird",
+      "database": "MySQL (lens_*) + Firebird",
+      "features": [
+        "Multi-lab consolidation",
+        "Sync batch",
+        "Margin calculation"
+      ]
+    },
+    "api-invistto": {
+      "name": "API Invistto (Pontomarket)",
+      "description": "CRM multi-tenant - Integração Pontomarket",
+      "port": 3000,
+      "framework": "NestJS 10.x",
+      "orm": "MySQL2 (raw)",
+      "database": "MySQL + Redis + RabbitMQ",
+      "features": [
+        "Rate limiting",
+        "AI integration (Claude/OpenAI)",
+        "Message queue"
+      ]
+    },
+    "sales-api": {
+      "name": "Sales API",
+      "description": "Gestão vendas óticas",
+      "port": 3011,
+      "framework": "NestJS 11.x",
+      "orm": "Firebird + MySQL2",
+      "database": "Firebird (ERP) + MySQL (auth)"
+    },
+    "dash-invistto-api": {
+      "name": "Dashboard API",
+      "description": "Métricas e indicadores",
+      "port": 3333,
+      "framework": "NestJS 11.x",
+      "orm": "Prisma + Firebird",
+      "database": "MySQL + Firebird"
+    }
+  },
+  "services": {
+    "ai-service": {
+      "name": "AI Service",
+      "description": "NLP e processamento de consultas naturais",
+      "port": 3003,
+      "framework": "NestJS 11.x",
+      "integrates_with": [
+        "ai-billing-service (3004)"
+      ]
+    },
+    "ai-billing-service": {
+      "name": "AI Billing Service",
+      "description": "Tracking de uso de AI (tokens, custos)",
+      "port": 3004,
+      "framework": "Express.js",
+      "orm": "Prisma",
+      "database": "MySQL",
+      "features": [
+        "Cron jobs",
+        "Invoice generation",
+        "Usage limits"
+      ]
+    },
+    "ari-whatsapp-service": {
+      "name": "WhatsApp Service",
+      "description": "Envio de mensagens WhatsApp via Web.js",
+      "port": 3007,
+      "framework": "NestJS 10.x",
+      "queue": "Bull + Redis",
+      "features": [
+        "Rate limiting",
+        "Retry strategy",
+        "Session management"
+      ]
+    },
+    "servermcp": {
+      "name": "ServerMCP",
+      "description": "Gateway MCP para Claude Desktop",
+      "port": 3002,
+      "framework": "Express.js (Node.js)",
+      "features": [
+        "Basic→JWT conversion",
+        "Circuit breaker",
+        "Redis cache"
+      ],
+      "integrates_with": [
+        "ari (3010)",
+        "ai-service (3003)"
+      ]
+    }
+  },
+  "shared_packages": {
+    "@invistto/auth-react": {
+      "name": "Auth React",
+      "description": "Autenticação React centralizada",
+      "location": "invistto-auth/packages/react",
+      "exports": [
+        "AuthProvider",
+        "useAuth",
+        "usePermissions",
+        "useUserRole"
+      ],
+      "features": [
+        "SSO support",
+        "httpOnly cookies",
+        "Token refresh"
+      ]
+    },
+    "@invistto/auth": {
+      "name": "Auth Core",
+      "description": "Guards e decorators NestJS",
+      "location": "invistto-auth/packages/core",
+      "exports": [
+        "JwtAuthGuard",
+        "RolesGuard",
+        "@CurrentUser",
+        "@Public",
+        "@Roles"
+      ]
+    },
+    "@invistto/shared-system-config": {
+      "name": "Shared Config",
+      "description": "Configurações centralizadas",
+      "location": "sharedconfig",
+      "exports": [
+        "InvisttoSystemConfig",
+        "systemConfig"
+      ]
+    },
+    "@invistto/database-schema": {
+      "name": "Database Schema",
+      "description": "Prisma schema compartilhado",
+      "location": "sharedschema",
+      "exports": [
+        "PrismaClient",
+        "types"
+      ]
+    }
+  },
+  "databases": {
+    "mysql_main": {
+      "name": "MySQL Principal",
+      "host": "painel.invistto.com",
+      "port": 3305,
+      "database": "invistto",
+      "tables_count": "80+",
+      "key_tables": [
+        "ariusers - Usuários do sistema",
+        "base - Multi-tenant bases",
+        "courier - Mensagens WhatsApp",
+        "vd_pedido - Pedidos de venda",
+        "vd_pedido_itens - Itens dos pedidos",
+        "vd_campanha - Campanhas marketing",
+        "ge_pessoa - Cadastro de pessoas",
+        "ge_empresa - Empresas/Lojas",
+        "es_produto - Produtos",
+        "ari_ai_usage - Uso de AI",
+        "ari_access_logs - Logs de acesso"
+      ],
+      "used_by": [
+        "invistto-auth",
+        "admin-panel-v2",
+        "courier-v3",
+        "ari",
+        "api-invistto",
+        "ai-billing-service"
+      ]
+    },
+    "firebird_erp": {
+      "name": "Firebird ERP",
+      "host": "inv04.invistto.com (e outros)",
+      "port": 3307,
+      "description": "Bancos legados dos ERPs - 1 por cliente",
+      "used_by": [
+        "courier-v3",
+        "zeiss-api-client",
+        "olhovivo-lens",
+        "sales-api",
+        "dash-invistto-api"
+      ]
+    },
+    "redis": {
+      "name": "Redis",
+      "host": "localhost",
+      "port": 6379,
+      "databases": {
+        "0": "ari-nest cache",
+        "1": "servermcp cache"
+      },
+      "used_by": [
+        "servermcp",
+        "ari-whatsapp-service",
+        "api-invistto",
+        "zeiss-api-client"
+      ]
+    }
+  },
+  "standardization_issues": {
+    "critical": [
+      {
+        "issue": "Versões React inconsistentes",
+        "details": "18.3.1 (admin-panel) vs 19.1.0 (bi, zeiss, olhovivo) vs 19.2.0+ (hub, courier)",
+        "recommendation": "Padronizar para React 19.1.0 (LTS estável)"
+      },
+      {
+        "issue": "ORMs diferentes",
+        "details": "Prisma vs Knex.js vs MySQL2 raw vs TypeORM",
+        "recommendation": "Consolidar em Prisma para novos projetos"
+      },
+      {
+        "issue": "Portas conflitantes",
+        "details": "ARI e olhovivo-lens usam porta 3010",
+        "recommendation": "olhovivo-lens já migrado para 3015"
+      }
+    ],
+    "warnings": [
+      {
+        "issue": "Storage keys inconsistentes",
+        "details": "@ari:token vs @courier:token vs @invistto-bi:token",
+        "recommendation": "Padronizar para @invistto:{app}:token"
+      },
+      {
+        "issue": "NestJS versions diferentes",
+        "details": "10.x vs 11.x",
+        "recommendation": "Migrar todos para NestJS 11.x"
+      },
+      {
+        "issue": "Projetos legados sem manutenção",
+        "details": "projeto-invistto, superV, superpdv, whoamii",
+        "recommendation": "Arquivar ou depreciar oficialmente"
+      }
+    ],
+    "improvements": [
+      {
+        "issue": "Monorepo inconsistente",
+        "details": "admin-panel e courier são monorepo, outros são single",
+        "recommendation": "Considerar turborepo/nx para todos"
+      },
+      {
+        "issue": "Validação SQL",
+        "details": "Apenas courier tem SqlSafeValidator",
+        "recommendation": "Implementar em todos os backends"
+      }
+    ]
+  },
+  "ports_map": {
+    "3000": "api-invistto (Pontomarket CRM)",
+    "3001": "invistto-auth (Auth API)",
+    "3002": "admin-panel-api / servermcp",
+    "3003": "ai-service",
+    "3004": "ai-billing-service",
+    "3005": "zeiss-backend",
+    "3006": "zeiss-frontend",
+    "3007": "invistto-bi / ari-whatsapp-service",
+    "3008": "courier-frontend",
+    "3009": "olhovivo-lens-frontend",
+    "3010": "ari (Analytics API)",
+    "3011": "sales-api",
+    "3015": "olhovivo-lens-backend",
+    "3333": "courier-api / dash-invistto-api",
+    "5173": "admin-panel-frontend / invistto-hub"
+  }
+}

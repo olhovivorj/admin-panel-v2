@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecossistema Invistto - Visão Hierárquica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        .tree { padding: 40px; }
+
+        .tree ul {
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tree li {
+            list-style: none;
+            position: relative;
+            padding: 10px 0 10px 30px;
+        }
+
+        .tree li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: #475569;
+        }
+
+        .tree li::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25px;
+            width: 25px;
+            height: 1px;
+            background: #475569;
+        }
+
+        .tree li:last-child::before {
+            height: 25px;
+        }
+
+        .tree > ul > li::before,
+        .tree > ul > li::after {
+            display: none;
+        }
+
+        .node {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.2s;
+        }
+
+        .node:hover {
+            transform: translateX(5px);
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .node-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .node-info h3 {
+            font-weight: 600;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .node-info p {
+            font-size: 11px;
+            color: #94a3b8;
+            margin: 2px 0 0 0;
+        }
+
+        .port {
+            font-family: monospace;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #0f172a;
+            color: #60a5fa;
+        }
+
+        /* Cores por tipo */
+        .db-mysql .node-icon { background: #3b82f6; }
+        .db-firebird .node-icon { background: #f59e0b; }
+        .db-redis .node-icon { background: #ef4444; }
+        .svc-auth .node-icon { background: #ef4444; }
+        .svc-backend .node-icon { background: #8b5cf6; }
+        .svc-frontend .node-icon { background: #10b981; }
+        .svc-service .node-icon { background: #f59e0b; }
+        .svc-hub .node-icon { background: #3b82f6; }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #64748b;
+            margin: 30px 0 15px 30px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #334155;
+            display: inline-block;
+        }
+
+        .firebird-tenant {
+            background: #1a1a2e !important;
+            border-color: #f59e0b !important;
+            border-style: dashed !important;
+        }
+
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            font-size: 12px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 4px;
+        }
+
+        .nav-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #2563eb;
+        }
+
+        .table-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+            margin-left: 30px;
+            margin-top: 10px;
+        }
+
+        .table-item {
+            font-size: 11px;
+            padding: 6px 10px;
+            background: #0f172a;
+            border-radius: 4px;
+            color: #94a3b8;
+            font-family: monospace;
+        }
+
+        .table-item::before {
+            content: '📋 ';
+        }
+    </style>
+</head>
+<body>
+    <a href="DIAGRAMA-ECOSSISTEMA-INTERATIVO.html" class="nav-link">← Diagrama Interativo</a>
+
+    <div class="p-8">
+        <h1 class="text-3xl font-bold mb-2">🗄️ Ecossistema Invistto - Hierarquia</h1>
+        <p class="text-slate-400 mb-8">Visão em árvore: Bancos de Dados → Backends → Frontends</p>
+
+        <div class="tree">
+            <ul>
+                <!-- ===== NÍVEL 1: BANCOS DE DADOS ===== -->
+                <li>
+                    <div class="section-title">Camada de Dados</div>
+                    <ul>
+                        <!-- MySQL Principal -->
+                        <li class="db-mysql">
+                            <div class="node">
+                                <div class="node-icon">🐬</div>
+                                <div class="node-info">
+                                    <h3>MySQL Principal</h3>
+                                    <p>painel.invistto.com</p>
+                                </div>
+                                <span class="port">:3305</span>
+                            </div>
+
+                            <div class="table-grid">
+                                <div class="table-item">ariusers</div>
+                                <div class="table-item">base</div>
+                                <div class="table-item">courier</div>
+                                <div class="table-item">vd_pedido</div>
+                                <div class="table-item">vd_pedido_itens</div>
+                                <div class="table-item">vd_campanha</div>
+                                <div class="table-item">ge_pessoa</div>
+                                <div class="table-item">ge_empresa</div>
+                                <div class="table-item">es_produto</div>
+                                <div class="table-item">ari_ai_usage</div>
+                            </div>
+
+                            <!-- Backends que usam MySQL -->
+                            <ul>
+                                <li class="svc-auth">
+                                    <div class="node">
+                                        <div class="node-icon">🔐</div>
+                                        <div class="node-info">
+                                            <h3>Auth API</h3>
+                                            <p>JWT, SSO, Cookies</p>
+                                        </div>
+                                        <span class="port">:3001</span>
+                                    </div>
+
+                                    <!-- Hub que usa Auth -->
+                                    <ul>
+                                        <li class="svc-hub">
+                                            <div class="node">
+                                                <div class="node-icon">🏠</div>
+                                                <div class="node-info">
+                                                    <h3>Invistto Hub</h3>
+                                                    <p>SSO Gateway Central</p>
+                                                </div>
+                                                <span class="port">:5173</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">⚙️</div>
+                                        <div class="node-info">
+                                            <h3>Admin API</h3>
+                                            <p>Prisma ORM</p>
+                                        </div>
+                                        <span class="port">:3002</span>
+                                    </div>
+                                    <ul>
+                                        <li class="svc-frontend">
+                                            <div class="node">
+                                                <div class="node-icon">🖥️</div>
+                                                <div class="node-info">
+                                                    <h3>Admin Panel</h3>
+                                                    <p>React 18.3.1</p>
+                                                </div>
+                                                <span class="port">:5173</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">📊</div>
+                                        <div class="node-info">
+                                            <h3>ARI Analytics</h3>
+                                            <p>Knex.js (11 módulos)</p>
+                                        </div>
+                                        <span class="port">:3010</span>
+                                    </div>
+                                    <ul>
+                                        <li class="svc-frontend">
+                                            <div class="node">
+                                                <div class="node-icon">📈</div>
+                                                <div class="node-info">
+                                                    <h3>Invistto BI</h3>
+                                                    <p>React 19.1.0 + Recharts</p>
+                                                </div>
+                                                <span class="port">:3007</span>
+                                            </div>
+                                        </li>
+                                        <li class="svc-service">
+                                            <div class="node">
+                                                <div class="node-icon">🤖</div>
+                                                <div class="node-info">
+                                                    <h3>ServerMCP</h3>
+                                                    <p>Gateway Claude Desktop</p>
+                                                </div>
+                                                <span class="port">:3002</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">🌐</div>
+                                        <div class="node-info">
+                                            <h3>API Invistto</h3>
+                                            <p>CRM Pontomarket</p>
+                                        </div>
+                                        <span class="port">:3000</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Firebird ERPs -->
+                        <li class="db-firebird">
+                            <div class="node">
+                                <div class="node-icon">🔥</div>
+                                <div class="node-info">
+                                    <h3>Firebird ERPs</h3>
+                                    <p>Multi-tenant (1 banco por cliente)</p>
+                                </div>
+                                <span class="port">:3307+</span>
+                            </div>
+
+                            <!-- Exemplos de Firebirds -->
+                            <ul>
+                                <li>
+                                    <div class="node firebird-tenant">
+                                        <div class="node-icon" style="background: #78350f;">🏢</div>
+                                        <div class="node-info">
+                                            <h3>inv04 / db_qualina</h3>
+                                            <p>Qualiótica - Renato</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="node firebird-tenant">
+                                        <div class="node-icon" style="background: #78350f;">🏢</div>
+                                        <div class="node-info">
+                                            <h3>inv05 / db_cliente2</h3>
+                                            <p>Cliente Exemplo 2</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="node firebird-tenant">
+                                        <div class="node-icon" style="background: #78350f;">🏢</div>
+                                        <div class="node-info">
+                                            <h3>...</h3>
+                                            <p>+50 clientes</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <!-- Backends que usam Firebird -->
+                            <ul>
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">💬</div>
+                                        <div class="node-info">
+                                            <h3>Courier API</h3>
+                                            <p>Prisma + Firebird</p>
+                                        </div>
+                                        <span class="port">:3333</span>
+                                    </div>
+                                    <ul>
+                                        <li class="svc-frontend">
+                                            <div class="node">
+                                                <div class="node-icon">📱</div>
+                                                <div class="node-info">
+                                                    <h3>Courier Analytics</h3>
+                                                    <p>React 19.2.3</p>
+                                                </div>
+                                                <span class="port">:3008</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">👁️</div>
+                                        <div class="node-info">
+                                            <h3>Zeiss API</h3>
+                                            <p>MySQL + Firebird + BullMQ</p>
+                                        </div>
+                                        <span class="port">:3005</span>
+                                    </div>
+                                    <ul>
+                                        <li class="svc-frontend">
+                                            <div class="node">
+                                                <div class="node-icon">🔬</div>
+                                                <div class="node-info">
+                                                    <h3>Zeiss Client</h3>
+                                                    <p>React 19.1.0 + MUI</p>
+                                                </div>
+                                                <span class="port">:3006</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">🔮</div>
+                                        <div class="node-info">
+                                            <h3>Lens API</h3>
+                                            <p>Multi-lab consolidation</p>
+                                        </div>
+                                        <span class="port">:3015</span>
+                                    </div>
+                                    <ul>
+                                        <li class="svc-frontend">
+                                            <div class="node">
+                                                <div class="node-icon">👓</div>
+                                                <div class="node-info">
+                                                    <h3>OlhoVivo Lens</h3>
+                                                    <p>React 19.1.0</p>
+                                                </div>
+                                                <span class="port">:3009</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">💰</div>
+                                        <div class="node-info">
+                                            <h3>Sales API</h3>
+                                            <p>Firebird + MySQL</p>
+                                        </div>
+                                        <span class="port">:3011</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- Redis -->
+                        <li class="db-redis">
+                            <div class="node">
+                                <div class="node-icon">⚡</div>
+                                <div class="node-info">
+                                    <h3>Redis</h3>
+                                    <p>Cache + Filas (Bull)</p>
+                                </div>
+                                <span class="port">:6379</span>
+                            </div>
+
+                            <ul>
+                                <li class="svc-service">
+                                    <div class="node">
+                                        <div class="node-icon">🤖</div>
+                                        <div class="node-info">
+                                            <h3>ServerMCP</h3>
+                                            <p>DB 0 e DB 1</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">👁️</div>
+                                        <div class="node-info">
+                                            <h3>Zeiss API</h3>
+                                            <p>Cache de catálogo</p>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="svc-backend">
+                                    <div class="node">
+                                        <div class="node-icon">🌐</div>
+                                        <div class="node-info">
+                                            <h3>API Invistto</h3>
+                                            <p>Session cache</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Legenda -->
+    <div class="legend">
+        <div class="text-xs text-slate-400 uppercase tracking-wider mb-3">Legenda</div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #3b82f6"></div>
+            <span>MySQL</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #f59e0b"></div>
+            <span>Firebird (Multi-tenant)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #ef4444"></div>
+            <span>Redis / Auth</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #8b5cf6"></div>
+            <span>Backend API</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #10b981"></div>
+            <span>Frontend</span>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="fixed top-20 right-20 bg-slate-900/90 rounded-lg p-4 border border-slate-700">
+        <div class="text-xs text-slate-400 uppercase tracking-wider mb-3">Resumo</div>
+        <div class="grid grid-cols-2 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold text-blue-400">1</div>
+                <div class="text-xs text-slate-500">MySQL</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-amber-400">50+</div>
+                <div class="text-xs text-slate-500">Firebirds</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-purple-400">8</div>
+                <div class="text-xs text-slate-500">Backends</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-400">6</div>
+                <div class="text-xs text-slate-500">Frontends</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
