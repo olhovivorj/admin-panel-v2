@@ -14,48 +14,6 @@
             font-family: system-ui, -apple-system, sans-serif;
         }
 
-        .tree { padding: 40px; }
-
-        .tree ul {
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .tree li {
-            list-style: none;
-            position: relative;
-            padding: 10px 0 10px 30px;
-        }
-
-        .tree li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 1px;
-            height: 100%;
-            background: #475569;
-        }
-
-        .tree li::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 25px;
-            width: 25px;
-            height: 1px;
-            background: #475569;
-        }
-
-        .tree li:last-child::before {
-            height: 25px;
-        }
-
-        .tree > ul > li::before,
-        .tree > ul > li::after {
-            display: none;
-        }
-
         .node {
             display: inline-flex;
             align-items: center;
@@ -63,7 +21,7 @@
             padding: 12px 20px;
             border-radius: 8px;
             background: #1e293b;
-            border: 1px solid #334155;
+            border: 2px solid #334155;
             transition: all 0.2s;
         }
 
@@ -105,30 +63,38 @@
         }
 
         /* Cores por tipo */
-        .db-mysql .node-icon { background: #3b82f6; }
-        .db-firebird .node-icon { background: #f59e0b; }
-        .db-redis .node-icon { background: #ef4444; }
-        .svc-auth .node-icon { background: #ef4444; }
-        .svc-backend .node-icon { background: #8b5cf6; }
-        .svc-frontend .node-icon { background: #10b981; }
-        .svc-service .node-icon { background: #f59e0b; }
-        .svc-hub .node-icon { background: #3b82f6; }
+        .type-hub .node-icon { background: #3b82f6; }
+        .type-auth .node-icon { background: #ef4444; }
+        .type-frontend .node-icon { background: #10b981; }
+        .type-backend .node-icon { background: #8b5cf6; }
+        .type-db .node-icon { background: #6366f1; }
+        .type-service .node-icon { background: #f59e0b; }
 
-        .section-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #64748b;
-            margin: 30px 0 15px 30px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #334155;
-            display: inline-block;
+        .central-node {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
         }
 
-        .firebird-tenant {
-            background: #1a1a2e !important;
-            border-color: #f59e0b !important;
-            border-style: dashed !important;
+        .hub-node {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .connection-line {
+            stroke: #475569;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .connection-line-auth {
+            stroke: #ef4444;
+            stroke-width: 2;
+            stroke-dasharray: 5,5;
+        }
+
+        .connection-line-hub {
+            stroke: #3b82f6;
+            stroke-width: 2;
         }
 
         .legend {
@@ -172,356 +138,448 @@
             background: #2563eb;
         }
 
-        .table-grid {
+        .section {
+            margin: 40px 0;
+            padding: 30px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 16px;
+            border: 1px solid #334155;
+        }
+
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #64748b;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .app-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .app-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .app-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .app-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .app-ports {
+            display: flex;
             gap: 8px;
-            margin-left: 30px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
-        .table-item {
-            font-size: 11px;
-            padding: 6px 10px;
-            background: #0f172a;
-            border-radius: 4px;
-            color: #94a3b8;
-            font-family: monospace;
+        .db-card {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            border-color: #4f46e5;
         }
 
-        .table-item::before {
-            content: '📋 ';
+        .firebird-tenant {
+            background: #1a1a2e;
+            border: 1px dashed #f59e0b;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #fbbf24;
+        }
+
+        .arrow {
+            display: inline-block;
+            color: #64748b;
+            margin: 0 8px;
+        }
+
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 30px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
     <a href="DIAGRAMA-ECOSSISTEMA-INTERATIVO.html" class="nav-link">← Diagrama Interativo</a>
 
-    <div class="p-8">
+    <div class="p-8 max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold mb-2">🗄️ Ecossistema Invistto - Hierarquia</h1>
-        <p class="text-slate-400 mb-8">Visão em árvore: Bancos de Dados → Backends → Frontends</p>
+        <p class="text-slate-400 mb-8">Visão completa: Auth central → Hub gateway → Apps → Backends → Databases</p>
 
-        <div class="tree">
-            <ul>
-                <!-- ===== NÍVEL 1: BANCOS DE DADOS ===== -->
-                <li>
-                    <div class="section-title">Camada de Dados</div>
-                    <ul>
-                        <!-- MySQL Principal -->
-                        <li class="db-mysql">
-                            <div class="node">
-                                <div class="node-icon">🐬</div>
-                                <div class="node-info">
-                                    <h3>MySQL Principal</h3>
-                                    <p>painel.invistto.com</p>
-                                </div>
-                                <span class="port">:3305</span>
-                            </div>
-
-                            <div class="table-grid">
-                                <div class="table-item">ariusers</div>
-                                <div class="table-item">base</div>
-                                <div class="table-item">courier</div>
-                                <div class="table-item">vd_pedido</div>
-                                <div class="table-item">vd_pedido_itens</div>
-                                <div class="table-item">vd_campanha</div>
-                                <div class="table-item">ge_pessoa</div>
-                                <div class="table-item">ge_empresa</div>
-                                <div class="table-item">es_produto</div>
-                                <div class="table-item">ari_ai_usage</div>
-                            </div>
-
-                            <!-- Backends que usam MySQL -->
-                            <ul>
-                                <li class="svc-auth">
-                                    <div class="node">
-                                        <div class="node-icon">🔐</div>
-                                        <div class="node-info">
-                                            <h3>Auth API</h3>
-                                            <p>JWT, SSO, Cookies</p>
-                                        </div>
-                                        <span class="port">:3001</span>
-                                    </div>
-
-                                    <!-- Hub que usa Auth -->
-                                    <ul>
-                                        <li class="svc-hub">
-                                            <div class="node">
-                                                <div class="node-icon">🏠</div>
-                                                <div class="node-info">
-                                                    <h3>Invistto Hub</h3>
-                                                    <p>SSO Gateway Central</p>
-                                                </div>
-                                                <span class="port">:5173</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">⚙️</div>
-                                        <div class="node-info">
-                                            <h3>Admin API</h3>
-                                            <p>Prisma ORM</p>
-                                        </div>
-                                        <span class="port">:3002</span>
-                                    </div>
-                                    <ul>
-                                        <li class="svc-frontend">
-                                            <div class="node">
-                                                <div class="node-icon">🖥️</div>
-                                                <div class="node-info">
-                                                    <h3>Admin Panel</h3>
-                                                    <p>React 18.3.1</p>
-                                                </div>
-                                                <span class="port">:5173</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">📊</div>
-                                        <div class="node-info">
-                                            <h3>ARI Analytics</h3>
-                                            <p>Knex.js (11 módulos)</p>
-                                        </div>
-                                        <span class="port">:3010</span>
-                                    </div>
-                                    <ul>
-                                        <li class="svc-frontend">
-                                            <div class="node">
-                                                <div class="node-icon">📈</div>
-                                                <div class="node-info">
-                                                    <h3>Invistto BI</h3>
-                                                    <p>React 19.1.0 + Recharts</p>
-                                                </div>
-                                                <span class="port">:3007</span>
-                                            </div>
-                                        </li>
-                                        <li class="svc-service">
-                                            <div class="node">
-                                                <div class="node-icon">🤖</div>
-                                                <div class="node-info">
-                                                    <h3>ServerMCP</h3>
-                                                    <p>Gateway Claude Desktop</p>
-                                                </div>
-                                                <span class="port">:3002</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">🌐</div>
-                                        <div class="node-info">
-                                            <h3>API Invistto</h3>
-                                            <p>CRM Pontomarket</p>
-                                        </div>
-                                        <span class="port">:3000</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <!-- Firebird ERPs -->
-                        <li class="db-firebird">
-                            <div class="node">
-                                <div class="node-icon">🔥</div>
-                                <div class="node-info">
-                                    <h3>Firebird ERPs</h3>
-                                    <p>Multi-tenant (1 banco por cliente)</p>
-                                </div>
-                                <span class="port">:3307+</span>
-                            </div>
-
-                            <!-- Exemplos de Firebirds -->
-                            <ul>
-                                <li>
-                                    <div class="node firebird-tenant">
-                                        <div class="node-icon" style="background: #78350f;">🏢</div>
-                                        <div class="node-info">
-                                            <h3>inv04 / db_qualina</h3>
-                                            <p>Qualiótica - Renato</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="node firebird-tenant">
-                                        <div class="node-icon" style="background: #78350f;">🏢</div>
-                                        <div class="node-info">
-                                            <h3>inv05 / db_cliente2</h3>
-                                            <p>Cliente Exemplo 2</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="node firebird-tenant">
-                                        <div class="node-icon" style="background: #78350f;">🏢</div>
-                                        <div class="node-info">
-                                            <h3>...</h3>
-                                            <p>+50 clientes</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-
-                            <!-- Backends que usam Firebird -->
-                            <ul>
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">💬</div>
-                                        <div class="node-info">
-                                            <h3>Courier API</h3>
-                                            <p>Prisma + Firebird</p>
-                                        </div>
-                                        <span class="port">:3333</span>
-                                    </div>
-                                    <ul>
-                                        <li class="svc-frontend">
-                                            <div class="node">
-                                                <div class="node-icon">📱</div>
-                                                <div class="node-info">
-                                                    <h3>Courier Analytics</h3>
-                                                    <p>React 19.2.3</p>
-                                                </div>
-                                                <span class="port">:3008</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">👁️</div>
-                                        <div class="node-info">
-                                            <h3>Zeiss API</h3>
-                                            <p>MySQL + Firebird + BullMQ</p>
-                                        </div>
-                                        <span class="port">:3005</span>
-                                    </div>
-                                    <ul>
-                                        <li class="svc-frontend">
-                                            <div class="node">
-                                                <div class="node-icon">🔬</div>
-                                                <div class="node-info">
-                                                    <h3>Zeiss Client</h3>
-                                                    <p>React 19.1.0 + MUI</p>
-                                                </div>
-                                                <span class="port">:3006</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">🔮</div>
-                                        <div class="node-info">
-                                            <h3>Lens API</h3>
-                                            <p>Multi-lab consolidation</p>
-                                        </div>
-                                        <span class="port">:3015</span>
-                                    </div>
-                                    <ul>
-                                        <li class="svc-frontend">
-                                            <div class="node">
-                                                <div class="node-icon">👓</div>
-                                                <div class="node-info">
-                                                    <h3>OlhoVivo Lens</h3>
-                                                    <p>React 19.1.0</p>
-                                                </div>
-                                                <span class="port">:3009</span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">💰</div>
-                                        <div class="node-info">
-                                            <h3>Sales API</h3>
-                                            <p>Firebird + MySQL</p>
-                                        </div>
-                                        <span class="port">:3011</span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <!-- Redis -->
-                        <li class="db-redis">
-                            <div class="node">
-                                <div class="node-icon">⚡</div>
-                                <div class="node-info">
-                                    <h3>Redis</h3>
-                                    <p>Cache + Filas (Bull)</p>
-                                </div>
-                                <span class="port">:6379</span>
-                            </div>
-
-                            <ul>
-                                <li class="svc-service">
-                                    <div class="node">
-                                        <div class="node-icon">🤖</div>
-                                        <div class="node-info">
-                                            <h3>ServerMCP</h3>
-                                            <p>DB 0 e DB 1</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">👁️</div>
-                                        <div class="node-info">
-                                            <h3>Zeiss API</h3>
-                                            <p>Cache de catálogo</p>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li class="svc-backend">
-                                    <div class="node">
-                                        <div class="node-icon">🌐</div>
-                                        <div class="node-info">
-                                            <h3>API Invistto</h3>
-                                            <p>Session cache</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
+        <!-- ===== CAMADA 1: AUTH CENTRAL ===== -->
+        <div class="section">
+            <div class="section-title">🔐 Camada 1: Autenticação Centralizada</div>
+            <div class="text-center">
+                <div class="inline-block type-auth">
+                    <div class="node central-node" style="padding: 20px 40px;">
+                        <div class="node-icon" style="width: 50px; height: 50px; font-size: 24px;">🔐</div>
+                        <div class="node-info">
+                            <h3 style="font-size: 18px;">INVISTTO-AUTH</h3>
+                            <p>API de Autenticação Centralizada</p>
+                            <p style="color: #fbbf24; margin-top: 4px;">Todos os apps dependem deste serviço</p>
+                        </div>
+                        <span class="port" style="font-size: 14px;">:3001</span>
+                    </div>
+                </div>
+                <div class="mt-4 text-slate-400 text-sm">
+                    JWT (24h) • httpOnly Cookies • CSRF Protection • SSO (código 30s)
+                </div>
+            </div>
         </div>
+
+        <!-- ===== CAMADA 2: HUB GATEWAY ===== -->
+        <div class="section">
+            <div class="section-title">🏠 Camada 2: Hub Gateway (SSO)</div>
+            <div class="text-center mb-6">
+                <div class="inline-block type-hub">
+                    <div class="node hub-node" style="padding: 20px 40px;">
+                        <div class="node-icon" style="width: 50px; height: 50px; font-size: 24px;">🏠</div>
+                        <div class="node-info">
+                            <h3 style="font-size: 18px;">INVISTTO-HUB</h3>
+                            <p>Portal Central - Abre todos os apps via SSO</p>
+                            <p style="color: #60a5fa; margin-top: 4px;">Web • Desktop (Tauri) • Mobile (Capacitor)</p>
+                        </div>
+                        <span class="port" style="font-size: 14px;">:5173</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-container">
+                <div class="text-center text-sm text-slate-400">
+                    <p class="mb-2">Fluxo SSO:</p>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="bg-slate-700 px-2 py-1 rounded">1. Login no Hub</span>
+                        <span class="arrow">→</span>
+                        <span class="bg-slate-700 px-2 py-1 rounded">2. Gera código SSO (30s)</span>
+                        <span class="arrow">→</span>
+                        <span class="bg-slate-700 px-2 py-1 rounded">3. Abre App com ?sso_code=xxx</span>
+                        <span class="arrow">→</span>
+                        <span class="bg-slate-700 px-2 py-1 rounded">4. App troca código por cookies</span>
+                        <span class="arrow">→</span>
+                        <span class="bg-green-700 px-2 py-1 rounded">✓ Logado</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CAMADA 3: APLICAÇÕES ===== -->
+        <div class="section">
+            <div class="section-title">🖥️ Camada 3: Aplicações (Frontend + Backend)</div>
+            <p class="text-slate-400 text-sm mb-6">Todos usam <code class="bg-slate-800 px-2 py-1 rounded">@invistto/auth-react</code> e se autenticam via Auth API (:3001)</p>
+
+            <div class="app-grid">
+                <!-- Admin Panel -->
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-emerald-600">⚙️</div>
+                        <div>
+                            <h3 class="font-bold">Admin Panel</h3>
+                            <p class="text-slate-400 text-xs">Gestão de usuários, bases, roles</p>
+                        </div>
+                    </div>
+                    <div class="app-ports">
+                        <span class="port bg-green-900/50">FE :5173</span>
+                        <span class="port bg-purple-900/50">API :3002</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">React 18.3.1 • NestJS • Prisma</div>
+                </div>
+
+                <!-- Courier -->
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-emerald-600">💬</div>
+                        <div>
+                            <h3 class="font-bold">Courier Analytics</h3>
+                            <p class="text-slate-400 text-xs">Dashboard WhatsApp, ROI campanhas</p>
+                        </div>
+                    </div>
+                    <div class="app-ports">
+                        <span class="port bg-green-900/50">FE :3008</span>
+                        <span class="port bg-purple-900/50">API :3333</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">React 19.2.3 • NestJS • Prisma+Firebird</div>
+                </div>
+
+                <!-- BI -->
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-emerald-600">📊</div>
+                        <div>
+                            <h3 class="font-bold">Invistto BI</h3>
+                            <p class="text-slate-400 text-xs">Business Intelligence, vendas, financeiro</p>
+                        </div>
+                    </div>
+                    <div class="app-ports">
+                        <span class="port bg-green-900/50">FE :3007</span>
+                        <span class="port bg-purple-900/50">API :3010 (ARI)</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">React 19.1.0 • NestJS • Knex.js</div>
+                </div>
+
+                <!-- Zeiss -->
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-emerald-600">👁️</div>
+                        <div>
+                            <h3 class="font-bold">Zeiss Client</h3>
+                            <p class="text-slate-400 text-xs">Integração Carl Zeiss Vision</p>
+                        </div>
+                    </div>
+                    <div class="app-ports">
+                        <span class="port bg-green-900/50">FE :3006</span>
+                        <span class="port bg-purple-900/50">API :3005</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">React 19.1.0 • NestJS • MySQL+Firebird</div>
+                </div>
+
+                <!-- OlhoVivo Lens -->
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-emerald-600">👓</div>
+                        <div>
+                            <h3 class="font-bold">OlhoVivo Lens</h3>
+                            <p class="text-slate-400 text-xs">Hub multi-laboratório (Zeiss, HOYA, etc)</p>
+                        </div>
+                    </div>
+                    <div class="app-ports">
+                        <span class="port bg-green-900/50">FE :3009</span>
+                        <span class="port bg-purple-900/50">API :3015</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">React 19.1.0 • NestJS • Prisma+Firebird</div>
+                </div>
+
+                <!-- Sales API -->
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-purple-600">💰</div>
+                        <div>
+                            <h3 class="font-bold">Sales API</h3>
+                            <p class="text-slate-400 text-xs">Gestão de vendas óticas</p>
+                        </div>
+                    </div>
+                    <div class="app-ports">
+                        <span class="port bg-purple-900/50">API :3011</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2">NestJS 11 • Firebird+MySQL</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CAMADA 4: SERVIÇOS ===== -->
+        <div class="section">
+            <div class="section-title">🔧 Camada 4: Serviços Auxiliares</div>
+            <div class="app-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-amber-600">🤖</div>
+                        <div>
+                            <h3 class="font-bold text-sm">ServerMCP</h3>
+                            <p class="text-slate-400 text-xs">Gateway Claude Desktop</p>
+                        </div>
+                    </div>
+                    <span class="port">:3002</span>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-amber-600">🧠</div>
+                        <div>
+                            <h3 class="font-bold text-sm">AI Service</h3>
+                            <p class="text-slate-400 text-xs">NLP queries</p>
+                        </div>
+                    </div>
+                    <span class="port">:3003</span>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-amber-600">💳</div>
+                        <div>
+                            <h3 class="font-bold text-sm">AI Billing</h3>
+                            <p class="text-slate-400 text-xs">Usage tracking</p>
+                        </div>
+                    </div>
+                    <span class="port">:3004</span>
+                </div>
+
+                <div class="app-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-amber-600">📱</div>
+                        <div>
+                            <h3 class="font-bold text-sm">WhatsApp Service</h3>
+                            <p class="text-slate-400 text-xs">Envio mensagens</p>
+                        </div>
+                    </div>
+                    <span class="port">:3007</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== CAMADA 5: BANCOS DE DADOS ===== -->
+        <div class="section">
+            <div class="section-title">💾 Camada 5: Bancos de Dados</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- MySQL -->
+                <div class="app-card db-card">
+                    <div class="app-header">
+                        <div class="app-icon bg-blue-600">🐬</div>
+                        <div>
+                            <h3 class="font-bold">MySQL Principal</h3>
+                            <p class="text-slate-300 text-xs">painel.invistto.com</p>
+                        </div>
+                        <span class="port">:3305</span>
+                    </div>
+                    <div class="text-xs text-slate-300 mt-3 space-y-1">
+                        <p><strong>80+ tabelas</strong></p>
+                        <p>ariusers, base, courier, vd_pedido, ge_pessoa, es_produto...</p>
+                    </div>
+                    <div class="text-xs text-blue-300 mt-3">
+                        <strong>Usado por:</strong> Auth, Admin, Courier, ARI, BI
+                    </div>
+                </div>
+
+                <!-- Firebird -->
+                <div class="app-card" style="background: linear-gradient(135deg, #451a03 0%, #78350f 100%); border-color: #f59e0b;">
+                    <div class="app-header">
+                        <div class="app-icon bg-amber-600">🔥</div>
+                        <div>
+                            <h3 class="font-bold">Firebird ERPs</h3>
+                            <p class="text-amber-200 text-xs">Multi-tenant</p>
+                        </div>
+                        <span class="port">:3307+</span>
+                    </div>
+                    <div class="text-xs text-amber-100 mt-3">
+                        <p><strong>1 banco por cliente</strong></p>
+                        <div class="mt-2 space-y-1">
+                            <div class="firebird-tenant">🏢 inv04/db_qualina - Qualiótica</div>
+                            <div class="firebird-tenant">🏢 inv05/db_cliente2 - Cliente 2</div>
+                            <div class="firebird-tenant">🏢 ... +50 clientes</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-amber-300 mt-3">
+                        <strong>Usado por:</strong> Courier, Zeiss, Lens, Sales
+                    </div>
+                </div>
+
+                <!-- Redis -->
+                <div class="app-card" style="background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%); border-color: #ef4444;">
+                    <div class="app-header">
+                        <div class="app-icon bg-red-600">⚡</div>
+                        <div>
+                            <h3 class="font-bold">Redis</h3>
+                            <p class="text-red-200 text-xs">localhost</p>
+                        </div>
+                        <span class="port">:6379</span>
+                    </div>
+                    <div class="text-xs text-red-100 mt-3">
+                        <p><strong>Cache + Filas (Bull)</strong></p>
+                        <p class="mt-1">DB 0: ari-nest cache</p>
+                        <p>DB 1: servermcp cache</p>
+                    </div>
+                    <div class="text-xs text-red-300 mt-3">
+                        <strong>Usado por:</strong> ServerMCP, Zeiss, API-Invistto
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== DIAGRAMA DE RELACIONAMENTO ===== -->
+        <div class="section">
+            <div class="section-title">🔗 Visão Geral de Relacionamentos</div>
+            <div class="bg-slate-900 rounded-xl p-6 font-mono text-sm overflow-x-auto">
+<pre class="text-slate-300">
+                              ┌─────────────────────────────────────┐
+                              │         <span class="text-red-400">INVISTTO-AUTH :3001</span>         │
+                              │   (Todos os apps se autenticam)    │
+                              └──────────────────┬──────────────────┘
+                                                 │
+                 ┌───────────────────────────────┼───────────────────────────────┐
+                 │                               │                               │
+                 ▼                               ▼                               ▼
+┌────────────────────────────┐   ┌────────────────────────────┐   ┌────────────────────────────┐
+│     <span class="text-blue-400">INVISTTO-HUB :5173</span>     │   │      <span class="text-green-400">Apps Frontend</span>         │   │      <span class="text-purple-400">Apps Backend</span>         │
+│   (SSO Gateway Central)    │   │   Admin, Courier, BI,      │   │   APIs NestJS             │
+│   Web + Desktop + Mobile   │   │   Zeiss, Lens              │   │   :3002, :3333, :3010...  │
+└────────────────────────────┘   └────────────────────────────┘   └──────────────┬─────────────┘
+                 │                               │                               │
+                 │         Abre via SSO         │                               │
+                 └──────────────────────────────┘                               │
+                                                                                │
+                              ┌─────────────────────────────────────────────────┘
+                              │
+                              ▼
+          ┌───────────────────┼───────────────────┬───────────────────┐
+          │                   │                   │                   │
+          ▼                   ▼                   ▼                   ▼
+    ┌───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐
+    │  <span class="text-blue-400">MySQL</span>   │      │ <span class="text-amber-400">Firebird</span>  │      │  <span class="text-red-400">Redis</span>   │      │  <span class="text-slate-400">Zeiss</span>   │
+    │  :3305   │      │  (ERPs)   │      │  :6379   │      │ <span class="text-slate-400">SAO API</span>  │
+    └───────────┘      └───────────┘      └───────────┘      └───────────┘
+</pre>
+            </div>
+        </div>
+
     </div>
 
     <!-- Legenda -->
     <div class="legend">
         <div class="text-xs text-slate-400 uppercase tracking-wider mb-3">Legenda</div>
         <div class="legend-item">
-            <div class="legend-dot" style="background: #3b82f6"></div>
-            <span>MySQL</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot" style="background: #f59e0b"></div>
-            <span>Firebird (Multi-tenant)</span>
-        </div>
-        <div class="legend-item">
             <div class="legend-dot" style="background: #ef4444"></div>
-            <span>Redis / Auth</span>
+            <span>Auth (Central)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #3b82f6"></div>
+            <span>Hub (Gateway)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #10b981"></div>
+            <span>Frontend</span>
         </div>
         <div class="legend-item">
             <div class="legend-dot" style="background: #8b5cf6"></div>
             <span>Backend API</span>
         </div>
         <div class="legend-item">
-            <div class="legend-dot" style="background: #10b981"></div>
-            <span>Frontend</span>
+            <div class="legend-dot" style="background: #f59e0b"></div>
+            <span>Serviço</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #6366f1"></div>
+            <span>Banco de Dados</span>
         </div>
     </div>
 
@@ -530,20 +588,20 @@
         <div class="text-xs text-slate-400 uppercase tracking-wider mb-3">Resumo</div>
         <div class="grid grid-cols-2 gap-4 text-center">
             <div>
+                <div class="text-2xl font-bold text-red-400">1</div>
+                <div class="text-xs text-slate-500">Auth Central</div>
+            </div>
+            <div>
                 <div class="text-2xl font-bold text-blue-400">1</div>
-                <div class="text-xs text-slate-500">MySQL</div>
+                <div class="text-xs text-slate-500">Hub Gateway</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-400">5</div>
+                <div class="text-xs text-slate-500">Apps</div>
             </div>
             <div>
                 <div class="text-2xl font-bold text-amber-400">50+</div>
                 <div class="text-xs text-slate-500">Firebirds</div>
-            </div>
-            <div>
-                <div class="text-2xl font-bold text-purple-400">8</div>
-                <div class="text-xs text-slate-500">Backends</div>
-            </div>
-            <div>
-                <div class="text-2xl font-bold text-green-400">6</div>
-                <div class="text-xs text-slate-500">Frontends</div>
             </div>
         </div>
     </div>
