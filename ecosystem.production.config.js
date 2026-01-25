@@ -26,8 +26,8 @@ module.exports = {
     exec_mode: 'fork',
 
     // Logs
-    error_file: path.join(homeDir, 'logs/admin-panel/api-error.log'),
-    out_file: path.join(homeDir, 'logs/admin-panel/api-out.log'),
+    error_file: path.join(homeDir, 'logs/admin-panel-v2/api-error.log'),
+    out_file: path.join(homeDir, 'logs/admin-panel-v2/api-out.log'),
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     merge_logs: true,
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# CI/CD DEPLOY - ADMIN PANEL (Frontend + Backend)
+# CI/CD DEPLOY - ADMIN PANEL V2 (Frontend + Backend)
 # =============================================================================
 # Este script é executado pelo GitHub Actions no servidor de produção
 # Faz deploy do frontend (SPA) e backend (NestJS API)
@@ -8,10 +8,10 @@
 
 set -e  # Parar em caso de erro
 
-# Configurações
+# Configurações - PADRONIZADO: admin-panel-v2 em todos os lugares
 DEPLOY_DIR="$HOME/projetos/admin-panel-v2"
-WEB_DIR="/var/www/admin-panel"
-BACKUP_DIR="$HOME/backups/admin-panel"
+WEB_DIR="/var/www/admin-panel-v2/dist"
+LOG_DIR="$HOME/logs/admin-panel-v2"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 PM2_APP_NAME="admin-panel-api"
 
@@ -26,7 +26,7 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 echo "=============================================="
-echo "  DEPLOY AUTOMATICO - ADMIN PANEL"
+echo "  DEPLOY AUTOMATICO - ADMIN PANEL V2"
 echo "  Timestamp: $TIMESTAMP"
 echo "=============================================="
 
@@ -89,19 +89,7 @@ else
 fi
 
 # -----------------------------------------------------------------------------
-# 6. BACKUP DA VERSAO ATUAL
-# -----------------------------------------------------------------------------
-log_info "Criando backup da versao atual..."
-mkdir -p $BACKUP_DIR
-
-# Backup do frontend
-if [ -d "$WEB_DIR" ]; then
-    cp -r $WEB_DIR $BACKUP_DIR/frontend_$TIMESTAMP
-    log_info "Backup frontend criado: frontend_$TIMESTAMP"
-fi
-
-# -----------------------------------------------------------------------------
-# 7. DEPLOY DO FRONTEND
+# 6. DEPLOY DO FRONTEND
 # -----------------------------------------------------------------------------
 log_info "Deploying frontend para $WEB_DIR..."
 sudo mkdir -p $WEB_DIR
@@ -110,12 +98,12 @@ sudo chown -R www-data:www-data $WEB_DIR
 log_info "Frontend deployed!"
 
 # -----------------------------------------------------------------------------
-# 8. DEPLOY DO BACKEND (PM2)
+# 7. DEPLOY DO BACKEND (PM2)
 # -----------------------------------------------------------------------------
 log_info "Deploying backend API..."
 
 # Criar diretório de logs
-mkdir -p $HOME/logs/admin-panel
+mkdir -p $LOG_DIR
 
 # Verificar se PM2 está instalado
 if ! command -v pm2 &> /dev/null; then
@@ -138,14 +126,7 @@ pm2 save
 log_info "Backend deployed!"
 
 # -----------------------------------------------------------------------------
-# 9. LIMPEZA DE BACKUPS ANTIGOS
-# -----------------------------------------------------------------------------
-log_info "Limpando backups antigos (mantendo ultimos 5)..."
-cd $BACKUP_DIR
-ls -dt frontend_* 2>/dev/null | tail -n +6 | xargs -r rm -rf
-
-# -----------------------------------------------------------------------------
-# 10. VERIFICACAO FINAL
+# 8. VERIFICACAO FINAL
 # -----------------------------------------------------------------------------
 log_info "Verificando status dos servicos..."
 
@@ -166,6 +147,6 @@ echo "  Timestamp: $TIMESTAMP"
 echo "=============================================="
 echo ""
 echo "URLs:"
-echo "  Frontend: https://admin.ierp.invistto.com/admin/"
-echo "  Backend:  https://ierp.invistto.com (proxy para API)"
+echo "  Frontend: https://ierp.invistto.com/admin/"
+echo "  API:      https://ierp.invistto.com/admin/api/"
 echo ""
