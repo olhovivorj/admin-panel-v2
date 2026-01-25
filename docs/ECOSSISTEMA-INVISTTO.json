@@ -233,7 +233,7 @@
     "api-invistto": {
       "name": "API Invistto (Pontomarket)",
       "description": "CRM multi-tenant - Integração Pontomarket",
-      "port": 3000,
+      "port": 4001,
       "framework": "NestJS 10.x",
       "orm": "MySQL2 (raw)",
       "database": "MySQL + Redis + RabbitMQ",
@@ -298,7 +298,7 @@
     "servermcp": {
       "name": "ServerMCP",
       "description": "Gateway MCP para Claude Desktop",
-      "port": 3002,
+      "port": 3099,
       "framework": "Express.js (Node.js)",
       "features": [
         "Basic→JWT conversion",
@@ -466,9 +466,10 @@
     ]
   },
   "ports_map": {
-    "3000": "api-invistto (Pontomarket CRM)",
+    "4001": "api-invistto (Pontomarket CRM)",
     "3001": "invistto-auth (Auth API)",
-    "3002": "admin-panel-api / servermcp",
+    "3002": "admin-panel-api",
+    "3099": "servermcp (Gateway MCP)",
     "3003": "ai-service",
     "3004": "ai-billing-service",
     "3005": "zeiss-backend",

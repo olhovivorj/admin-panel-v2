@@ -17,8 +17,8 @@
 | 6 | **zeiss-api-client** | 2026-01-24 | 3006/3005 | Integração Zeiss Vision |
 | 7 | **olhovivo-lens** | 2026-01-24 | 3009/3015 | Hub multi-laboratório |
 | 8 | **ari** | 2026-01-24 | 3010 | API Analytics (BI) |
-| 9 | **api-invistto** | 2026-01-24 | 3000 | CRM Pontomarket |
-| 10 | **servermcp** | 2026-01-24 | 3002 | Gateway MCP Claude |
+| 9 | **api-invistto** | 2026-01-24 | 4001 | CRM Pontomarket |
+| 10 | **servermcp** | 2026-01-24 | 3099 | Gateway MCP Claude |
 | 11 | **invistto-template** | 2026-01-24 | - | Template base |
 | 12 | **sales-api** | 2025-12-06 | 3011 | Vendas óticas |
 
@@ -222,7 +222,7 @@ DB: MySQL (painel.invistto.com:3305/invistto)
 
 ```
 Tipo: NestJS Backend
-Porta: 3000
+Porta: 4001
 Framework: NestJS 10.x
 ORM: MySQL2 (raw)
 DB: MySQL + Redis + RabbitMQ (opcional)
@@ -238,7 +238,7 @@ DB: MySQL + Redis + RabbitMQ (opcional)
 
 ```
 Tipo: Express.js (Node.js puro)
-Porta: 3002
+Porta: 3099
 Cache: Redis (DB 0 e 1)
 ```
 
