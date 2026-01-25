@@ -39,7 +39,7 @@ function AppRoutes() {
 
   return (
     <AuthProvider
-      apiUrl="/admin/api"
+      apiUrl=""
       tokenKey="@ari:token"
       userKey="@ari:user"
       useSessionStorage={false}
